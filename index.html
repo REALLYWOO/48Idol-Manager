@@ -221,7 +221,7 @@
                                 <i class="fa-solid fa-calculator text-sm"></i>
                             </div>
                             <div>
-                                <h3 class="font-bold text-xs text-slate-700 leading-tight">ประมาณการทำเพลง</h3>
+                                <h3 class="font-bold text-xs text-slate-700 leading-tight">รวมทั้งสิ้น</h3>
                                 <p class="text-[10px] text-slate-400">รวมค่าผลิต ทีมงาน และการตลาด</p>
                             </div>
                         </div>
@@ -233,53 +233,90 @@
                 </div>
 
                 <!-- ================= STEP 1: วางแผนโปรเจกต์ 3 คอลัมน์ ================= -->
-                <div id="studio-step-1" class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-[fadeIn_0.3s_ease-out]">
-                    
-                    <!-- คอลัมน์ 1: ตั้งค่าโปรเจกต์ -->
-                    <div class="modern-panel p-4 bg-white/95 border border-slate-200/80 shadow-sm rounded-xl space-y-4 flex flex-col">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    <div class="md:col-span-2 modern-panel p-4 bg-white/95 border border-slate-200/80 shadow-sm rounded-xl space-y-3">
                         <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 border-b pb-2">
-                            <i class="fa-solid fa-sliders text-indigo-500"></i> 1. ตั้งค่าโปรเจกต์
+                            <i class="fa-solid fa-compact-disc text-indigo-500"></i> 1. ตั้งค่าโปรเจกต์เพลง & ดีไซน์ผลงาน
                         </h3>
                         
-                        <div class="flex-grow space-y-4">
-                            <div>
-                                <label class="text-[11px] font-bold text-slate-600 block mb-1">ชื่อเพลง / ชื่อซิงเกิลหลัก <span class="text-red-500">*</span></label>
-                                <input type="text" id="music-title" class="modern-input w-full font-bold text-slate-700" placeholder="ระบุชื่อเพลง...">
-                            </div>
-
-                            <div>
-                                <label class="text-[11px] font-bold text-slate-600 block mb-1.5">ประเภทผลงาน</label>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <label class="flex flex-col p-2 bg-slate-50 border rounded-xl cursor-pointer hover:bg-slate-100 transition-colors text-center">
-                                        <input type="radio" name="release-type" value="single" class="sr-only" checked>
-                                        <span class="font-bold text-xs text-slate-700">💿 ซิงเกิล</span>
-                                        <span class="text-[9px] text-slate-400 mt-0.5">ต้นทุน ฿25k</span>
-                                    </label>
-                                    <label class="flex flex-col p-2 bg-slate-50 border rounded-xl cursor-pointer hover:bg-slate-100 transition-colors text-center">
-                                        <input type="radio" name="release-type" value="album" class="sr-only">
-                                        <span class="font-bold text-xs text-slate-700">📀 อัลบั้มเต็ม</span>
-                                        <span class="text-[9px] text-slate-400 mt-0.5">ต้นทุน ฿120k</span>
-                                    </label>
+                        <!-- จัดระเบียบภายใน: แบ่งเป็นฝั่งรูปภาพพรีวิว และฝั่งกรอกข้อมูลข้อมูลเพลง -->
+                        <div class="flex flex-col lg:flex-row gap-4 pt-1">
+                            
+                            <!-- 📸 ฝั่งรูปอัลบั้ม/อัปโหลดปก (คลิกอัปโหลดได้) -->
+                            <div class="flex flex-col items-center justify-center bg-slate-50 border border-dashed border-slate-300 rounded-xl p-3 w-full lg:w-32 h-32 relative group cursor-pointer overflow-hidden shrink-0 self-center" onclick="document.getElementById('album-cover-input').click()">
+                                <input type="file" id="album-cover-input" accept="image/*" class="hidden" onchange="previewAlbumCover(this)">
+                                <img id="album-cover-preview" src="" class="absolute inset-0 w-full h-full object-cover hidden">
+                                <div id="album-cover-placeholder" class="text-center space-y-1 text-slate-400 group-hover:text-slate-600 transition-colors">
+                                    <i class="fa-solid fa-image text-2xl block"></i>
+                                    <span class="text-[10px] font-bold block">อัปโหลดปกเพลง</span>
+                                </div>
+                                <div class="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[9px] text-center py-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    คลิกเพื่อเปลี่ยนรูป
                                 </div>
                             </div>
 
-                            <div>
-                                <label class="text-[11px] font-bold text-slate-600 block mb-1">แนวทาง/คอนเซปต์เพลง</label>
-                                <select id="music-concept" class="modern-input w-full text-xs font-medium text-slate-700 bg-white">
-                                    <option value="cute">🌸 น่ารัก สดใส (เน้นค่าเสน่ห์)</option>
-                                    <option value="cool">🔥 เท่ ดุดัน (เน้นค่าเต้น)</option>
-                                    <option value="vocal">🎤 ทรงพลัง โชว์เสียง (เน้นค่าร้อง)</option>
-                                </select>
+                            <!-- 📝 ฝั่งกรอกข้อมูลและตัวเลือกเชิงกลยุทธ์ (ปรับจาก 3 คอลัมน์ เป็น 2 คอลัมน์ เพื่อความสมดุล) -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow items-start">
+                                
+                                <!-- 🔹 ฝั่งซ้าย: จัดกลุ่มข้อมูลหลักซ้อนกันแนวดิ่ง (ชื่อเพลง + แนวเพลง) -->
+                                <div class="space-y-3">
+                                    <!-- ส่วนที่ 1: กรอกชื่อเพลง -->
+                                    <div class="space-y-1.5">
+                                        <label class="text-[11px] font-bold text-slate-600 block">📝 ชื่อซิงเกิล / อัลบั้ม</label>
+                                        <input type="text" id="music-title" class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500 transition-colors" placeholder="ระบุชื่อเพลงของคุณ...">
+                                    </div>
+
+                                    <!-- ส่วนที่ 2: เลือกคอนเซปต์แนวทางเพลง (ย้ายลงมาอยู่ด้านล่างชื่อเพลงแล้ว) -->
+                                    <div class="space-y-1.5">
+                                        <label class="text-[11px] font-bold text-slate-600 block">💡 คอนเซปต์แนวทางเพลง</label>
+                                        <select id="music-concept" class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500 transition-colors font-medium text-slate-700">
+                                            <option value="pop-cute">สายหวาน/น่ารัก (เน้นค่าเสน่ห์ ✨✨✨)</option>
+                                            <option value="ballad-diva">สายโชว์พลังเสียง (เน้นค่าร้อง 🎤🎤🎤)</option>
+                                            <option value="hiphop-dance">สายแดนซ์/ดุดัน (เน้นค่าเต้น 💃💃💃)</option>
+                                            <option value="indie-chill">สายชิล/อินดี้ (เน้นความแปลกใหม่ ทรงคุณค่า 🌟)</option>
+                                            <option value="mass-pop">สายแมสพิมพ์นิยม (ค่าพลังสมดุลทุกด้าน 📊)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <!-- 🔹 ฝั่งขวา: เลือกประเภทผลงาน (ดีไซน์ตามรูปแบบภาพ image_a2efed.png) -->
+                                <div class="space-y-1.5">
+                                    <label class="text-[11px] font-bold text-slate-600 block">💿 ประเภทผลงาน</label>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        
+                                        <!-- ซิงเกิล (ซีดีสีเทา/เงิน) -->
+                                        <label class="flex flex-col items-center justify-center p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer transition-all has-[:checked]:bg-indigo-50 has-[:checked]:border-indigo-500 has-[:checked]:ring-1 has-[:checked]:ring-indigo-500 hover:bg-slate-100 text-center min-h-[85px]">
+                                            <input type="radio" name="release-type" value="single" checked class="sr-only" onchange="if(typeof updateStudioTotalCostLive === 'function') updateStudioTotalCostLive()">
+                                            <div class="flex items-center gap-1.5 justify-center">
+                                                <i class="fa-solid fa-compact-disc text-slate-400 text-sm"></i>
+                                                <span class="text-xs font-bold text-slate-700">ซิงเกิล</span>
+                                            </div>
+                                            <span class="text-[9px] text-slate-400 font-medium mt-1">ต้นทุน ฿25k</span>
+                                        </label>
+
+                                        <!-- อัลบั้มเต็ม (ซีดีสีทอง) -->
+                                        <label class="flex flex-col items-center justify-center p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer transition-all has-[:checked]:bg-indigo-50 has-[:checked]:border-indigo-500 has-[:checked]:ring-1 has-[:checked]:ring-indigo-500 hover:bg-slate-100 text-center min-h-[85px]">
+                                            <input type="radio" name="release-type" value="album" class="sr-only" onchange="if(typeof updateStudioTotalCostLive === 'function') updateStudioTotalCostLive()">
+                                            <div class="flex items-center gap-1.5 justify-center">
+                                                <i class="fa-solid fa-compact-disc text-amber-500 text-sm"></i>
+                                                <span class="text-xs font-bold text-slate-700">อัลบั้มเต็ม</span>
+                                            </div>
+                                            <span class="text-[9px] text-slate-400 font-medium mt-1">ต้นทุน ฿120k</span>
+                                        </label>
+
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     </div>
 
-                    <!-- คอลัมน์ 2: การจ้างงานบุคลากร -->
-                    <div class="modern-panel p-4 bg-white/95 border border-slate-200/80 shadow-sm rounded-xl space-y-4 flex flex-col">
+                    <div class="modern-panel p-4 bg-white/95 border border-slate-200/80 shadow-sm rounded-xl space-y-3 flex flex-col">
                         <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 border-b pb-2">
-                            <i class="fa-solid fa-user-tie text-blue-500"></i> 2. การจ้างงานทีมผลิต
+                            <i class="fa-solid fa-users text-blue-500"></i> 2. การจ้างงานทีมผลิต
                         </h3>
-                        <p class="text-[10px] text-slate-400 leading-relaxed -mt-2">เลือกทีมงานคุณภาพ เกรดผลงานยิ่งสูง ต้นทุนยิ่งแพง</p>
+                        <p class="text-[10px] text-slate-400 leading-relaxed -mt-1">เลือกผู้เชี่ยวชาญเพื่อเพิ่มคุณภาพระดับผลงาน</p>
 
                         <div class="flex-grow space-y-3">
                             <div>
@@ -336,48 +373,66 @@
                         </h3>
                         <p class="text-[10px] text-slate-400 leading-relaxed -mt-1">เลือกของแถม/อีเวนต์ เพื่อกระตุ้นยอดขาย</p>
                         
-                        <div class="flex-grow space-y-2 pt-1 overflow-y-auto custom-scrollbar pr-1 max-h-[250px]">
+                        <div class="flex-grow space-y-2 pt-1 overflow-y-auto custom-scrollbar pr-1 max-h-[280px]">
                             <label class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer transition-colors has-[:checked]:bg-pink-100 has-[:checked]:border-pink-500 hover:bg-pink-50">
                                 <div class="flex items-center gap-2">
-                                    <input type="checkbox" id="merch-photo" class="sr-only">
-                                    <span class="text-[11px] font-bold text-slate-700">📸 รูปสุ่ม (Photoset)</span>
+                                    <input type="checkbox" id="merch-handshake" class="sr-only" onchange="if(typeof updateStudioTotalCostLive === 'function') updateStudioTotalCostLive()">
+                                    <span class="text-[11px] font-bold text-slate-700">🤝 บัตรจับมือ (Handshake)</span>
                                 </div>
                                 <span class="text-[9px] text-pink-600 bg-pink-100/70 px-1.5 py-0.5 rounded font-bold">+ ฿5,000</span>
                             </label>
-                            
+
                             <label class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer transition-colors has-[:checked]:bg-pink-100 has-[:checked]:border-pink-500 hover:bg-pink-50">
                                 <div class="flex items-center gap-2">
-                                    <input type="checkbox" id="merch-calendar" class="sr-only">
-                                    <span class="text-[11px] font-bold text-slate-700">📅 ปฏิทิน (Calendar)</span>
+                                    <input type="checkbox" id="merch-2shot" class="sr-only" onchange="if(typeof updateStudioTotalCostLive === 'function') updateStudioTotalCostLive()">
+                                    <span class="text-[11px] font-bold text-slate-700">✌️ บัตรถ่ายรูปคู่ (2-Shot)</span>
                                 </div>
                                 <span class="text-[9px] text-pink-600 bg-pink-100/70 px-1.5 py-0.5 rounded font-bold">+ ฿10,000</span>
                             </label>
 
                             <label class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer transition-colors has-[:checked]:bg-pink-100 has-[:checked]:border-pink-500 hover:bg-pink-50">
                                 <div class="flex items-center gap-2">
-                                    <input type="checkbox" id="merch-handshake" class="sr-only">
-                                    <span class="text-[11px] font-bold text-slate-700">🤝 บัตรจับมือ (Handshake)</span>
+                                    <input type="checkbox" id="merch-photo" class="sr-only" onchange="if(typeof updateStudioTotalCostLive === 'function') updateStudioTotalCostLive()">
+                                    <span class="text-[11px] font-bold text-slate-700">📸 รูปสุ่ม (Photoset)</span>
                                 </div>
                                 <span class="text-[9px] text-pink-600 bg-pink-100/70 px-1.5 py-0.5 rounded font-bold">+ ฿15,000</span>
                             </label>
 
                             <label class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer transition-colors has-[:checked]:bg-pink-100 has-[:checked]:border-pink-500 hover:bg-pink-50">
                                 <div class="flex items-center gap-2">
-                                    <input type="checkbox" id="merch-2shot" class="sr-only">
-                                    <span class="text-[11px] font-bold text-slate-700">✌️ บัตรถ่ายรูปคู่ (2-Shot)</span>
+                                    <input type="checkbox" id="merch-plushie" class="sr-only" onchange="if(typeof updateStudioTotalCostLive === 'function') updateStudioTotalCostLive()">
+                                    <span class="text-[11px] font-bold text-slate-700">🧸 ตุ๊กตา (Plushie)</span>
                                 </div>
                                 <span class="text-[9px] text-pink-600 bg-pink-100/70 px-1.5 py-0.5 rounded font-bold">+ ฿20,000</span>
                             </label>
 
                             <label class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer transition-colors has-[:checked]:bg-pink-100 has-[:checked]:border-pink-500 hover:bg-pink-50">
                                 <div class="flex items-center gap-2">
-                                    <input type="checkbox" id="merch-plushie" class="sr-only">
-                                    <span class="text-[11px] font-bold text-slate-700">🧸 ตุ๊กตา (Plushie)</span>
+                                    <input type="checkbox" id="merch-calendar" class="sr-only" onchange="if(typeof updateStudioTotalCostLive === 'function') updateStudioTotalCostLive()">
+                                    <span class="text-[11px] font-bold text-slate-700">📅 ปฏิทิน (Calendar)</span>
                                 </div>
                                 <span class="text-[9px] text-pink-600 bg-pink-100/70 px-1.5 py-0.5 rounded font-bold">+ ฿25,000</span>
                             </label>
                         </div>
                     </div>
+
+                </div>
+
+                <script>
+                function previewAlbumCover(input) {
+                    const preview = document.getElementById('album-cover-preview');
+                    const placeholder = document.getElementById('album-cover-placeholder');
+                    if (input.files && input.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            preview.src = e.target.result;
+                            preview.classList.remove('hidden');
+                            placeholder.classList.add('hidden');
+                        }
+                        reader.readAsDataURL(input.files[0]);
+                    }
+                }
+                </script>
 
                     <!-- ปุ่มดำเนินการต่อ -->
                     <div class="col-span-1 lg:col-span-3 mt-2">
