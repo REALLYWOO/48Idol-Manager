@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>48Idol Manager - Audition & Group Master</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Prompt', sans-serif; color: #334155; overflow-x: hidden; background-color: #cbd5e1; }
+        .heading-font { font-weight: 700; letter-spacing: 0.02em; }
+        .modern-btn { background-color: #ffffff; color: #475569; border: 1px solid #cbd5e1; border-radius: 8px; font-family: 'Prompt', sans-serif; font-size: 13px; font-weight: 600; padding: 8px 16px; cursor: pointer; transition: all 0.2s ease; }
+        .modern-btn:hover:not(:disabled) { background-color: #f1f5f9; transform: translateY(-1px); }
+        .modern-btn:active:not(:disabled) { transform: translateY(0); }
+        .modern-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .modern-btn-primary { background-color: #ec4899; color: white; border-color: #db2777; }
+        .modern-btn-primary:hover:not(:disabled) { background-color: #db2777; }
+        .modern-btn-success { background-color: #10b981; color: white; border-color: #059669; }
+        .modern-btn-success:hover:not(:disabled) { background-color: #059669; }
+        .modern-btn-info { background-color: #0ea5e9; color: white; border-color: #0284c7; }
+        .modern-btn-info:hover:not(:disabled) { background-color: #0284c7; }
+        
+        .modern-panel { background-color: rgba(255, 255, 255, 0.95); border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); backdrop-filter: blur(8px); }
+        .modern-input { background-color: #f8fafc; color: #334155; border: 1px solid #cbd5e1; border-radius: 6px; font-family: 'Prompt', sans-serif; font-size: 13px; padding: 8px; width: 100%; transition: border-color 0.2s; }
+        
+        @keyframes moveCity {
+            from { background-position: 0 center; }
+            to { background-position: -1920px center; }
+        }
+
+        .city-bg { 
+            position: fixed; 
+            top: 0; left: 0; right: 0; bottom: 0; 
+            z-index: -2; 
+            background: url('https://jumpshare.com/v/NSYL8aeQEnKxurpmhuSi+') repeat-x center;
+            background-size: auto 100%; 
+            animation: moveCity 60s linear infinite; 
+        }
+        
+        .city-skyline { display: none; }
+
+        .grade-F { background-color: #9ca3af; color: white; border-color: #6b7280; }
+        .grade-D { background-color: #60a5fa; color: white; border-color: #3b82f6; }
+        .grade-C { background-color: #d1d5db; color: #374151; border-color: #9ca3af; }
+        .grade-B { background-color: #34d399; color: white; border-color: #10b981; }
+        .grade-A { background-color: #f87171; color: white; border-color: #ef4444; }
+        .grade-S { background-color: #fbbf24; color: #78350f; border-color: #f59e0b; }
+        
+        .check-container input:checked + div { border-color: #ec4899; background-color: #fdf2f8; }
+        
+        .group-flag { display: block; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); transition: all 0.3s ease; }
+        .group-tab-btn.active { border-bottom: 2px solid #ec4899; color: #ec4899; font-weight: bold; }
+        
+        /* Custom Scrollbar for Memeber List */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between overflow-x-hidden relative">
+
+    <div class="city-bg"><div class="city-skyline"></div></div>
+
+    <div id="msg-modal" class="fixed inset-0 bg-slate-900/70 z-[300] flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="modern-panel w-full max-w-sm p-6 text-center border-t-4 border-t-pink-500 shadow-2xl">
+            <h3 id="msg-title" class="heading-font text-pink-600 mb-2 uppercase tracking-wider text-sm">SYSTEM</h3>
+            <p id="msg-text" class="text-sm text-slate-700 mb-6 leading-relaxed whitespace-pre-line"></p>
+            <button onclick="document.getElementById('msg-modal').classList.add('hidden')" class="modern-btn modern-btn-primary w-full">ตกลง</button>
+        </div>
+    </div>
+
+    <div id="setup-modal" class="fixed inset-0 bg-white/95 z-[200] flex items-center justify-center p-4 backdrop-blur-md hidden">
+        <div class="modern-panel w-full max-w-md p-8 shadow-2xl border border-slate-200 text-center">
+            <h1 class="heading-font text-3xl text-pink-600 mb-6">48IDOL MANAGER</h1>
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="text-xs font-bold text-slate-500 mb-1 block">ชื่อบริษัท (ตั้งใหม่กรณีสร้างค่ายใหม่)</label>
+                    <input type="text" id="agency-name-input" class="modern-input text-lg font-bold">
+                </div>
+            </div>
+            <div id="setup-buttons-container" class="mt-6 flex flex-col gap-3"></div>
+        </div>
+    </div>
+
+    <header class="modern-panel m-4 px-6 py-3 flex flex-wrap justify-between items-center gap-4 z-10 relative bg-white/95 border border-slate-200">
+        <div class="flex items-center gap-4">
+            <div class="bg-pink-100 text-pink-600 w-12 h-12 flex items-center justify-center rounded-xl shadow-sm"><i class="fa-solid fa-building text-2xl"></i></div>
+            <div>
+                <h1 id="display-agency-name" class="font-bold text-lg text-slate-800 tracking-wide">---</h1>
+                <p class="text-[10px] text-pink-500 font-bold tracking-wider">
+                    GENERAL MANAGER 
+                    <span class="text-slate-300 font-normal mx-1.5">|</span> 
+                    <span class="text-slate-500"><i class="fa-solid fa-hourglass-half mr-1"></i>อายุค่าย: <span id="stat-company-age" class="text-slate-700 font-bold">น้อยกว่า 1 เดือน</span></span>
+                </p>
+            </div>
+        </div>
+        
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="saveGame()" class="bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-lg px-3 py-1.5 flex items-center gap-2 hover:bg-indigo-100 hover:shadow-sm transition-all">
+                <i class="fa-solid fa-floppy-disk text-lg"></i>
+                <span class="text-xs font-bold hidden sm:inline">บันทึกเกม</span>
+            </button>
+            <div class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                <i class="fa-solid fa-calendar-days text-slate-400"></i>
+                <div class="text-right"><p class="text-[9px] text-slate-500 font-bold">DATE</p><p class="text-xs font-bold" id="stat-date">1 ม.ค. 2026</p></div>
+            </div>
+            <div class="bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                <i class="fa-solid fa-coins text-amber-500"></i>
+                <div class="text-right"><p class="text-[9px] text-amber-600 font-bold">FUNDS</p><p class="text-xs font-bold text-amber-600">฿<span id="stat-cash">150,000</span></p></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow px-4 pb-4 grid grid-cols-1 lg:grid-cols-5 gap-4 max-w-[1500px] mx-auto w-full relative z-10">
+        <section class="lg:col-span-1 flex flex-col gap-3">
+            <div class="modern-panel p-3 bg-white/95">
+                <nav class="flex flex-col gap-2">
+                    <button id="tab-btn-idols" onclick="switchTab('idols')" class="modern-btn flex items-center justify-start gap-3"><i class="fa-solid fa-address-book w-5"></i><span>เมมเบอร์ (เด็กฝึก)</span></button>
+                    <button id="tab-btn-audition" onclick="switchTab('audition')" class="modern-btn flex items-center justify-start gap-3"><i class="fa-solid fa-microphone-lines w-5"></i><span>ออดิชั่น (Audition)</span></button>
+                    <button id="tab-btn-groups" onclick="switchTab('groups')" class="modern-btn flex items-center justify-start gap-3"><i class="fa-solid fa-layer-group w-5"></i><span>การจัดการวง</span></button>
+                    
+                    <button id="tab-btn-music-studio" onclick="switchTab('music-studio')" class="modern-btn flex items-center justify-start gap-3">
+                        <i class="fa-solid fa-compact-disc w-5 text-pink-500"></i>
+                        <span>สตูดิโอผลิตเพลง</span>
+                    </button>
+                </nav>
+            </div>
+            <div class="modern-panel p-3 bg-white/95 mt-auto shadow-md">
+                <button onclick="advanceTime()" class="modern-btn modern-btn-primary w-full py-3 text-sm flex items-center justify-center gap-2 shadow"><i class="fa-solid fa-forward-step"></i><span>ข้ามสัปดาห์</span></button>
+            </div>
+        </section>
+
+        <section class="lg:col-span-4 flex flex-col gap-4">
+            
+            <!-- TAB IDOLS -->
+            <div id="tab-content-idols" class="hidden space-y-4">
+                <div class="modern-panel p-5 bg-white/95 shadow-md">
+                    <div class="flex justify-between items-center border-b border-slate-200 pb-3 mb-4">
+                        <h2 class="text-lg text-slate-800 font-bold"><i class="fa-solid fa-user-group mr-2 text-pink-500"></i> เมมเบอร์ในค่ายทั้งหมด</h2>
+                        <span class="text-xs text-slate-400 font-medium">*รับเด็กฝึกเพิ่มได้จากระบบออดิชั่น</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="idol-cards-container"></div>
+                </div>
+            </div>
+
+            <!-- TAB AUDITION -->
+            <div id="tab-content-audition" class="hidden space-y-4">
+                <div class="modern-panel p-5 bg-white/95 shadow-md">
+                    <h2 class="text-lg text-slate-800 font-bold border-b border-slate-200 pb-3 mb-6"><i class="fa-solid fa-microphone-lines mr-2 text-pink-500"></i> เปิดออดิชั่นค้นหาเด็กฝึก (Audition)</h2>
+                    
+                    <div id="audition-options" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="border border-slate-200 rounded-xl p-5 bg-white flex flex-col justify-between shadow-sm">
+                            <div>
+                                <span class="bg-slate-100 text-slate-600 font-bold text-[10px] px-2 py-0.5 rounded uppercase">ระดับทั่วไป</span>
+                                <h3 class="font-bold text-slate-700 text-base mt-2 mb-1">Local Audition</h3>
+                                <p class="text-xs text-slate-500 mb-6">ค้นหาเด็กฝึกในพื้นที่ใกล้เคียง มีโอกาสเจอเกรด <span class="font-bold">F ถึง B</span> (สุ่มผู้สมัคร 3 คน)</p>
+                            </div>
+                            <button onclick="startAudition('local')" class="modern-btn modern-btn-primary w-full text-xs py-2.5">ลงทุน ฿5,000</button>
+                        </div>
+                        
+                        <div class="border border-blue-200 rounded-xl p-5 bg-white flex flex-col justify-between shadow-sm relative overflow-hidden">
+                            <div class="absolute right-0 top-0 bg-blue-500 text-white text-[9px] font-bold px-2 py-0.5 uppercase tracking-wide rounded-bl shadow-sm">แนะนำ</div>
+                            <div>
+                                <span class="bg-blue-50 text-blue-600 font-bold text-[10px] px-2 py-0.5 rounded uppercase">ระดับภูมิภาค</span>
+                                <h3 class="font-bold text-blue-700 text-base mt-2 mb-1">Regional Audition</h3>
+                                <p class="text-xs text-slate-500 mb-6">ขยายขอบเขตการค้นหาทั่วประเทศ มีโอกาสเจอเกรด <span class="font-bold">D ถึง A</span> (สุ่มผู้สมัคร 4 คน)</p>
+                            </div>
+                            <button onclick="startAudition('regional')" class="modern-btn modern-btn-info w-full text-xs py-2.5">ลงทุน ฿15,000</button>
+                        </div>
+                        
+                        <div class="border border-amber-200 rounded-xl p-5 bg-white flex flex-col justify-between shadow-sm">
+                            <div>
+                                <span class="bg-amber-50 text-amber-600 font-bold text-[10px] px-2 py-0.5 rounded uppercase">ระดับประเทศ</span>
+                                <h3 class="font-bold text-amber-700 text-base mt-2 mb-1">National Elite</h3>
+                                <p class="text-xs text-slate-500 mb-6">จัดออดิชั่นใหญ่ระดับประเทศ คัดเพชรเม็ดงามเกรด <span class="font-bold">C ถึง S</span> (สุ่มผู้สมัคร 4 คน)</p>
+                            </div>
+                            <button onclick="startAudition('national')" class="modern-btn modern-btn-success w-full text-xs py-2.5">ลงทุน ฿40,000</button>
+                        </div>
+                    </div>
+
+                    <div id="audition-results" class="hidden space-y-4 animate-[fadeIn_0.2s_ease-out]">
+                        <div class="flex justify-between items-center bg-pink-50 border border-pink-100 p-3 rounded-lg">
+                            <span class="text-xs font-bold text-pink-700"><i class="fa-solid fa-circle-info mr-1"></i> พบผู้สมัครที่ผ่านเกณฑ์เบื้องต้น กรุณาพิจารณาใบสมัครด้านล่าง</span>
+                            <button onclick="cancelAuditionPool()" class="text-xs text-slate-400 hover:text-slate-600 underline">ยกเลิกใบสมัครทั้งหมด</button>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="audition-candidates-container"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB GROUPS -->
+            <div id="tab-content-groups" class="hidden space-y-4">
+                <div class="modern-panel p-5 bg-white/95 shadow-md min-h-[500px]" id="group-dynamic-container"></div>
+            </div>
+
+            <!-- TAB MUSIC STUDIO -->
+        <div id="tab-content-music-studio" class="hidden space-y-6">
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="md:col-span-2 modern-panel py-2.5 px-5 bg-gradient-to-r from-indigo-900 to-purple-900 text-white shadow-lg rounded-2xl flex items-center justify-between">
+                        <div>
+                            <h2 class="text-lg font-extrabold tracking-wide flex items-center gap-2">
+                                <i class="fa-solid fa-compact-disc animate-spin-slow text-pink-400"></i>
+                                MUSIC PRODUCTION STUDIO
+                            </h2>
+                            <p class="text-[11px] text-indigo-200 mt-0.5">วางแผนกลยุทธ์ ผลิตผลงานเพลง และส่งต่อความสุขให้แฟนคลับ</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] uppercase font-bold tracking-wider bg-pink-500/30 text-pink-300 px-2.5 py-0.5 rounded-full border border-pink-400/20">ท่านประธานควบคุม</span>
+                        </div>
+                    </div>
+
+                    <div class="modern-panel py-2.5 px-5 bg-white border border-slate-200 shadow-lg rounded-2xl flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600">
+                                <i class="fa-solid fa-calculator text-sm"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-xs text-slate-700 leading-tight">ประมาณการทำเพลง</h3>
+                                <p class="text-[10px] text-slate-400">รวมค่าผลิต ทีมงาน และการตลาด</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span id="studio-total-cost-display" class="text-base font-black text-emerald-600">฿0</span>
+                            <p class="text-[9px] text-slate-400 font-medium leading-none mt-0.5">อัปเดตเรียลไทม์</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= STEP 1: วางแผนโปรเจกต์ 3 คอลัมน์ ================= -->
+                <div id="studio-step-1" class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-[fadeIn_0.3s_ease-out]">
+                    
+                    <!-- คอลัมน์ 1: ตั้งค่าโปรเจกต์ -->
+                    <div class="modern-panel p-4 bg-white/95 border border-slate-200/80 shadow-sm rounded-xl space-y-4 flex flex-col">
+                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 border-b pb-2">
+                            <i class="fa-solid fa-sliders text-indigo-500"></i> 1. ตั้งค่าโปรเจกต์
+                        </h3>
+                        
+                        <div class="flex-grow space-y-4">
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-600 block mb-1">ชื่อเพลง / ชื่อซิงเกิลหลัก <span class="text-red-500">*</span></label>
+                                <input type="text" id="music-title" class="modern-input w-full font-bold text-slate-700" placeholder="ระบุชื่อเพลง...">
+                            </div>
+
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-600 block mb-1.5">ประเภทผลงาน</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="flex flex-col p-2 bg-slate-50 border rounded-xl cursor-pointer hover:bg-slate-100 transition-colors text-center">
+                                        <input type="radio" name="release-type" value="single" class="sr-only" checked>
+                                        <span class="font-bold text-xs text-slate-700">💿 ซิงเกิล</span>
+                                        <span class="text-[9px] text-slate-400 mt-0.5">ต้นทุน ฿25k</span>
+                                    </label>
+                                    <label class="flex flex-col p-2 bg-slate-50 border rounded-xl cursor-pointer hover:bg-slate-100 transition-colors text-center">
+                                        <input type="radio" name="release-type" value="album" class="sr-only">
+                                        <span class="font-bold text-xs text-slate-700">📀 อัลบั้มเต็ม</span>
+                                        <span class="text-[9px] text-slate-400 mt-0.5">ต้นทุน ฿120k</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-600 block mb-1">แนวทาง/คอนเซปต์เพลง</label>
+                                <select id="music-concept" class="modern-input w-full text-xs font-medium text-slate-700 bg-white">
+                                    <option value="cute">🌸 น่ารัก สดใส (เน้นค่าเสน่ห์)</option>
+                                    <option value="cool">🔥 เท่ ดุดัน (เน้นค่าเต้น)</option>
+                                    <option value="vocal">🎤 ทรงพลัง โชว์เสียง (เน้นค่าร้อง)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- คอลัมน์ 2: การจ้างงานบุคลากร -->
+                    <div class="modern-panel p-4 bg-white/95 border border-slate-200/80 shadow-sm rounded-xl space-y-4 flex flex-col">
+                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 border-b pb-2">
+                            <i class="fa-solid fa-user-tie text-blue-500"></i> 2. การจ้างงานทีมผลิต
+                        </h3>
+                        <p class="text-[10px] text-slate-400 leading-relaxed -mt-2">เลือกทีมงานคุณภาพ เกรดผลงานยิ่งสูง ต้นทุนยิ่งแพง</p>
+
+                        <div class="flex-grow space-y-3">
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-600 block mb-1">✍️ นักแต่งเพลง (Songwriter)</label>
+                                <select id="hire-songwriter" class="modern-input text-xs font-medium text-slate-700 bg-white">
+                                    <option value="2000">Grade F (เด็กฝึกงาน) - ฿2,000</option>
+                                    <option value="5000">Grade D (มือสมัครเล่น) - ฿5,000</option>
+                                    <option value="10000" selected>Grade C (มาตรฐาน) - ฿10,000</option>
+                                    <option value="20000">Grade B (มืออาชีพ) - ฿20,000</option>
+                                    <option value="40000">Grade A (นักแต่งเพลงดัง) - ฿40,000</option>
+                                    <option value="80000">Grade S (ระดับปรมาจารย์) - ฿80,000</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-600 block mb-1">🎧 คนทำดนตรี (Producer)</label>
+                                <select id="hire-composer" class="modern-input text-xs font-medium text-slate-700 bg-white">
+                                    <option value="2000">Grade F (บีทฟรีอินเทอร์เน็ต) - ฿2,000</option>
+                                    <option value="5000">Grade D (นักศึกษาดนตรี) - ฿5,000</option>
+                                    <option value="10000" selected>Grade C (มาตรฐาน) - ฿10,000</option>
+                                    <option value="20000">Grade B (สตูดิโออาชีพ) - ฿20,000</option>
+                                    <option value="40000">Grade A (โปรดิวเซอร์ดัง) - ฿40,000</option>
+                                    <option value="80000">Grade S (ระดับอินเตอร์) - ฿80,000</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-600 block mb-1">💃 ออกแบบท่าเต้น (Choreographer)</label>
+                                <select id="hire-choreographer" class="modern-input text-xs font-medium text-slate-700 bg-white">
+                                    <option value="2000">Grade F (คิดท่าเอง) - ฿2,000</option>
+                                    <option value="5000">Grade D (ครูสอนเต้นอิสระ) - ฿5,000</option>
+                                    <option value="10000" selected>Grade C (มาตรฐาน) - ฿10,000</option>
+                                    <option value="20000">Grade B (นักออกแบบอาชีพ) - ฿20,000</option>
+                                    <option value="40000">Grade A (ทีมเต้นชื่อดัง) - ฿40,000</option>
+                                    <option value="80000">Grade S (นักเต้นระดับโลก) - ฿80,000</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-600 block mb-1">🎬 ผู้อำนวยการสร้าง (MV Director)</label>
+                                <select id="hire-mv" class="modern-input text-xs font-medium text-slate-700 bg-white">
+                                    <option value="2000">Grade F (ใช้มือถือถ่าย) - ฿2,000</option>
+                                    <option value="5000">Grade D (ช่างภาพอิสระ) - ฿5,000</option>
+                                    <option value="10000" selected>Grade C (โปรดักชั่นเล็ก) - ฿10,000</option>
+                                    <option value="20000">Grade B (บริษัทสื่อมาตรฐาน) - ฿20,000</option>
+                                    <option value="40000">Grade A (ผู้กำกับภาพยนตร์) - ฿40,000</option>
+                                    <option value="80000">Grade S (โปรดักชั่นสากล) - ฿80,000</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- คอลัมน์ 3: กลยุทธ์การตลาด -->
+                    <div class="modern-panel p-4 bg-white/95 border border-slate-200/80 shadow-sm rounded-xl space-y-3 flex flex-col">
+                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 border-b pb-2">
+                            <i class="fa-solid fa-gift text-pink-500"></i> 3. กลยุทธ์การตลาด
+                        </h3>
+                        <p class="text-[10px] text-slate-400 leading-relaxed -mt-1">เลือกของแถม/อีเวนต์ เพื่อกระตุ้นยอดขาย</p>
+                        
+                        <div class="flex-grow space-y-2 pt-1 overflow-y-auto custom-scrollbar pr-1 max-h-[250px]">
+                            <label class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer transition-colors has-[:checked]:bg-pink-100 has-[:checked]:border-pink-500 hover:bg-pink-50">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="merch-photo" class="sr-only">
+                                    <span class="text-[11px] font-bold text-slate-700">📸 รูปสุ่ม (Photoset)</span>
+                                </div>
+                                <span class="text-[9px] text-pink-600 bg-pink-100/70 px-1.5 py-0.5 rounded font-bold">+ ฿5,000</span>
+                            </label>
+                            
+                            <label class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer transition-colors has-[:checked]:bg-pink-100 has-[:checked]:border-pink-500 hover:bg-pink-50">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="merch-calendar" class="sr-only">
+                                    <span class="text-[11px] font-bold text-slate-700">📅 ปฏิทิน (Calendar)</span>
+                                </div>
+                                <span class="text-[9px] text-pink-600 bg-pink-100/70 px-1.5 py-0.5 rounded font-bold">+ ฿10,000</span>
+                            </label>
+
+                            <label class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer transition-colors has-[:checked]:bg-pink-100 has-[:checked]:border-pink-500 hover:bg-pink-50">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="merch-handshake" class="sr-only">
+                                    <span class="text-[11px] font-bold text-slate-700">🤝 บัตรจับมือ (Handshake)</span>
+                                </div>
+                                <span class="text-[9px] text-pink-600 bg-pink-100/70 px-1.5 py-0.5 rounded font-bold">+ ฿15,000</span>
+                            </label>
+
+                            <label class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer transition-colors has-[:checked]:bg-pink-100 has-[:checked]:border-pink-500 hover:bg-pink-50">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="merch-2shot" class="sr-only">
+                                    <span class="text-[11px] font-bold text-slate-700">✌️ บัตรถ่ายรูปคู่ (2-Shot)</span>
+                                </div>
+                                <span class="text-[9px] text-pink-600 bg-pink-100/70 px-1.5 py-0.5 rounded font-bold">+ ฿20,000</span>
+                            </label>
+
+                            <label class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer transition-colors has-[:checked]:bg-pink-100 has-[:checked]:border-pink-500 hover:bg-pink-50">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="merch-plushie" class="sr-only">
+                                    <span class="text-[11px] font-bold text-slate-700">🧸 ตุ๊กตา (Plushie)</span>
+                                </div>
+                                <span class="text-[9px] text-pink-600 bg-pink-100/70 px-1.5 py-0.5 rounded font-bold">+ ฿25,000</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- ปุ่มดำเนินการต่อ -->
+                    <div class="col-span-1 lg:col-span-3 mt-2">
+                        <button onclick="goToSenbatsuStep()" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-sm font-bold py-3.5 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                            ถัดไป: เข้าสู่การคัดเลือกเซ็มบัตสึและเซ็นเตอร์ <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ================= STEP 2: เลือกเซ็มบัตสึ (ซ่อนไว้ตอนแรก) ================= -->
+                <div id="studio-step-2" class="hidden flex-col space-y-4 animate-[fadeIn_0.3s_ease-out]">
+                    <div class="flex items-center justify-between">
+                        <button onclick="goToPlanningStep()" class="modern-btn py-1.5 text-xs bg-slate-50 hover:bg-slate-100">
+                            <i class="fa-solid fa-arrow-left mr-1"></i> ย้อนกลับไปตั้งค่าโปรเจกต์
+                        </button>
+                    </div>
+
+                    <div class="modern-panel p-5 bg-white/95 border border-slate-200/80 shadow-md rounded-xl flex-grow flex flex-col min-h-[500px]">
+                        <div class="flex justify-between items-center border-b border-slate-200 pb-3 mb-4">
+                            <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-users text-amber-500 text-lg"></i> 4. คัดเลือกเซ็มบัตสึ และ เซ็นเตอร์ (Senbatsu)
+                            </h3>
+                            <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-100 shadow-sm" id="senbatsu-count">เลือกแล้ว: 0 คน</span>
+                        </div>
+                        
+                        <!-- พื้นที่แสดงรายชื่อที่ถูกเลือก (Preview) -->
+                        <div class="mb-4 border border-slate-200 bg-slate-50/50 rounded-xl p-3 min-h-[100px] shadow-inner">
+                            <div class="text-xs font-bold text-slate-500 mb-2">รูปแบบฟอร์เมชั่น (เรียงตามลำดับที่เลือก)</div>
+                            <div id="studio-selected-preview" class="flex gap-3 overflow-x-auto custom-scrollbar pb-2 pt-1 px-1">
+                                <!-- จะถูกสร้างด้วย JS -->
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 flex-grow">
+                            <!-- ส่วนกรองวง (Group Filter) -->
+                            <div class="col-span-1 lg:col-span-1 border-r border-slate-100 pr-2">
+                                <div class="text-xs font-bold text-slate-600 mb-2 bg-slate-100 p-2 rounded">ตัวกรองวง (Filter)</div>
+                                <div id="studio-group-filter" class="flex flex-col gap-2 overflow-y-auto custom-scrollbar max-h-[300px]">
+                                    <!-- จะถูกสร้างด้วย JS -->
+                                </div>
+                            </div>
+
+                            <!-- รายชื่อเมมเบอร์ให้เลือก -->
+                            <div class="col-span-1 lg:col-span-3">
+                                <div class="text-xs font-bold text-slate-600 mb-2 bg-slate-100 p-2 rounded">รายชื่อเมมเบอร์ (คลิกที่ช่องเพื่อเลือกเข้าเซ็มบัตสึ)</div>
+                                <div id="studio-member-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2 overflow-y-auto max-h-[350px] custom-scrollbar pr-2">
+                                    <!-- จะถูกสร้างด้วย JS -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-slate-200">
+                            <button onclick="startSongProduction()" class="w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white text-base font-bold py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 transform hover:-translate-y-1">
+                                <i class="fa-solid fa-play text-xl"></i> ยืนยันการชำระเงิน ผลิตและวางจำหน่ายทันที
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+    </main>
+
+    <div id="action-modal" class="fixed inset-0 bg-slate-900/60 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="modern-panel w-full max-w-2xl p-6 shadow-2xl flex flex-col max-h-[90vh]">
+            <h3 id="am-title" class="text-base text-pink-600 font-bold mb-4 border-b pb-2">Title</h3>
+            <div id="am-content" class="space-y-4 overflow-y-auto pr-2 flex-grow custom-scrollbar"></div>
+            <div class="flex justify-end gap-2 mt-4 pt-3 border-t">
+                <button onclick="document.getElementById('action-modal').classList.add('hidden')" class="modern-btn text-xs">ยกเลิก</button>
+                <button id="am-confirm-btn" class="modern-btn modern-btn-success text-xs font-bold">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Utilities
+        function showMsg(title, text) { document.getElementById('msg-title').innerText = title; document.getElementById('msg-text').innerText = text; document.getElementById('msg-modal').classList.remove('hidden'); }
+        function getGradeClass(g) { return `grade-${g}`; }
+        function generateId() { return Math.random().toString(36).substr(2, 9); }
+        
+        function getFlagInnerHtml(name) {
+            if(!name) return '';
+            const charCount = Math.max(name.length, 3);
+            const fallbackSize = Math.min(Math.max(14, (172 / charCount) * 1.4), 64);
+            return `
+                <div class="w-full h-full flex items-center justify-center text-center font-black p-2 break-words" 
+                    style="container-type: inline-size; text-shadow: 0px 2px 4px rgba(0,0,0,0.6);">
+                    <span style="font-size: ${fallbackSize}px; font-size: clamp(14px, calc(100cqw / ${charCount} * 1.4), 64px); line-height: 1.15;">
+                        ${name}
+                    </span>
+                </div>
+            `;
+        }
+
+        function getFlagCssStr(flagObj) {
+            let css = `color: ${flagObj.text}; `;
+            if (flagObj.type === 'gradient') {
+                let bg = flagObj.color1;
+                if(flagObj.color1 !== flagObj.color2) {
+                    if(flagObj.dir === 'radial') bg = `radial-gradient(circle, ${flagObj.color1}, ${flagObj.color2})`;
+                    else bg = `linear-gradient(${flagObj.dir}, ${flagObj.color1}, ${flagObj.color2})`;
+                }
+                css += `background: ${bg};`;
+            } else if (flagObj.type === 'pattern') {
+                if (flagObj.patType === 'dots') {
+                    css += `background-color: ${flagObj.color1}; background-image: radial-gradient(${flagObj.color2} 15%, transparent 16%), radial-gradient(${flagObj.color2} 15%, transparent 16%); background-size: 20px 20px; background-position: 0 0, 10px 10px;`;
+                } else if (flagObj.patType === 'stripes') {
+                    css += `background: repeating-linear-gradient(180deg, ${flagObj.color1}, ${flagObj.color1} 10px, ${flagObj.color2} 10px, ${flagObj.color2} 20px);`;
+                }
+            } else if (flagObj.type === 'image') {
+                let img = flagObj.imgBase64 || '';
+                css += `background: url(${img}) center/cover no-repeat;`;
+            }
+            return css;
+        }
+
+        function getGroupFlagCss(g) {
+            if(g.flag) return getFlagCssStr(g.flag);
+            let bg = g.flagBg2 ? `linear-gradient(180deg, ${g.flagBg}, ${g.flagBg2})` : (g.flagBg || '#f472b6');
+            return `background: ${bg}; color: ${g.flagText || '#ffffff'};`;
+        }
+
+        function generatePixelAvatar() {
+            let canvas = document.createElement('canvas');
+            canvas.width = 64; canvas.height = 64;
+            let ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#f1f5f9'; ctx.fillRect(0, 0, 64, 64);
+            ctx.fillStyle = '#9ca3af';
+            ctx.beginPath(); ctx.arc(32, 22, 12, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(32, 64, 24, Math.PI, 0); ctx.fill();
+            return canvas.toDataURL();
+        }
+
+        function formatContract(weeks) {
+            let totalMonths = Math.ceil(weeks / 4);
+            let yrs = Math.floor(totalMonths / 12);
+            let mos = totalMonths % 12;
+            let str = "";
+            if (yrs > 0) str += `${yrs} ปี `;
+            if (mos > 0) str += `${mos} เดือน`;
+            if (str === "") str = "หมดสัญญา";
+            return str;
+        }
+
+        const SAVE_KEY = 'CompanyIdolManager_SaveData';
+        let currentDate = new Date(2026, 0, 1);
+        let state = { agencyName: "", cash: 150000, week: 1, idols: [], groups: [], activeGroupId: null, currentDateValue: currentDate.getTime(), auditionPool: [] };
+        
+        // --- STUDIO STATE ---
+        let studioState = { groupId: null, senbatsu: [], center: null };
+
+        // --- SAVE / LOAD ---
+        function initSetupScreen() {
+            const hasSave = localStorage.getItem(SAVE_KEY);
+            const btnContainer = document.getElementById('setup-buttons-container');
+            let html = ``;
+            if(hasSave) {
+                html += `<button onclick="loadGame()" class="modern-btn modern-btn-success w-full text-base py-3 shadow-md flex items-center justify-center gap-2"><i class="fa-solid fa-folder-open"></i> โหลดเกมที่บันทึกไว้</button>
+                         <div class="flex items-center gap-4 py-2"><div class="flex-grow border-t"></div><span class="text-xs text-slate-400">หรือ</span><div class="flex-grow border-t"></div></div>`;
+            }
+            html += `<button onclick="startGame()" class="modern-btn modern-btn-primary w-full text-base py-3 shadow-md">ก่อตั้งบริษัทใหม่ <i class="fa-solid fa-play ml-2"></i></button>`;
+            btnContainer.innerHTML = html;
+            document.getElementById('setup-modal').classList.remove('hidden');
+        }
+
+        function saveGame() {
+            state.currentDateValue = currentDate.getTime();
+            try {
+                localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+                showMsg('SYSTEM', '💾 บันทึกข้อมูลเกมเรียบร้อยแล้ว!');
+            } catch (e) {
+                showMsg('ERROR', 'ไม่สามารถบันทึกเกมได้ (Storage อาจเต็ม หากอัพโหลดรูปภาพขนาดใหญ่เกินไป ลองเปลี่ยนเป็นรูปที่ขนาดเล็กลง)');
+            }
+        }
+
+        function loadGame() {
+            const savedData = localStorage.getItem(SAVE_KEY);
+            if(!savedData) return showMsg('ERROR', 'ไม่พบข้อมูลเซฟเกม');
+            try {
+                const parsed = JSON.parse(savedData);
+                Object.assign(state, parsed);
+                state.auditionPool = state.auditionPool || []; 
+                currentDate = new Date(state.currentDateValue || new Date(2026, 0, 1).getTime());
+                updateGlobalUI();
+                document.getElementById('setup-modal').classList.add('hidden');
+                switchTab('groups');
+                showMsg('SYSTEM', `โหลดเกมสำเร็จ!\nยินดีต้อนรับกลับมา, ผู้จัดการค่าย ${state.agencyName}`);
+            } catch (e) {
+                showMsg('ERROR', 'ไฟล์เซฟเสียหาย ไม่สามารถโหลดเกมได้');
+            }
+        }
+
+        function startGame() {
+            const nameInput = document.getElementById('agency-name-input').value.trim();
+            if(!nameInput) return showMsg('แจ้งเตือน', 'กรุณาตั้งชื่อบริษัท');
+            state = { agencyName: nameInput, cash: 150000, week: 1, idols: [], groups: [], activeGroupId: null, auditionPool: [] };
+            currentDate = new Date(2026, 0, 1);
+            state.currentDateValue = currentDate.getTime();
+            updateGlobalUI();
+            document.getElementById('setup-modal').classList.add('hidden');
+            switchTab('audition');
+            saveGame();
+        }
+
+        function updateGlobalUI() {
+            document.getElementById('display-agency-name').innerText = state.agencyName;
+            let currentWeekOfYear = ((state.week - 1) % 48) + 1;
+            let currentMonth = Math.floor((state.week - 1) / 4) % 12 + 1;
+            let currentYear = 2026 + Math.floor((state.week - 1) / 48);
+            const monthNames = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+            document.getElementById('stat-date').innerText = `สัปดาห์ที่ ${currentWeekOfYear} (${monthNames[currentMonth-1]} ${currentYear})`;
+            document.getElementById('stat-cash').innerText = state.cash.toLocaleString();
+            let totalPassedMonths = Math.floor((state.week - 1) / 4);
+            let ageYears = Math.floor(totalPassedMonths / 12);
+            let ageMonths = totalPassedMonths % 12;
+            let ageString = "";
+            if (ageYears > 0) ageString += `${ageYears} ปี `;
+            if (ageMonths > 0) ageString += `${ageMonths} เดือน`;
+            if (ageString === "") ageString = "น้อยกว่า 1 เดือน";
+            document.getElementById('stat-company-age').innerText = ageString;
+        }
+
+        function advanceTime() {
+            state.week++; 
+            state.idols.forEach(i => { if(i.contractWeeks && i.contractWeeks > 0) i.contractWeeks--; });
+            updateGlobalUI();
+        }
+
+        // --- IDOLS SYSTEM ---
+        function renderIdols() {
+            const cont = document.getElementById('idol-cards-container');
+            if(state.idols.length === 0) {
+                cont.innerHTML = `<div class="col-span-full text-center text-sm text-slate-400 p-12 border border-dashed rounded-xl bg-white">ยังไม่มีเด็กฝึกในค่าย ไปที่เมนู "ออดิชั่น" เพื่อค้นหาและเซ็นสัญญาเข้าค่าย</div>`;
+                return;
+            }
+            cont.innerHTML = state.idols.map(i => {
+                if(!i.stats) { 
+                    i.stats = { singing: 30, dancing: 30, music: 30, charm: 30 }; 
+                    i.background = "เด็กทั่วไป"; i.avatar = generatePixelAvatar(); 
+                    i.activity = "ว่าง"; i.contractWeeks = 288;
+                }
+                let groupObj = i.groupId ? state.groups.find(g=>g.id===i.groupId) : null;
+                let badgeStyle = groupObj ? getGroupFlagCss(groupObj) + ' border: 1px solid rgba(0,0,0,0.1); background-size: cover; background-position: center;' : '';
+                let statusBadge = groupObj ? `<span class="text-[9px] px-1.5 py-0.5 rounded font-bold shadow-sm" style="${badgeStyle}">วง ${groupObj.name} | ${i.team}</span>` : `<span class="bg-slate-100 text-slate-500 border border-slate-200 text-[9px] px-1.5 py-0.5 rounded font-bold">เด็กฝึกหัดทั่วไป</span>`;
+                let specHtml = i.specialty ? `<div class="text-[11px] text-pink-600 mt-0.5 font-semibold"><i class="fa-solid fa-bolt mr-1"></i>จุดเด่น: ${i.specialty}</div>` : '';
+                let locBadge = `<span class="bg-blue-100 text-blue-700 border border-blue-200 text-[9px] px-1.5 py-0.5 rounded font-bold ml-1">${i.activity || 'ว่าง'}</span>`;
+
+                return `
+                <div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow relative">
+                    <div class="absolute top-4 right-4 ${getGradeClass(i.grade)} text-[11px] px-1.5 py-0.5 rounded border font-bold">Grade ${i.grade}</div>
+                    <div>
+                        <div class="flex items-start gap-3">
+                            <img src="${i.avatar}" class="w-12 h-12 rounded-xl border object-cover bg-slate-50">
+                            <div class="flex-grow">
+                                <div class="font-bold text-slate-800 text-sm pr-16">${i.name} <span class="text-xs text-slate-400 font-normal">อายุ ${i.age} ปี</span></div>
+                                <div class="text-[11px] text-slate-500 mt-0.5"><b>ประวัติ:</b> ${i.background}</div>
+                                ${specHtml}
+                                <div class="grid grid-cols-2 gap-1 text-[10px] mt-2 bg-slate-50 p-1.5 rounded text-slate-700">
+                                    <div>🎤 ร้อง: ${i.stats.singing}</div><div>💃 เต้น: ${i.stats.dancing}</div>
+                                    <div>🎸 เล่นดนตรี: ${i.stats.music}</div><div>✨ เสน่ห์: ${i.stats.charm}</div>
+                                </div>
+                                <div class="mt-2 pt-2 border-t border-slate-100 flex flex-wrap gap-1 items-center">${statusBadge} ${locBadge}</div>
+                                <div class="text-[10px] text-slate-500 mt-1 font-medium"><i class="fa-solid fa-file-signature text-slate-400 mr-1"></i>สัญญาคงเหลือ: ${formatContract(i.contractWeeks)}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-2 border-t border-slate-100">
+                        <button onclick="openManageIdolModal('${i.id}')" class="modern-btn w-full text-center text-xs py-1 border-pink-200 text-pink-600 hover:bg-pink-50"><i class="fa-solid fa-sliders mr-1"></i>จัดการเมมเบอร์ & ฝึกซ้อม</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // --- AUDITION SYSTEM ---
+        const specialtyPool = ["Vocal (ร้องเพลง)", "Dance (เต้น)", "Visual (ภาพลักษณ์)", "Variety (วาไรตี้)"];
+        const bioNames = ["Ale", "Daichi", "Kirua", "Melody", "Paolo", "Putter", "Wakiw", "Daisy", "Garfield", "Jigsaw", "Dylan", "Noah", "Lazer", "Thalay", "Sato", "Sorso", "Yuta", "Danish", "Hashi", "Flynn", "Asahi", "Haruto", "Leon", "Ryuto", "Pieah", "Kanomping", "Furby", "Ongsa", "Shibuay", "Dahlia", "Peipei", "Phandao", "Peanut", "Dia", "Krista", "Violin", "Kitasan", "Giao", "Metta"];
+        const backgroundPool = ["เคยเป็นศิลปินฝึกหัด", "เคยเดบิวต์", "เคยผ่านรายการ Survival", "นักดนตรี", "เด็กทั่วไป"];
+
+        function renderAudition() {
+            const optionsDiv = document.getElementById('audition-options');
+            const resultsDiv = document.getElementById('audition-results');
+            const container = document.getElementById('audition-candidates-container');
+
+            if (!state.auditionPool || state.auditionPool.length === 0) {
+                optionsDiv.classList.remove('hidden'); resultsDiv.classList.add('hidden');
+            } else {
+                optionsDiv.classList.add('hidden'); resultsDiv.classList.remove('hidden');
+                container.innerHTML = state.auditionPool.map((c, index) => `
+                    <div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-sm hover:border-pink-300 transition-all relative">
+                        <div class="absolute top-4 right-4 ${getGradeClass(c.grade)} text-[11px] px-2 py-0.5 rounded border font-bold">Grade ${c.grade}</div>
+                        <div class="flex items-start gap-4 mb-4">
+                            <img src="${c.avatar}" class="w-14 h-14 rounded-xl border object-cover bg-slate-50">
+                            <div class="flex-grow">
+                                <div class="font-bold text-slate-800 text-base pr-16">${c.name}</div>
+                                <div class="text-xs text-slate-500 mt-1"><b>อายุ:</b> ${c.age} ปี | <b>ประวัติ:</b> ${c.background}</div>
+                                <div class="text-xs text-slate-600 mt-0.5"><b>ความสามารถเด่น:</b> <span class="text-pink-600 font-bold">${c.specialty}</span></div>
+                                <div class="grid grid-cols-2 gap-1 text-[11px] mt-2 bg-slate-50 p-2 rounded text-slate-700">
+                                    <div>🎤 ร้อง: ${c.stats.singing}</div><div>💃 เต้น: ${c.stats.dancing}</div>
+                                    <div>🎸 เล่นดนตรี: ${c.stats.music}</div><div>✨ เสน่ห์: ${c.stats.charm}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 border-t pt-3">
+                            <button onclick="rejectCandidate(${index})" class="modern-btn text-xs py-2 flex-1 text-slate-400 border-slate-200 hover:bg-slate-50 hover:text-red-500 hover:border-red-200">ปฏิเสธ</button>
+                            <button onclick="acceptCandidate(${index})" class="modern-btn modern-btn-success text-xs py-2 flex-1 font-bold"><i class="fa-solid fa-file-signature mr-1"></i>เซ็นสัญญา</button>
+                        </div>
+                    </div>`).join('');
+            }
+        }
+
+        function startAudition(type) {
+            let cost = 0; let grades = []; let count = 3;
+            if (type === 'local') { cost = 5000; grades = ['F', 'D', 'C', 'B']; count = 3; }
+            else if (type === 'regional') { cost = 15000; grades = ['D', 'C', 'B', 'A']; count = 4; }
+            else if (type === 'national') { cost = 40000; grades = ['C', 'B', 'A', 'S']; count = 4; }
+
+            if (state.cash < cost) return showMsg('เงินทุนไม่พอ', 'ค่ายมีเงินทุนไม่เพียงพอสำหรับการออดิชั่นระดับนี้');
+            state.cash -= cost; state.auditionPool = [];
+
+            for (let i = 0; i < count; i++) {
+                let grade = grades[Math.floor(Math.random() * grades.length)];
+                let minStat = 0, maxStat = 24;
+                if(grade === 'S') { minStat = 85; maxStat = 100; }
+                else if(grade === 'A') { minStat = 70; maxStat = 84; }
+                else if(grade === 'B') { minStat = 55; maxStat = 69; }
+                else if(grade === 'C') { minStat = 40; maxStat = 54; }
+                else if(grade === 'D') { minStat = 25; maxStat = 39; }
+                
+                let stats = {
+                    singing: Math.floor(Math.random() * (maxStat - minStat + 1)) + minStat,
+                    dancing: Math.floor(Math.random() * (maxStat - minStat + 1)) + minStat,
+                    music: Math.floor(Math.random() * (maxStat - minStat + 1)) + minStat,
+                    charm: Math.floor(Math.random() * (maxStat - minStat + 1)) + minStat
+                };
+
+                state.auditionPool.push({
+                    id: 'id_' + generateId(), name: bioNames[Math.floor(Math.random() * bioNames.length)], 
+                    grade: grade, age: Math.floor(Math.random() * 8) + 14, 
+                    specialty: specialtyPool[Math.floor(Math.random() * specialtyPool.length)],
+                    background: backgroundPool[Math.floor(Math.random() * backgroundPool.length)],
+                    stats: stats, avatar: generatePixelAvatar(), activity: "ว่าง", contractWeeks: 288
+                });
+            }
+            updateGlobalUI(); renderAudition();
+            showMsg('ออดิชั่นเสร็จสิ้น', `ค่ายได้รับใบสมัครที่ผ่านเกณฑ์คัดเลือกเบื้องต้นจำนวน ${count} คน!`);
+        }
+
+        function acceptCandidate(index) {
+            let c = state.auditionPool[index];
+            state.idols.push({ ...c, groupId: null, generationNum: null, team: null });
+            state.auditionPool.splice(index, 1);
+            renderAudition(); showMsg('สำเร็จ', `รับอนุมัติใบสมัครของ ${c.name} เข้าเป็นเด็กฝึกหัดเรียบร้อย!`);
+        }
+
+        function rejectCandidate(index) { state.auditionPool.splice(index, 1); renderAudition(); }
+        function cancelAuditionPool() { state.auditionPool = []; renderAudition(); }
+
+        // --- MANAGE IDOL & TRAINING MODAL ---
+        function openManageIdolModal(idolId) {
+            let i = state.idols.find(x => x.id === idolId);
+            document.getElementById('am-title').innerHTML = `<i class="fa-solid fa-user-gear text-pink-500 mr-2"></i> จัดการข้อมูล & พัฒนาเมมเบอร์: ${i.name}`;
+            let totalMonths = Math.ceil(i.contractWeeks / 4);
+            let currentYears = Math.floor(totalMonths / 12);
+            let currentMonths = totalMonths % 12;
+
+            let html = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-3 bg-slate-50 p-3 rounded-xl border">
+                        <h4 class="text-xs font-bold text-slate-700 border-b pb-1 mb-2 uppercase tracking-wide"><i class="fa-solid fa-pen"></i> แก้ไขประวัติเด็กฝึก</h4>
+                        <div><label class="text-[11px] font-bold text-slate-600 block mb-0.5">ชื่อเมมเบอร์</label><input type="text" id="edit-i-name" class="modern-input" value="${i.name}"></div>
+                        <div>
+                            <label class="text-[11px] font-bold text-slate-600 block mb-0.5">อัพโหลดรูปภาพประจำตัว</label>
+                            <input type="file" id="edit-i-file" accept="image/*" class="modern-input text-xs" onchange="handleIdolImageUpload(event, '${i.id}')">
+                            <button onclick="randomizeIdolAvatar('${i.id}')" class="modern-btn text-[10px] py-1 mt-1.5 w-full bg-white"><i class="fa-solid fa-user"></i> รีเซ็ตเป็นภาพเงาตัวละคร</button>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold text-slate-600 block mb-0.5">ระยะเวลาสัญญา</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div><input type="number" id="edit-i-years" class="modern-input" placeholder="ปี" value="${currentYears}" min="0"> <span class="text-[10px] text-slate-400">ปี</span></div>
+                                <div><input type="number" id="edit-i-months" class="modern-input" placeholder="เดือน" value="${currentMonths}" min="0" max="11"> <span class="text-[10px] text-slate-400">เดือน</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="bg-blue-50/50 p-3 rounded-xl border border-blue-100">
+                            <h4 class="text-xs font-bold text-blue-700 border-b border-blue-200 pb-1 mb-2 uppercase tracking-wide"><i class="fa-solid fa-map-location-dot"></i> การส่งเมมเบอร์ไปทำภารกิจ</h4>
+                            <div class="grid grid-cols-3 gap-1.5">
+                                <button onclick="setIdolActivity('${i.id}', 'งานจับมือ')" class="modern-btn text-[11px] py-1.5 ${i.activity==='งานจับมือ'?'modern-btn-info':''}">งานจับมือ</button>
+                                <button onclick="setIdolActivity('${i.id}', 'เธียเตอร์')" class="modern-btn text-[11px] py-1.5 ${i.activity==='เธียเตอร์'?'modern-btn-info':''}">เธียเตอร์</button>
+                                <button onclick="setIdolActivity('${i.id}', 'พักงาน')" class="modern-btn text-[11px] py-1.5 ${i.activity==='พักงาน'?'modern-btn-info':''}">พักงาน</button>
+                            </div>
+                        </div>
+
+                        <div class="bg-pink-50/50 p-3 rounded-xl border border-pink-100">
+                            <h4 class="text-xs font-bold text-pink-700 border-b border-pink-200 pb-1 mb-2 uppercase tracking-wide"><i class="fa-solid fa-graduation-cap"></i> หมวดหมู่การฝึกซ้อม (ค่าเรียน ฿3,000 / ครั้ง)</h4>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="trainIdolSkill('${i.id}', 'singing', 'ร้องเพลง')" class="modern-btn text-[11px] py-1 text-left flex justify-between"><span>🎤 เรียนร้องเพลง</span> <span class="text-pink-600 font-bold">+5</span></button>
+                                <button onclick="trainIdolSkill('${i.id}', 'dancing', 'เต้น')" class="modern-btn text-[11px] py-1 text-left flex justify-between"><span>💃 เรียนเต้น</span> <span class="text-pink-600 font-bold">+5</span></button>
+                                <button onclick="trainIdolSkill('${i.id}', 'charm', 'พิธีกร')" class="modern-btn text-[11px] py-1 text-left flex justify-between"><span>🎙️ เรียนพิธีกร</span> <span class="text-pink-600 font-bold">+5</span></button>
+                                <button onclick="trainIdolSkill('${i.id}', 'music', 'เล่นดนตรี')" class="modern-btn text-[11px] py-1 text-left flex justify-between"><span>🎸 เรียนดนตรี</span> <span class="text-pink-600 font-bold">+5</span></button>
+                                <button onclick="trainIdolSkill('${i.id}', 'charm', 'เรียนภาษา')" class="modern-btn text-[11px] py-1 text-left flex justify-between"><span>🗣️ เรียนภาษา</span> <span class="text-pink-600 font-bold">+5</span></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('am-content').innerHTML = html;
+            document.getElementById('am-confirm-btn').onclick = () => {
+                let nameInput = document.getElementById('edit-i-name').value.trim();
+                let yrsInput = parseInt(document.getElementById('edit-i-years').value) || 0;
+                let mosInput = parseInt(document.getElementById('edit-i-months').value) || 0;
+                if(nameInput) i.name = nameInput;
+                i.contractWeeks = ((yrsInput * 12) + mosInput) * 4;
+                document.getElementById('action-modal').classList.add('hidden');
+                renderIdols();
+            };
+            document.getElementById('action-modal').classList.remove('hidden');
+        }
+
+        function handleIdolImageUpload(event, idolId) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    let i = state.idols.find(x => x.id === idolId);
+                    i.avatar = e.target.result;
+                    renderIdols();
+                    showMsg('สำเร็จ', 'อัพโหลดรูปภาพเมมเบอร์เรียบร้อย');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function randomizeIdolAvatar(idolId) {
+            let i = state.idols.find(x => x.id === idolId);
+            i.avatar = generatePixelAvatar();
+            renderIdols(); showMsg('สำเร็จ', 'รีเซ็ตเป็นภาพเงาตัวละครสำเร็จ!');
+            openManageIdolModal(idolId);
+        }
+
+        function setIdolActivity(idolId, act) {
+            let i = state.idols.find(x => x.id === idolId);
+            i.activity = act; renderIdols(); openManageIdolModal(idolId);
+        }
+
+        function trainIdolSkill(idolId, skillKey, label) {
+            if(state.cash < 3000) return showMsg('เงินทุนไม่พอ', 'ค่ายมีเงินทุนไม่พอสำหรับค่าเรียนฝึกซ้อม ฿3,000');
+            state.cash -= 3000; updateGlobalUI();
+
+            let i = state.idols.find(x => x.id === idolId);
+            i.stats[skillKey] = Math.min(100, i.stats[skillKey] + 5);
+
+            let avg = (i.stats.singing + i.stats.dancing + i.stats.music + i.stats.charm) / 4;
+            let oldGrade = i.grade;
+            if (avg >= 85) i.grade = 'S';
+            else if (avg >= 70) i.grade = 'A';
+            else if (avg >= 55) i.grade = 'B';
+            else if (avg >= 40) i.grade = 'C';
+            else if (avg >= 25) i.grade = 'D';
+            else i.grade = 'F';
+
+            renderIdols();
+            let msgStr = `เมมเบอร์ได้รับการฝึกซ้อมทักษะ [${label}] ส่งผลให้ความสามารถเพิ่มขึ้นและหักเงินค่ายแล้ว!`;
+            if (oldGrade !== i.grade) msgStr += `\n\n🎉 พัฒนาการถึงเกณฑ์คลาสชั้นเรียน! ระบบคำนวณอัพเกรดระดับให้อัตโนมัติจาก Grade ${oldGrade} ➔ Grade ${i.grade}!`;
+            showMsg('การฝึกซ้อมสำเร็จ', msgStr);
+            openManageIdolModal(idolId);
+        }
+
+        // --- NAVIGATION ROUTING ---
+        function switchTab(tabId) {
+            ['idols', 'groups', 'audition', 'music-studio'].forEach(id => {
+                const contentEl = document.getElementById(`tab-content-${id}`);
+                const btnEl = document.getElementById(`tab-btn-${id}`);
+                if (contentEl) contentEl.classList.add('hidden');
+                if (btnEl) btnEl.classList.remove('modern-btn-info');
+            });
+            const targetContent = document.getElementById(`tab-content-${tabId}`);
+            const targetBtn = document.getElementById(`tab-btn-${tabId}`);
+            if (targetContent) targetContent.classList.remove('hidden');
+            if (targetBtn) targetBtn.classList.add('modern-btn-info');
+            
+            if(tabId === 'idols') renderIdols();
+            if(tabId === 'audition') renderAudition();
+            if(tabId === 'groups') renderGroupMain();
+            if(tabId === 'music-studio') initMusicStudio();
+        }
+
+        // --- MUSIC STUDIO SYSTEM (NEW) ---
+        function initMusicStudio() {
+            studioState = { groupId: null, senbatsu: [], center: null };
+            document.getElementById('music-title').value = '';
+            
+            // Reset Checkboxes
+            ['merch-photo', 'merch-handshake', 'merch-2shot', 'merch-calendar', 'merch-plushie'].forEach(id => {
+                let el = document.getElementById(id);
+                if(el) el.checked = false;
+            });
+
+            // Reset Selects to default (Grade C)
+            ['hire-songwriter', 'hire-composer', 'hire-choreographer', 'hire-mv'].forEach(id => {
+                let el = document.getElementById(id);
+                if(el) el.value = "10000";
+            });
+
+            goToPlanningStep(); // Show step 1 by default
+            renderStudioGroupFilter();
+            renderStudioMemberList();
+            updateStudioPreview();
+        }
+
+        function goToSenbatsuStep() {
+            let title = document.getElementById('music-title').value.trim();
+            if (!title) return showMsg('แจ้งเตือน', 'กรุณาตั้งชื่อเพลง / ซิงเกิลหลัก ก่อนดำเนินการต่อ');
+            
+            document.getElementById('studio-step-1').classList.add('hidden');
+            document.getElementById('studio-step-2').classList.remove('hidden');
+            document.getElementById('studio-step-2').classList.add('flex');
+        }
+
+        function goToPlanningStep() {
+            document.getElementById('studio-step-2').classList.add('hidden');
+            document.getElementById('studio-step-2').classList.remove('flex');
+            document.getElementById('studio-step-1').classList.remove('hidden');
+        }
+
+        function renderStudioGroupFilter() {
+            let html = `<button onclick="setStudioGroupFilter(null)" class="flex-shrink-0 text-left text-xs px-3 py-2 rounded-md border font-bold ${studioState.groupId === null ? 'bg-pink-500 text-white border-pink-600 shadow-sm' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}">🌟 แสดงทั้งหมด</button>`;
+            
+            html += `<button onclick="setStudioGroupFilter('none')" class="flex-shrink-0 text-left text-xs px-3 py-2 rounded-md border font-bold ${studioState.groupId === 'none' ? 'bg-pink-500 text-white border-pink-600 shadow-sm' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}">👤 เด็กฝึกทั่วไป (ไม่มีวง)</button>`;
+
+            state.groups.forEach(g => {
+                let activeClass = studioState.groupId === g.id ? 'bg-pink-500 text-white border-pink-600 shadow-sm' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50';
+                html += `<button onclick="setStudioGroupFilter('${g.id}')" class="flex-shrink-0 text-left text-xs px-3 py-2 rounded-md border font-bold ${activeClass} truncate">วง ${g.name}</button>`;
+            });
+            document.getElementById('studio-group-filter').innerHTML = html;
+        }
+
+        function setStudioGroupFilter(gId) {
+            studioState.groupId = gId;
+            renderStudioGroupFilter();
+            renderStudioMemberList();
+        }
+
+        function renderStudioMemberList() {
+            let idols = state.idols;
+            if (studioState.groupId === 'none') {
+                idols = idols.filter(i => !i.groupId);
+            } else if (studioState.groupId !== null) {
+                idols = idols.filter(i => i.groupId === studioState.groupId);
+            }
+
+            let html = '';
+            idols.forEach(i => {
+                let isSenbatsu = studioState.senbatsu.includes(i.id);
+                let isCenter = studioState.center === i.id;
+                
+                let bgClass = 'bg-white border-slate-200 hover:border-indigo-300';
+                if (isCenter) bgClass = 'bg-gradient-to-r from-amber-50 to-yellow-100 border-yellow-400 shadow-sm';
+                else if (isSenbatsu) bgClass = 'bg-pink-50 border-pink-300';
+
+                html += `
+                <div class="p-2 border rounded-xl flex items-center justify-between text-xs transition-colors ${bgClass}">
+                    <div class="flex items-center gap-3">
+                        <label class="cursor-pointer p-1">
+                            <input type="checkbox" ${isSenbatsu ? 'checked' : ''} onchange="toggleSenbatsu('${i.id}')" class="w-4 h-4 rounded text-pink-600 focus:ring-pink-500 cursor-pointer">
+                        </label>
+                        <div class="relative">
+                            <img src="${i.avatar}" class="w-10 h-10 rounded-lg object-cover bg-white border ${isCenter ? 'border-yellow-500' : 'border-slate-200'}">
+                            ${isCenter ? '<div class="absolute -top-2.5 -right-2 text-yellow-500 text-sm drop-shadow"><i class="fa-solid fa-crown"></i></div>' : ''}
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="font-bold ${isCenter ? 'text-amber-900' : 'text-slate-800'} truncate max-w-[80px]">${i.name}</span>
+                                <span class="text-[9px] ${getGradeClass(i.grade)} px-1.5 py-0.5 rounded font-bold shadow-sm">Grade ${i.grade}</span>
+                            </div>
+                            <span class="text-[10px] text-slate-500 font-mono">🎤:${i.stats?.singing||0} 💃:${i.stats?.dancing||0} ✨:${i.stats?.charm||0}</span>
+                        </div>
+                    </div>
+                    <button onclick="setCenter('${i.id}')" class="py-1.5 px-2 text-[10px] font-bold rounded-lg border flex-shrink-0 ${isCenter ? 'border-yellow-500 bg-yellow-400 text-yellow-900 shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200'} transition-all flex items-center gap-1">
+                        <i class="fa-solid fa-crown ${isCenter ? 'text-yellow-900' : 'text-slate-300'}"></i> ${isCenter ? 'เซ็นเตอร์' : 'เซ็นเตอร์'}
+                    </button>
+                </div>`;
+            });
+            document.getElementById('studio-member-list').innerHTML = html || '<div class="col-span-full text-center text-xs text-slate-400 py-10 border border-dashed rounded-xl bg-white">ไม่พบเมมเบอร์ในหมวดหมู่นี้</div>';
+        }
+
+        function toggleSenbatsu(id) {
+            let idx = studioState.senbatsu.indexOf(id);
+            if (idx > -1) {
+                // เอาออก
+                studioState.senbatsu.splice(idx, 1);
+                if (studioState.center === id) studioState.center = null;
+            } else {
+                // เพิ่มเข้า
+                studioState.senbatsu.push(id);
+            }
+            updateStudioUI();
+        }
+
+        function setCenter(id) {
+            if (studioState.center === id) return; // เป็นอยู่แล้ว
+            studioState.center = id;
+            if (!studioState.senbatsu.includes(id)) {
+                studioState.senbatsu.push(id); // แอดเข้าเซ็มอัตโนมัติถ้ายังไม่ติด
+            }
+            updateStudioUI();
+        }
+
+        function updateStudioUI() {
+            renderStudioMemberList();
+            updateStudioPreview();
+            document.getElementById('senbatsu-count').innerText = `เลือกแล้ว: ${studioState.senbatsu.length} คน`;
+        }
+
+        function updateStudioPreview() {
+            let container = document.getElementById('studio-selected-preview');
+            if (studioState.senbatsu.length === 0) {
+                container.innerHTML = `<div class="text-[11px] text-slate-400 italic flex items-center justify-center w-full py-4">ยังไม่ได้คัดเลือกเซ็มบัตสึเข้าสู่โปรเจกต์</div>`;
+                return;
+            }
+
+            let html = '';
+            studioState.senbatsu.forEach((id, index) => {
+                let idol = state.idols.find(i => i.id === id);
+                if (!idol) return;
+                let isCenter = studioState.center === id;
+                
+                html += `
+                <div class="relative flex flex-col items-center flex-shrink-0 w-16 group">
+                    <div class="absolute top-0 left-0 bg-slate-800 text-white text-[9px] font-bold w-4 h-4 flex items-center justify-center rounded-full z-10 border border-white shadow-sm">${index + 1}</div>
+                    ${isCenter ? '<div class="absolute -top-3 text-yellow-500 text-xl z-10 drop-shadow-md animate-bounce"><i class="fa-solid fa-crown"></i></div>' : ''}
+                    <img src="${idol.avatar}" class="w-14 h-14 rounded-full object-cover border-2 ${isCenter ? 'border-yellow-400 shadow-md ring-2 ring-yellow-200' : 'border-slate-300'} bg-white mt-1">
+                    <span class="text-[10px] font-bold ${isCenter ? 'text-amber-600' : 'text-slate-700'} truncate w-full text-center mt-1.5">${idol.name}</span>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function startSongProduction() {
+            if (studioState.senbatsu.length === 0) return showMsg('แจ้งเตือน', 'กรุณาเลือกเซ็มบัตสึอย่างน้อย 1 คน');
+            if (!studioState.center) return showMsg('แจ้งเตือน', 'กรุณาเลือกตำแหน่งเซ็นเตอร์ 1 คน');
+
+            let title = document.getElementById('music-title').value.trim();
+            let releaseType = document.querySelector('input[name="release-type"]:checked').value;
+            
+            // คำนวณค่าใช้จ่าย
+            let cost = releaseType === 'single' ? 25000 : 120000;
+            
+            // บวกค่าจ้างทีมงาน
+            cost += parseInt(document.getElementById('hire-songwriter').value) || 0;
+            cost += parseInt(document.getElementById('hire-composer').value) || 0;
+            cost += parseInt(document.getElementById('hire-choreographer').value) || 0;
+            cost += parseInt(document.getElementById('hire-mv').value) || 0;
+
+            // บวกค่าการตลาด
+            if (document.getElementById('merch-photo').checked) cost += 5000;
+            if (document.getElementById('merch-handshake').checked) cost += 15000;
+            if (document.getElementById('merch-2shot').checked) cost += 20000;
+            if (document.getElementById('merch-calendar').checked) cost += 10000;
+            if (document.getElementById('merch-plushie').checked) cost += 25000;
+
+            if (state.cash < cost) return showMsg('เงินทุนไม่พอ', `ต้องการเงินทุนอย่างน้อย ฿${cost.toLocaleString()} สำหรับการผลิตโปรเจกต์นี้\n(ปัจจุบันมี ฿${state.cash.toLocaleString()})`);
+
+            state.cash -= cost;
+            updateGlobalUI();
+
+            let centerName = state.idols.find(i=>i.id===studioState.center)?.name || "Unknown";
+            
+            showMsg('🎉 ผลิตเพลงและวางจำหน่ายสำเร็จ!', 
+                `ผลงาน "${title}" ถูกปล่อยออกสู่ตลาดแล้ว!\n\n` +
+                `👑 ตำแหน่งเซ็นเตอร์: ${centerName}\n` +
+                `✨ จำนวนเซ็มบัตสึ: ${studioState.senbatsu.length} คน\n` +
+                `💰 งบประมาณที่ใช้ทั้งหมด: ฿${cost.toLocaleString()}`
+            );
+            
+            initMusicStudio();
+        }
+
+        // --- GROUP SYSTEM ---
+        function renderGroupMain() {
+            state.activeGroupId = null;
+            const container = document.getElementById('group-dynamic-container');
+            let manageBtnState = state.groups.length > 0 ? '' : 'disabled';
+            let manageBtnText = state.groups.length > 0 ? 'จัดการวง (Manage)' : 'จัดการวง (ต้องสร้างวงก่อน)';
+
+            container.innerHTML = `
+                <h2 class="text-lg text-slate-800 font-bold border-b border-slate-200 pb-3 mb-6"><i class="fa-solid fa-layer-group mr-2 text-pink-500"></i> ระบบวง (Group System)</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto mt-10">
+                    <button onclick="renderGroupForm()" class="modern-panel p-8 flex flex-col items-center justify-center gap-4 hover:border-pink-400 hover:shadow-lg transition-all cursor-pointer bg-white group">
+                        <div class="w-16 h-16 rounded-full bg-pink-50 text-pink-500 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform"><i class="fa-solid fa-plus"></i></div>
+                        <span class="font-bold text-lg text-slate-700">สร้างวงใหม่</span>
+                    </button>
+                    
+                    <button onclick="renderGroupList()" class="modern-panel p-8 flex flex-col items-center justify-center gap-4 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer bg-white group disabled:opacity-50 disabled:cursor-not-allowed" ${manageBtnState}>
+                        <div class="w-16 h-16 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform"><i class="fa-solid fa-list-check"></i></div>
+                        <span class="font-bold text-lg text-slate-700">${manageBtnText}</span>
+                    </button>
+                </div>
+            `;
+        }
+
+        function toggleBgOptions() {
+            const type = document.getElementById('new-g-bg-type').value;
+            ['gradient', 'pattern', 'image'].forEach(t => document.getElementById(`opt-${t}`).classList.add('hidden'));
+            document.getElementById(`opt-${type}`).classList.remove('hidden');
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        let width = img.width; let height = img.height; const MAX = 600;
+                        if (width > height && width > MAX) { height *= MAX / width; width = MAX; } 
+                        else if (height > MAX) { width *= MAX / height; height = MAX; }
+                        canvas.width = width; canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        document.getElementById('new-g-image-base64').value = canvas.toDataURL('image/jpeg', 0.8);
+                        updateFlagPreview();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function renderGroupForm(groupId = null) {
+            const container = document.getElementById('group-dynamic-container');
+            let g = groupId ? state.groups.find(x => x.id === groupId) : null;
+            let name = g ? g.name : '';
+            let type = g && g.flag ? g.flag.type : 'gradient';
+            let c1 = g && g.flag ? g.flag.color1 : (g ? (g.flagBg || '#f472b6') : '#f472b6');
+            let c2 = g && g.flag ? g.flag.color2 : (g ? (g.flagBg2 || '#ec4899') : '#ec4899');
+            let dir = g && g.flag ? g.flag.dir : '180deg';
+            let patType = g && g.flag ? g.flag.patType : 'dots';
+            let img = g && g.flag ? g.flag.imgBase64 : '';
+            let txtCol = g && g.flag ? g.flag.text : (g ? (g.flagText || '#ffffff') : '#ffffff');
+            let currentShare = g && g.revShare !== undefined ? g.revShare : 50;
+            let backAction = groupId ? `renderGroupDashboard('${groupId}')` : `renderGroupMain()`;
+
+            container.innerHTML = `
+                <div class="flex items-center gap-4 border-b border-slate-200 pb-3 mb-6">
+                    <button onclick="${backAction}" class="modern-btn text-xs py-1"><i class="fa-solid fa-arrow-left"></i> กลับ</button>
+                    <h2 class="text-lg text-slate-800 font-bold"><i class="fa-solid fa-wand-magic-sparkles mr-2 text-pink-500"></i> ${groupId ? 'แก้ไขข้อมูลวงและโลโก้' : 'สร้างวงใหม่'}</h2>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs font-bold text-slate-600 block mb-1">1. ชื่อวง (ระบบจะแสดงบนธงอัตโนมัติ)</label>
+                            <input type="text" id="new-g-name" class="modern-input font-bold text-lg border-2 border-slate-800" placeholder="ระบุชื่อวง..." oninput="updateFlagPreview()" value="${name}">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-600 block mb-1">2. รูปแบบพื้นหลังธงโลโก้</label>
+                            <select id="new-g-bg-type" class="modern-input mb-2" onchange="toggleBgOptions(); updateFlagPreview()">
+                                <option value="gradient" ${type==='gradient'?'selected':''}>สีทึบ / การไล่สี (Gradient)</option>
+                                <option value="pattern" ${type==='pattern'?'selected':''}>ลวดลาย (Pattern)</option>
+                                <option value="image" ${type==='image'?'selected':''}>อัพโหลดรูปภาพ (Image)</option>
+                            </select>
+                            <div id="opt-gradient" class="bg-slate-50 p-3 rounded border border-slate-200 mb-2 ${type!=='gradient'?'hidden':''}">
+                                <div class="grid grid-cols-2 gap-2 mb-2">
+                                    <div><label class="text-[10px]">สีที่ 1</label><input type="color" id="new-g-color" value="${c1}" class="w-full h-8 cursor-pointer rounded" oninput="updateFlagPreview()"></div>
+                                    <div><label class="text-[10px]">สีที่ 2</label><input type="color" id="new-g-color-2" value="${c2}" class="w-full h-8 cursor-pointer rounded" oninput="updateFlagPreview()"></div>
+                                </div>
+                                <label class="text-[10px]">ทิศทางการไล่สี</label>
+                                <select id="new-g-dir" class="modern-input text-xs" onchange="updateFlagPreview()">
+                                    <option value="180deg" ${dir==='180deg'?'selected':''}>บนลงล่าง (Top to Bottom)</option>
+                                    <option value="0deg" ${dir==='0deg'?'selected':''}>ล่างขึ้นบน (Bottom to Top)</option>
+                                    <option value="135deg" ${dir==='135deg'?'selected':''}>เฉียงซ้ายบนลงขวาล่าง (Diagonal)</option>
+                                    <option value="radial" ${dir==='radial'?'selected':''}>วงกลมรัศมี (Radial)</option>
+                                </select>
+                            </div>
+                            <div id="opt-pattern" class="bg-slate-50 p-3 rounded border border-slate-200 mb-2 ${type!=='pattern'?'hidden':''}">
+                                <div class="grid grid-cols-2 gap-2 mb-2">
+                                    <div><label class="text-[10px]">สีพื้น</label><input type="color" id="new-g-pat-bg" value="${type==='pattern'?c1:'#ffffff'}" class="w-full h-8 cursor-pointer rounded" oninput="updateFlagPreview()"></div>
+                                    <div><label class="text-[10px]">สีลวดลาย</label><input type="color" id="new-g-pat-color" value="${type==='pattern'?c2:'#ec4899'}" class="w-full h-8 cursor-pointer rounded" oninput="updateFlagPreview()"></div>
+                                </div>
+                                <label class="text-[10px]">รูปแบบลวดลาย</label>
+                                <select id="new-g-pat-type" class="modern-input text-xs" onchange="updateFlagPreview()">
+                                    <option value="dots" ${patType==='dots'?'selected':''}>ลายจุด (Dots)</option>
+                                    <option value="stripes" ${patType==='stripes'?'selected':''}>ลายทางขวาง (Horizontal Stripes)</option>
+                                </select>
+                            </div>
+                            <div id="opt-image" class="bg-slate-50 p-3 rounded border border-slate-200 mb-2 ${type!=='image'?'hidden':''}">
+                                <label class="text-[10px] text-pink-600 mb-1 block">* แนะนำรูปภาพแนวตั้ง ระบบจะทำการบีบอัดขนาดอัตโนมัติ</label>
+                                <input type="file" id="new-g-image" accept="image/*" class="modern-input text-xs" onchange="handleImageUpload(event)">
+                                <input type="hidden" id="new-g-image-base64" value="${img}">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-600 block mb-1">3. สีตัวอักษรชื่อวง</label>
+                            <input type="color" id="new-g-text-color" value="${txtCol}" class="w-full h-10 rounded cursor-pointer border border-slate-200" oninput="updateFlagPreview()">
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                            <label class="text-xs font-bold text-slate-700 block mb-1">4. ข้อตกลงส่วนแบ่งรายได้ (Revenue Sharing Agreement)</label>
+                            <input type="range" id="new-g-rev-share" min="0" max="100" step="10" value="${currentShare}" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-pink-500" oninput="document.getElementById('rev-share-val').innerText = 'บริษัท ' + (100 - this.value) + ' : ' + this.value + ' เมมเบอร์'">
+                            <div id="rev-share-val" class="text-xs font-bold text-pink-600 mt-1">บริษัท ${100 - currentShare} : ${currentShare} เมมเบอร์</div>
+                        </div>
+                        <button onclick="saveGroupData('${groupId || ''}')" class="modern-btn modern-btn-primary w-full py-3 mt-4 text-sm shadow font-bold">
+                            <i class="fa-solid fa-floppy-disk mr-1"></i> ${groupId ? 'บันทึกการแก้ไข' : 'ยืนยันการสร้างวง'}
+                        </button>
+                    </div>
+                    <div class="flex flex-col items-center justify-center bg-slate-50 border border-slate-200 rounded-xl p-6 overflow-hidden">
+                        <p class="text-xs font-bold text-slate-400 mb-4 uppercase tracking-widest">Preview (172 x 240)</p>
+                        <div id="flag-preview" class="group-flag shadow-lg rounded-sm" style="width: 172px; height: 240px; max-width: 100%;"></div>
+                    </div>
+                </div>
+            `;
+            setTimeout(() => { updateFlagPreview(); }, 10);
+        }
+
+        function updateFlagPreview() {
+            const name = document.getElementById('new-g-name').value;
+            const type = document.getElementById('new-g-bg-type').value;
+            const c1 = document.getElementById('new-g-color').value;
+            const c2 = document.getElementById('new-g-color-2').value;
+            const dir = document.getElementById('new-g-dir').value;
+            const patBg = document.getElementById('new-g-pat-bg').value;
+            const patCol = document.getElementById('new-g-pat-color').value;
+            const patType = document.getElementById('new-g-pat-type').value;
+            const img = document.getElementById('new-g-image-base64').value;
+            const text = document.getElementById('new-g-text-color').value;
+
+            let flagObj = { type: type, color1: type === 'pattern' ? patBg : c1, color2: type === 'pattern' ? patCol : c2, dir: dir, patType: patType, imgBase64: img, text: text };
+            const preview = document.getElementById('flag-preview');
+            preview.style.cssText = `width: 172px; height: 240px; max-width: 100%; ` + getFlagCssStr(flagObj);
+            preview.innerHTML = getFlagInnerHtml(name);
+        }
+
+        function saveGroupData(groupId) {
+            const name = document.getElementById('new-g-name').value.trim();
+            if(!name) return showMsg('ผิดพลาด', 'กรุณาระบุชื่อวง');
+            const type = document.getElementById('new-g-bg-type').value;
+            const c1 = document.getElementById('new-g-color').value;
+            const c2 = document.getElementById('new-g-color-2').value;
+            const dir = document.getElementById('new-g-dir').value;
+            const patBg = document.getElementById('new-g-pat-bg').value;
+            const patCol = document.getElementById('new-g-pat-color').value;
+            const patType = document.getElementById('new-g-pat-type').value;
+            const img = document.getElementById('new-g-image-base64').value;
+            const text = document.getElementById('new-g-text-color').value;
+            const revShare = parseInt(document.getElementById('new-g-rev-share').value);
+
+            let flagObj = { type: type, color1: type === 'pattern' ? patBg : c1, color2: type === 'pattern' ? patCol : c2, dir: dir, patType: patType, imgBase64: img, text: text };
+
+            if (groupId) {
+                let g = state.groups.find(x => x.id === groupId);
+                g.name = name; g.flag = flagObj; g.revShare = revShare;
+                showMsg('สำเร็จ', `บันทึกการแก้ไขข้อมูลวง ${name} เรียบร้อยแล้ว!`);
+                renderGroupDashboard(groupId);
+            } else {
+                const newGroup = {
+                    id: 'grp_' + generateId(), name: name, flag: flagObj, flagBg: flagObj.color1, flagBg2: flagObj.color2, flagText: flagObj.text,
+                    groupCaptain: null, generations: [], teams: [], units: [], revShare: revShare
+                };
+                state.groups.push(newGroup);
+                showMsg('สำเร็จ', `สร้างวง ${name} เรียบร้อยแล้ว!`);
+                renderGroupMain();
+            }
+        }
+
+        function renderGroupList() {
+            const container = document.getElementById('group-dynamic-container');
+            container.innerHTML = `
+                <div class="flex items-center gap-4 border-b border-slate-200 pb-3 mb-6">
+                    <button onclick="renderGroupMain()" class="modern-btn text-xs py-1"><i class="fa-solid fa-arrow-left"></i> กลับ</button>
+                    <h2 class="text-lg text-slate-800 font-bold"><i class="fa-solid fa-list mr-2 text-pink-500"></i> เลือกวงที่ต้องการจัดการ</h2>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    ${state.groups.map(g => {
+                        let styleStr = getGroupFlagCss(g) + " width: 172px; height: 240px;";
+                        return `
+                        <div onclick="renderGroupDashboard('${g.id}')" class="modern-panel p-4 flex flex-col items-center justify-center cursor-pointer hover:border-pink-400 hover:shadow-md transition-all bg-white">
+                            <div class="group-flag mb-3 shadow rounded-sm" style="${styleStr}">${getFlagInnerHtml(g.name)}</div>
+                            <span class="font-bold text-sm text-slate-800">${g.name}</span>
+                            <span class="text-[10px] text-slate-500 mt-1">เมมเบอร์: ${state.idols.filter(i=>i.groupId===g.id).length} คน</span>
+                            <span class="text-[9px] text-pink-600 font-bold mt-0.5">ส่วนแบ่ง: ${100-g.revShare}:${g.revShare}</span>
+                        </div>`;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function renderGroupDashboard(groupId, tab = 'gen') {
+            state.activeGroupId = groupId;
+            const g = state.groups.find(x => x.id === groupId);
+            const container = document.getElementById('group-dynamic-container');
+            let capName = g.groupCaptain ? state.idols.find(i=>i.id===g.groupCaptain)?.name : 'ยังไม่ระบุ';
+            let tabContent = '';
+            if(tab === 'gen') tabContent = getGenTabHtml(g);
+            else if(tab === 'team') tabContent = getTeamTabHtml(g);
+            else if(tab === 'unit') tabContent = getUnitTabHtml(g);
+            let styleStr = getGroupFlagCss(g) + " width: 172px; height: 240px;";
+
+            container.innerHTML = `
+                <div class="flex flex-col gap-4 border-b border-slate-200 pb-4 mb-4">
+                    <div class="flex justify-end"><button onclick="renderGroupList()" class="modern-btn text-xs py-1"><i class="fa-solid fa-arrow-left"></i> ออก</button></div>
+                    <div class="flex flex-col md:flex-row items-start gap-6">
+                        <div class="group-flag shadow-md rounded-sm flex-shrink-0" style="${styleStr}">${getFlagInnerHtml(g.name)}</div>
+                        <div class="pt-2 flex-grow w-full">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h2 class="text-2xl text-slate-800 font-bold mb-1">${g.name}</h2>
+                                    <div class="text-xs text-slate-600 bg-slate-100 inline-block px-2 py-1 rounded border border-slate-200 mb-3"><b>กัปตันวง:</b> ${capName} | <b>ข้อตกลงส่วนแบ่ง:</b> บริษัท ${100-g.revShare} : ${g.revShare} เมมเบอร์</div>
+                                </div>
+                                <button onclick="renderGroupForm('${g.id}')" class="modern-btn text-xs py-1.5 border-pink-200 text-pink-600 hover:bg-pink-50"><i class="fa-solid fa-pen mr-1"></i> แก้ไขข้อมูลวง</button>
+                            </div>
+                            <div class="flex gap-4 mt-2 border-b border-slate-200 overflow-x-auto whitespace-nowrap w-full">
+                                <button onclick="renderGroupDashboard('${g.id}', 'gen')" class="group-tab-btn pb-2 text-sm px-2 ${tab==='gen'?'active':'text-slate-500'}">1. การจัดการรุ่น</button>
+                                <button onclick="renderGroupDashboard('${g.id}', 'team')" class="group-tab-btn pb-2 text-sm px-2 ${tab==='team'?'active':'text-slate-500'}">2. การจัดการทีม</button>
+                                <button onclick="renderGroupDashboard('${g.id}', 'unit')" class="group-tab-btn pb-2 text-sm px-2 ${tab==='unit'?'active':'text-slate-500'}">3. การจัดการยูนิต</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pt-2 animate-[fadeIn_0.2s_ease-out]">${tabContent}</div>
+            `;
+        }
+
+        function getGenTabHtml(g) {
+            let html = `
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-pink-600"><i class="fa-solid fa-users-rays mr-2"></i> รายการรุ่น (Generations)</h3>
+                    <div class="flex gap-2">
+                        <button onclick="openSetGroupCaptainModal('${g.id}')" class="modern-btn text-xs py-1.5"><i class="fa-solid fa-crown text-amber-500 mr-1"></i> เลือกกัปตันวง</button>
+                        <button onclick="openAddGenModal('${g.id}')" class="modern-btn modern-btn-primary text-xs py-1.5 px-4">+ เพิ่มรุ่นใหม่</button>
+                    </div>
+                </div>
+                <div class="space-y-3">
+            `;
+            if(g.generations.length === 0) html += `<div class="text-center text-sm text-slate-400 p-8 border border-dashed rounded-lg">ยังไม่มีรุ่นในวงนี้ กดเพิ่มรุ่นใหม่เพื่อเริ่มรับสมาชิก</div>`;
+            g.generations.forEach(gen => {
+                let members = state.idols.filter(i => i.groupId === g.id && i.generationNum === gen.num);
+                html += `
+                    <div class="bg-white border border-slate-200 p-4 rounded-xl flex justify-between items-center shadow-sm">
+                        <div>
+                            <div class="font-bold text-slate-700 text-base">รุ่นที่ ${gen.num} (Generation ${gen.num})</div>
+                            <div class="text-xs text-slate-500 mt-1">สมาชิก: ${members.length} คน (${members.map(m=>m.name).join(', ') || 'ยังไม่มี'})</div>
+                        </div>
+                        <button onclick="openManageGenMembersModal('${g.id}', ${gen.num})" class="modern-btn text-xs modern-btn-info py-1">จัดการสมาชิก</button>
+                    </div>
+                `;
+            });
+            return html + `</div>`;
+        }
+
+        function openManageGenMembersModal(gId, genNum) {
+            let allTrainees = state.idols.filter(i => !i.groupId || (i.groupId === gId && i.generationNum === genNum));
+            document.getElementById('am-title').innerHTML = `จัดการสมาชิก รุ่นที่ ${genNum}`;
+            let html = `<p class="text-[10px] text-slate-500 mb-3">กดเลือกสมาชิกเพื่อบรรจุเข้า หรือเอาออกตามต้องการ</p>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-80 overflow-y-auto p-2 border rounded bg-slate-50 custom-scrollbar">`;
+            allTrainees.forEach(i => {
+                let isChecked = (i.groupId === gId && i.generationNum === genNum) ? 'checked' : '';
+                let displayImg = i.img || i.avatar || 'https://via.placeholder.com/150';
+                html += `
+                    <label class="cursor-pointer">
+                        <input type="checkbox" value="${i.id}" class="hidden peer gen-manage-cb" ${isChecked}>
+                        <div class="p-2 border rounded-xl bg-white peer-checked:bg-pink-100 peer-checked:border-pink-500 flex flex-col items-center gap-1 transition-all hover:shadow-md">
+                            <div class="w-12 h-12 rounded-full bg-slate-200 overflow-hidden flex items-center justify-center border border-slate-300">
+                                <img src="${displayImg}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/150';">
+                            </div>
+                            <div class="text-[10px] font-bold text-slate-700 text-center truncate w-full">${i.name}</div>
+                            <div class="text-[9px] text-slate-400">${i.groupId ? 'มีรุ่นแล้ว' : 'ว่าง'}</div>
+                        </div>
+                    </label>`;
+            });
+            html += `</div>`;
+            document.getElementById('am-content').innerHTML = html;
+            document.getElementById('am-confirm-btn').onclick = () => {
+                let selectedIds = Array.from(document.querySelectorAll('.gen-manage-cb:checked')).map(c=>c.value);
+                state.idols.forEach(i => {
+                    if (i.groupId === gId && i.generationNum === genNum && !selectedIds.includes(i.id)) { i.groupId = null; i.generationNum = null; i.team = null; }
+                });
+                selectedIds.forEach(id => {
+                    let idol = state.idols.find(x => x.id === id);
+                    idol.groupId = gId; idol.generationNum = genNum; if(!idol.team) idol.team = 'TRAINEE';
+                });
+                document.getElementById('action-modal').classList.add('hidden');
+                renderGroupDashboard(gId, 'gen');
+            };
+            document.getElementById('action-modal').classList.remove('hidden');
+        }
+
+        function openAddGenModal(gId) {
+            document.getElementById('am-title').innerHTML = `<i class="fa-solid fa-plus"></i> เพิ่มรุ่นใหม่`;
+            document.getElementById('am-content').innerHTML = `<label class="text-xs font-bold text-slate-600 block mb-1">ระบุหมายเลขรุ่น (เช่น 1, 2, 3)</label><input type="number" id="mod-gen-num" class="modern-input" min="1" value="1">`;
+            document.getElementById('am-confirm-btn').onclick = () => {
+                let num = parseInt(document.getElementById('mod-gen-num').value);
+                let g = state.groups.find(x=>x.id===gId);
+                if(g.generations.find(x=>x.num === num)) return showMsg('ผิดพลาด', 'มีรุ่นนี้อยู่แล้ว');
+                g.generations.push({ num: num });
+                document.getElementById('action-modal').classList.add('hidden');
+                renderGroupDashboard(gId, 'gen');
+            };
+            document.getElementById('action-modal').classList.remove('hidden');
+        }
+
+        function openSetGroupCaptainModal(gId) {
+            let g = state.groups.find(x=>x.id===gId);
+            let groupMembers = state.idols.filter(i => i.groupId === gId);
+            document.getElementById('am-title').innerHTML = `<i class="fa-solid fa-crown text-amber-500"></i> เลือกกัปตันวง`;
+            let html = `<select id="mod-group-cap" class="modern-input"><option value="">-- ไม่ระบุกัปตัน --</option>`;
+            groupMembers.forEach(i => { html += `<option value="${i.id}" ${g.groupCaptain===i.id?'selected':''}>${i.name} (รุ่น ${i.generationNum})</option>`; });
+            html += `</select>`;
+            document.getElementById('am-content').innerHTML = html;
+            document.getElementById('am-confirm-btn').onclick = () => {
+                g.groupCaptain = document.getElementById('mod-group-cap').value || null;
+                document.getElementById('action-modal').classList.add('hidden');
+                renderGroupDashboard(gId, 'gen');
+            };
+            document.getElementById('action-modal').classList.remove('hidden');
+        }
+
+        function getTeamTabHtml(g) {
+            let trainees = state.idols.filter(i => i.groupId === g.id && i.team === 'TRAINEE');
+            let html = `
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-pink-600"><i class="fa-solid fa-flag mr-2"></i> การจัดการทีม (Teams)</h3>
+                    <button onclick="openCreateTeamModal('${g.id}')" class="modern-btn modern-btn-primary text-xs py-1.5 px-4">+ สร้างทีมใหม่</button>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl">
+                        <h4 class="font-bold text-slate-700 mb-2 border-b border-slate-200 pb-2">Team TRAINEE <span class="text-[10px] bg-slate-200 px-1.5 rounded ml-1">${trainees.length}</span></h4>
+                        <div class="flex flex-wrap gap-1.5">
+                            ${trainees.length===0 ? '<span class="text-xs text-slate-400">ไม่มีสมาชิก Trainee</span>' : trainees.map(i=>`<span class="text-[10px] bg-white border border-slate-200 px-2 py-1 rounded">${i.name} <span class="text-pink-400">Gen.${i.generationNum}</span></span>`).join('')}
+                        </div>
+                    </div>
+            `;
+            g.teams.forEach(t => {
+                let mCount = state.idols.filter(i => i.groupId === g.id && i.team === t.name).length;
+                let capName = t.captain ? state.idols.find(i=>i.id===t.captain)?.name : '-';
+                let vCapName = t.viceCaptain ? state.idols.find(i=>i.id===t.viceCaptain)?.name : '-';
+                html += `
+                    <div class="bg-white border border-blue-200 p-4 rounded-xl shadow-sm relative overflow-hidden">
+                        <div class="absolute left-0 top-0 w-1 h-full bg-blue-500"></div>
+                        <div class="flex justify-between items-start mb-2 ml-2">
+                            <h4 class="font-bold text-blue-700 text-lg">${t.name}</h4>
+                            <button onclick="openManageTeamModal('${g.id}', '${t.id}')" class="modern-btn text-[10px] py-1 px-2 border-blue-200 hover:bg-blue-50">จัดการทีม</button>
+                        </div>
+                        <div class="ml-2 text-[10px] text-slate-600 grid grid-cols-2 gap-1 mb-2 bg-slate-50 p-1.5 rounded">
+                            <div><b class="text-amber-600"><i class="fa-solid fa-crown"></i> กัปตัน:</b> ${capName}</div>
+                            <div><b class="text-blue-500"><i class="fa-solid fa-star"></i> รองกัปตัน:</b> ${vCapName}</div>
+                        </div>
+                        <div class="ml-2 text-xs text-slate-500">สมาชิก: ${mCount} คน</div>
+                    </div>
+                `;
+            });
+            return html + `</div>`;
+        }
+
+        function openCreateTeamModal(gId) {
+            document.getElementById('am-title').innerHTML = `สร้างทีมใหม่`;
+            document.getElementById('am-content').innerHTML = `<label class="text-xs font-bold text-slate-600 block mb-1">ชื่อทีม (เช่น Team A, Team K)</label><input type="text" id="mod-team-name" class="modern-input font-bold" placeholder="Team ...">`;
+            document.getElementById('am-confirm-btn').onclick = () => {
+                let name = document.getElementById('mod-team-name').value.trim();
+                if(!name) return;
+                let g = state.groups.find(x=>x.id===gId);
+                g.teams.push({ id: 'tm_'+generateId(), name: name, captain: null, viceCaptain: null });
+                document.getElementById('action-modal').classList.add('hidden');
+                renderGroupDashboard(gId, 'team');
+            };
+            document.getElementById('action-modal').classList.remove('hidden');
+        }
+
+        function openManageTeamModal(gId, tId) {
+            let g = state.groups.find(x=>x.id===gId);
+            let team = g.teams.find(x=>x.id===tId);
+            let availableMembers = state.idols.filter(i => i.groupId === gId && (i.team === 'TRAINEE' || i.team === team.name));
+            
+            document.getElementById('am-title').innerHTML = `จัดการ ${team.name}`;
+            let html = `<div class="mb-4"><label class="text-xs font-bold text-slate-600 block mb-1">เลือกสมาชิกเข้าสู่ทีม (ดึงจาก Trainee)</label><div class="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto p-1 border rounded bg-slate-50 custom-scrollbar">`;
+            availableMembers.forEach(i => {
+                let isChecked = i.team === team.name ? 'checked' : '';
+                html += `<label class="check-container cursor-pointer block">
+                    <input type="checkbox" value="${i.id}" class="hidden peer tm-mem-cb" ${isChecked} onchange="updateTeamRolesDropdown()">
+                    <div class="p-1.5 border rounded-lg bg-white peer-checked:bg-blue-50 peer-checked:border-blue-400 text-[10px] font-bold text-slate-700">${i.name} (Gen.${i.generationNum})</div>
+                </label>`;
+            });
+            html += `</div></div>
+                <div class="grid grid-cols-2 gap-4 border-t pt-3">
+                    <div><label class="text-xs font-bold text-amber-600 block mb-1">กัปตันทีม</label><select id="mod-tm-cap" class="modern-input text-xs"></select></div>
+                    <div><label class="text-xs font-bold text-blue-500 block mb-1">รองกัปตันทีม</label><select id="mod-tm-vcap" class="modern-input text-xs"></select></div>
+                </div>`;
+            document.getElementById('am-content').innerHTML = html;
+            window.tempTeamData = { cap: team.captain, vcap: team.viceCaptain, allObj: availableMembers };
+            window.updateTeamRolesDropdown = function() {
+                let selectedIds = Array.from(document.querySelectorAll('.tm-mem-cb:checked')).map(c=>c.value);
+                let capSel = document.getElementById('mod-tm-cap');
+                let vcapSel = document.getElementById('mod-tm-vcap');
+                let currCap = capSel ? capSel.value : window.tempTeamData.cap;
+                let currVcap = vcapSel ? vcapSel.value : window.tempTeamData.vcap;
+
+                let opts = `<option value="">-- ไม่ระบุ --</option>`;
+                selectedIds.forEach(id => {
+                    let name = window.tempTeamData.allObj.find(x=>x.id===id).name;
+                    opts += `<option value="${id}">${name}</option>`;
+                });
+                if(capSel) { capSel.innerHTML = opts; capSel.value = selectedIds.includes(currCap) ? currCap : ""; }
+                if(vcapSel) { vcapSel.innerHTML = opts; vcapSel.value = selectedIds.includes(currVcap) ? currVcap : ""; }
+            };
+            setTimeout(() => { updateTeamRolesDropdown(); }, 50);
+
+            document.getElementById('am-confirm-btn').onclick = () => {
+                let selectedIds = Array.from(document.querySelectorAll('.tm-mem-cb:checked')).map(c=>c.value);
+                availableMembers.forEach(i => { i.team = selectedIds.includes(i.id) ? team.name : 'TRAINEE'; });
+                team.captain = document.getElementById('mod-tm-cap').value || null;
+                team.viceCaptain = document.getElementById('mod-tm-vcap').value || null;
+                document.getElementById('action-modal').classList.add('hidden');
+                renderGroupDashboard(gId, 'team');
+            };
+            document.getElementById('action-modal').classList.remove('hidden');
+        }
+
+        function getUnitTabHtml(g) {
+            let html = `
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-pink-600"><i class="fa-solid fa-compact-disc mr-2"></i> การจัดการยูนิต (Units)</h3>
+                    <button onclick="openCreateUnitModal('${g.id}')" class="modern-btn modern-btn-primary text-xs py-1.5 px-4">+ สร้างยูนิตใหม่</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            `;
+            if(g.units.length === 0) html += `<div class="col-span-full text-center text-sm text-slate-400 p-8 border border-dashed rounded-lg">ยังไม่มียูนิตย่อยในวงนี้</div>`;
+            g.units.forEach(u => {
+                let names = u.members.map(id => state.idols.find(i=>i.id===id)?.name).join(', ');
+                html += `
+                    <div class="bg-white border border-purple-200 p-4 rounded-xl shadow-sm">
+                        <div class="flex justify-between items-start mb-2 border-b border-slate-100 pb-2">
+                            <h4 class="font-bold text-purple-700">${u.name}</h4>
+                            <button onclick="openEditUnitModal('${g.id}', '${u.id}')" class="text-xs text-blue-500 hover:underline">แก้ไขยูนิต</button>
+                        </div>
+                        <div class="text-[10px] text-slate-600 leading-relaxed"><b>สมาชิก:</b> ${names || '-'}</div>
+                    </div>
+                `;
+            });
+            return html + `</div>`;
+        }
+
+        function openCreateUnitModal(gId) {
+            let g = state.groups.find(x=>x.id===gId);
+            document.getElementById('am-title').innerHTML = `สร้างยูนิตใหม่`;
+            document.getElementById('am-content').innerHTML = `<label class="text-xs font-bold text-slate-600 block mb-1">ชื่อยูนิต (เช่น Unite ...)</label><input type="text" id="mod-unit-name" class="modern-input font-bold" placeholder="Unite...">`;
+            document.getElementById('am-confirm-btn').onclick = () => {
+                let name = document.getElementById('mod-unit-name').value.trim();
+                if(!name) return;
+                g.units.push({ id: 'un_'+generateId(), name: name, members: [] });
+                document.getElementById('action-modal').classList.add('hidden');
+                openEditUnitModal(gId, g.units[g.units.length-1].id);
+            };
+            document.getElementById('action-modal').classList.remove('hidden');
+        }
+
+        function openEditUnitModal(gId, uId) {
+            let g = state.groups.find(x=>x.id===gId);
+            let unit = g.units.find(x=>x.id===uId);
+            let allGroupMembers = state.idols.filter(i => i.groupId === gId);
+            document.getElementById('am-title').innerHTML = `แก้ไขยูนิต: ${unit.name}`;
+            let html = `<div class="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-60 overflow-y-auto p-1 bg-slate-50 border rounded custom-scrollbar">`;
+            allGroupMembers.forEach(i => {
+                let isChecked = unit.members.includes(i.id) ? 'checked' : '';
+                html += `<label class="check-container cursor-pointer block">
+                    <input type="checkbox" value="${i.id}" class="hidden peer un-mem-cb" ${isChecked}>
+                    <div class="p-1.5 border rounded-lg bg-white peer-checked:bg-purple-50 peer-checked:border-purple-400 text-[10px] font-bold text-slate-700">${i.name}</div>
+                </label>`;
+            });
+            html += `</div>`;
+            document.getElementById('am-content').innerHTML = html;
+            document.getElementById('am-confirm-btn').onclick = () => {
+                let selectedIds = Array.from(document.querySelectorAll('.un-mem-cb:checked')).map(c=>c.value);
+                unit.members = selectedIds;
+                document.getElementById('action-modal').classList.add('hidden');
+                renderGroupDashboard(gId, 'unit');
+            };
+            document.getElementById('action-modal').classList.remove('hidden');
+        }
+        // ฟังก์ชันคำนวณและแสดงผลสรุปยอดค่าใช้จ่ายในหน้าสตูดิโอแบบเรียลไทม์ (นับรวมทุกคอลัมน์)
+        function updateStudioTotalCostLive() {
+            let totalCost = 0;
+
+            // คอลัมน์ที่ 1: นับประเภทผลงาน (ซิงเกิล = 25000, อัลบั้มเต็ม = 120000)
+            const releaseTypeInput = document.querySelector('input[name="release-type"]:checked');
+            if (releaseTypeInput) {
+                if (releaseTypeInput.value === 'single') totalCost += 25000;
+                else if (releaseTypeInput.value === 'album') totalCost += 120000;
+            }
+
+            // คอลัมน์ที่ 2: นับการจ้างงานทีมผลิตทั้ง 4 ตำแหน่ง (ดึงราคา Value จาก select โดยตรง)
+            const staffIds = ['hire-songwriter', 'hire-composer', 'hire-choreographer', 'hire-mv'];
+            staffIds.forEach(id => {
+                const staffSelect = document.getElementById(id);
+                if (staffSelect) {
+                    totalCost += parseInt(staffSelect.value) || 0;
+                }
+            });
+
+            // คอลัมน์ที่ 3: นับกลยุทธ์การตลาดที่ติ๊กเลือกไว้
+            const marketingItems = [
+                { id: 'merch-photo', cost: 5000 },
+                { id: 'merch-handshake', cost: 15000 },
+                { id: 'merch-2shot', cost: 20000 },
+                { id: 'merch-calendar', cost: 10000 },
+                { id: 'merch-plushie', cost: 25000 }
+            ];
+            marketingItems.forEach(item => {
+                const checkbox = document.getElementById(item.id);
+                if (checkbox && checkbox.checked) {
+                    totalCost += item.cost;
+                }
+            });
+
+            // แสดงผลบนหน้าจอแถบประธานควบคุม
+            const displayElement = document.getElementById('studio-total-cost-display');
+            if (displayElement) {
+                displayElement.innerText = '฿' + totalCost.toLocaleString();
+            }
+        }
+
+        // ผูกฟังก์ชันเข้ากับทุก Event ของทุกคอลัมน์ให้ประมวลผลทันทีเมื่อมีการเปลี่ยนแปลง
+        function initStudioCostListeners() {
+            // 1. ดักจับเมื่อเปลี่ยน "ประเภทผลงาน" (ซิงเกิล/อัลบั้ม)
+            const releaseRadios = document.querySelectorAll('input[name="release-type"]');
+            releaseRadios.forEach(radio => {
+                radio.addEventListener('change', updateStudioTotalCostLive);
+            });
+
+            // 2. ดักจับเมื่อเปลี่ยนระดับ "การจ้างงานทีมผลิต" ทั้ง 4 แผนก
+            const staffIds = ['hire-songwriter', 'hire-composer', 'hire-choreographer', 'hire-mv'];
+            staffIds.forEach(id => {
+                const selectEl = document.getElementById(id);
+                if (selectEl) {
+                    selectEl.addEventListener('change', updateStudioTotalCostLive);
+                }
+            });
+
+            // 3. ดักจับเมื่อมีการเลือก "กลยุทธ์การตลาด"
+            const marketingIds = ['merch-photo', 'merch-handshake', 'merch-2shot', 'merch-calendar', 'merch-plushie'];
+            marketingIds.forEach(id => {
+                const checkbox = document.getElementById(id);
+                if (checkbox) {
+                    checkbox.addEventListener('change', updateStudioTotalCostLive);
+                }
+            });
+
+            // เรียกคำนวณค่าเริ่มต้นทันทีเมื่อเข้าเกม (Default: ซิงเกิล 25k + ทีมงานมาตรฐาน 4 คนคนละ 10k = ยอดเริ่ม 65k)
+            updateStudioTotalCostLive();
+        }
+
+        // เรียกทำงานเมื่อโหลดหน้าเว็บเรียบร้อย
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initStudioCostListeners);
+        } else {
+            initStudioCostListeners();
+        }
+
+        window.onload = () => { initSetupScreen(); };
+        
+    </script>
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCyp5NRlZhkQ_i67uwucB_6Fgawon4eJUg",
+        authDomain: "idol-manager-game.firebaseapp.com",
+        databaseURL: "https://idol-manager-game-default-rtdb.firebaseio.com",
+        projectId: "idol-manager-game",
+        storageBucket: "idol-manager-game.firebasestorage.app",
+        messagingSenderId: "412035143990",
+        appId: "1:412035143990:web:99a6b23266f39b14ddfb97",
+        measurementId: "G-TSJ7BWZCXT"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    function injectOnlineButtons() {
+        if (document.getElementById('btn-save-online')) return;
+
+        const localSaveBtn = document.querySelector('button[onclick="saveGame()"]');
+        
+        if (localSaveBtn) {
+        const saveOnlineBtn = document.createElement('button');
+        saveOnlineBtn.id = 'btn-save-online';
+        saveOnlineBtn.className = "bg-purple-50 text-purple-600 border border-purple-200 rounded-lg px-3 py-1.5 flex items-center gap-2 hover:bg-purple-100 hover:shadow-sm transition-all text-xs font-bold active:scale-95 shadow-sm";
+        saveOnlineBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-purple-500"></i> <span>เซฟออนไลน์</span>`;
+
+        const loadOnlineBtn = document.createElement('button');
+        loadOnlineBtn.id = 'btn-load-online';
+        loadOnlineBtn.className = "bg-slate-100 text-slate-700 border border-slate-300 rounded-lg px-3 py-1.5 flex items-center gap-2 hover:bg-slate-200 hover:shadow-sm transition-all text-xs font-bold active:scale-95 shadow-sm";
+        loadOnlineBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-down text-slate-500"></i> <span>โหลดออนไลน์</span>`;
+
+        localSaveBtn.after(saveOnlineBtn);
+        saveOnlineBtn.after(loadOnlineBtn);
+
+        saveOnlineBtn.addEventListener('click', () => {
+            if (typeof window.saveGame === 'function') {
+            window.saveGame();
+            }
+
+            const localData = localStorage.getItem('CompanyIdolManager_SaveData');
+            if (!localData) {
+            alert('❌ ไม่พบข้อมูลเซฟในเครื่อง! กรุณาสร้างค่ายและเริ่มเล่นเกมก่อนเซฟออนไลน์ครับ');
+            return;
+            }
+
+            const saveData = JSON.parse(localData);
+            const agencyName = saveData.agencyName ? saveData.agencyName.trim() : "";
+
+            if (!agencyName || agencyName === "---") {
+            alert('❌ ไม่สามารถเซฟออนไลน์ได้เนื่องจากค่ายเกมยังไม่มีชื่อหรืออยู่หน้าตั้งไข่');
+            return;
+            }
+
+            set(ref(db, 'saves/' + agencyName), saveData)
+            .then(() => {
+                alert(`💾 [คลาวด์สำเร็จ] บันทึกข้อมูลค่าย "${agencyName}" ขึ้นออนไลน์เรียบร้อย! คุณสามารถนำชื่อค่ายนี้ไปกดโหลดเล่นต่อบนเครื่องอื่นได้ทันทีครับ`);
+            })
+            .catch((error) => {
+                alert('❌ เซฟออนไลน์ล้มเหลว: ' + error.message);
+            });
+        });
+
+        loadOnlineBtn.addEventListener('click', () => {
+            const agencyName = prompt("กรุณากรอกชื่อบริษัท/ค่ายเกมที่คุณต้องการโหลดข้อมูลออนไลน์:");
+            if (!agencyName || !agencyName.trim()) return;
+
+            const dbRef = ref(db);
+            get(child(dbRef, `saves/${agencyName.trim()}`))
+            .then((snapshot) => {
+                if (snapshot.exists()) {
+                const onlineData = snapshot.val();
+                localStorage.setItem('CompanyIdolManager_SaveData', JSON.stringify(onlineData));
+                alert(`🎉 [โหลดสำเร็จ] ดึงข้อมูลออนไลน์ของค่าย "${agencyName.trim()}" มาเปิดบนเครื่องนี้เรียบร้อย หน้าเว็บจะรีเฟรชเข้าสู่เกมครับ`);
+                location.reload(); 
+                } else {
+                alert(`❌ ไม่พบข้อมูลเซฟออนไลน์ของค่ายชื่อ "${agencyName.trim()}" ในระบบ กรุณาตรวจสอบตัวอักษรพิมพ์เล็ก-ใหญ่ให้ถูกต้องนะครับ`);
+                }
+            })
+            .catch((error) => {
+                alert('❌ โหลดเซฟออนไลน์ล้มเหลว: ' + error.message);
+            });
+        });
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', injectOnlineButtons);
+    } else {
+        injectOnlineButtons();
+    }
+    </script>
+</body>
+</html>
