@@ -561,7 +561,7 @@
 
         const SAVE_KEY = 'CompanyIdolManager_SaveData';
         let currentDate = new Date(2026, 0, 1);
-        let state = { agencyName: "", cash: 150000, week: 1, idols: [], groups: [], activeGroupId: null, currentDateValue: currentDate.getTime(), auditionPool: [] };
+        let state = { agencyName: "", cash: 1000000, week: 1, idols: [], groups: [], activeGroupId: null, currentDateValue: currentDate.getTime(), auditionPool: [] };
         
         // --- STUDIO STATE ---
         let studioState = { groupId: null, senbatsu: [], centers: [] };
@@ -610,7 +610,7 @@
         function startGame() {
             const nameInput = document.getElementById('agency-name-input').value.trim();
             if(!nameInput) return showMsg('แจ้งเตือน', 'กรุณาตั้งชื่อบริษัท');
-            state = { agencyName: nameInput, cash: 150000, week: 1, idols: [], groups: [], activeGroupId: null, auditionPool: [] };
+            state = { agencyName: nameInput, cash: 1000000, week: 1, idols: [], groups: [], activeGroupId: null, auditionPool: [] };
             currentDate = new Date(2026, 0, 1);
             state.currentDateValue = currentDate.getTime();
             updateGlobalUI();
