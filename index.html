@@ -135,13 +135,29 @@
                     <button id="tab-btn-idols" onclick="switchTab('idols')" class="modern-btn flex items-center justify-start gap-3"><i class="fa-solid fa-address-book w-5"></i><span>เมมเบอร์ (เด็กฝึก)</span></button>
                     <button id="tab-btn-audition" onclick="switchTab('audition')" class="modern-btn flex items-center justify-start gap-3"><i class="fa-solid fa-microphone-lines w-5"></i><span>ออดิชั่น (Audition)</span></button>
                     <button id="tab-btn-groups" onclick="switchTab('groups')" class="modern-btn flex items-center justify-start gap-3"><i class="fa-solid fa-layer-group w-5"></i><span>การจัดการวง</span></button>
-                    
                     <button id="tab-btn-music-studio" onclick="switchTab('music-studio')" class="modern-btn flex items-center justify-start gap-3">
                         <i class="fa-solid fa-compact-disc w-5 text-pink-500"></i>
                         <span>สตูดิโอผลิตเพลง</span>
                     </button>
                 </nav>
             </div>
+            
+            <div class="modern-panel p-3 bg-white/95 shadow-md flex flex-col gap-2">
+                <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b pb-1 flex items-center gap-1.5">
+                    <i class="fa-solid fa-terminal text-pink-500"></i> ช่องแชท
+                </div>
+                
+                <div id="chat-logs" class="h-32 overflow-y-auto custom-scrollbar space-y-1 text-xs text-slate-600 bg-slate-50 p-2 rounded border border-slate-200">
+                    <div class="text-slate-400 font-medium">[ระบบ] พิมพ์แชทลงที่นี่</div>
+                </div>
+                
+                <div class="flex gap-1.5 w-full items-center">
+                    <input type="text" id="chat-input" placeholder="พิมพ์แชทลงที่นี่" 
+                        class="flex-1 min-w-0 text-xs p-2 bg-slate-50 border border-slate-200 rounded focus:outline-none focus:border-pink-500 transition-colors" />
+                    <button id="send-chat-btn" class="modern-btn modern-btn-primary text-xs py-2 px-4 shrink-0">ส่ง</button>
+                </div>
+            </div>
+
             <div class="modern-panel p-3 bg-white/95 mt-auto shadow-md">
                 <button onclick="advanceTime()" class="modern-btn modern-btn-primary w-full py-3 text-sm flex items-center justify-center gap-2 shadow"><i class="fa-solid fa-forward-step"></i><span>ข้ามสัปดาห์</span></button>
             </div>
@@ -711,7 +727,8 @@
                 }
             }
         }
-
+        // --- CHAT CONSOLE ---
+        // ฟังก์ชันหลักที่ทำงานเมื่อมีการส่งข้อความในแชท
         // --- IDOLS SYSTEM ---
         function renderIdols() {
             const cont = document.getElementById('idol-cards-container');
@@ -2193,6 +2210,108 @@
         document.addEventListener('DOMContentLoaded', injectOnlineButtons);
     } else {
         injectOnlineButtons();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const chatInput = document.getElementById("chat-input");
+        const sendBtn = document.getElementById("send-chat-btn");
+
+        if (chatInput && sendBtn) {
+            // ฟังก์ชันหลักเมื่อผู้เล่นกดส่งข้อความ
+            function handleSendMessage() {
+                const message = chatInput.value.trim();
+                if (!message) return; // ถ้าช่องว่าง ไม่ต้องทำงาน
+
+                processChatMessage(message);
+                chatInput.value = ""; // เคลียร์ช่องพิมพ์
+            }
+
+            // รองรับการคลิกปุ่มส่ง
+            sendBtn.addEventListener("click", handleSendMessage);
+
+            // รองรับการกดปุ่ม Enter บนคีย์บอร์ดในช่องอินพุต
+            chatInput.addEventListener("keyup", (event) => {
+                if (event.key === "Enter") {
+                    handleSendMessage();
+                }
+            });
+        }
+    });
+
+    // ฟังก์ชันคัดกรองระหว่าง แชททั่วไป หรือ คำสั่งสแลช (/) - อัปเดตรองรับชื่อเซฟออนไลน์
+        function processChatMessage(playerMessage) {
+            // ถ้าไม่ได้ขึ้นต้นด้วย / ให้แสดงผลเป็นข้อความแชทธรรมดา
+            if (!playerMessage.startsWith('/')) {
+                showSystemMessage(`[ผู้เล่น]: ${playerMessage}`, "text-slate-700");
+                return;
+            }
+
+            // แยกแยะคำสั่ง (เช่น /give money ARTEM1S 1000)
+            const args = playerMessage.slice(1).trim().split(/\s+/);
+            const command = args.shift().toLowerCase(); 
+
+            switch (command) {
+                case 'help':
+                    showSystemMessage("💡 คำสั่งที่มีระบบ: /give money <ชื่อเซฟออนไลน์> <จำนวนเงิน>", "text-amber-600 font-medium");
+                    break;
+                    
+                case 'give':
+                    const subCommand = args[0]?.toLowerCase(); // ดึงคำว่า 'money'
+                    
+                    let targetSave = "";
+                    let amount = 0;
+
+                    // ตรวจสอบโครงสร้างคำสั่งหลังจากคำว่า 'money'
+                    // กรณีพิมพ์แบบมีชื่อเซฟคั่นกลาง: /give money ARTEM1S 1000
+                    if (args[1] && isNaN(parseInt(args[1], 10))) {
+                        targetSave = args[1];                // คำแรกหลัง money คือชื่อเซฟ (ARTEM1S)
+                        amount = parseInt(args[2], 10);      // คำถัดไปคือจำนวนเงิน (1000)
+                    } 
+                    // กรณีพิมพ์แบบเก่า (ใส่แค่ตัวเลข): /give money 1000
+                    else {
+                        amount = parseInt(args[1], 10);      // คำแรกหลัง money คือจำนวนเงินทันที
+                    }
+                    
+                    if (subCommand === 'money' && !isNaN(amount) && amount > 0) {
+                        // ตรวจสอบและเชื่อมโยงกับระบบเงินในไฟล์จริงของคุณ
+                        if (typeof cash !== 'undefined') {
+                            cash += amount;
+                            // ถ้าเกมของคุณมีฟังก์ชันอัปเดตหน้าจอ UI ให้เรียกใช้ตรงนี้ (เช่น updateUI() )
+                            if (typeof updateUI === 'function') updateUI(); 
+                            
+                            // อัปเดตตัวเลขแสดงผลบนหน้าจอโดยตรง (กรณีอิงตามไอดีในโค้ดเก่า)
+                            const cashDisplay = document.getElementById("stat-cash");
+                            if (cashDisplay) cashDisplay.innerText = cash.toLocaleString();
+                        }
+                        
+                        // ปรับแต่งข้อความแจ้งเตือนความสำเร็จให้แสดงชื่อเซฟด้วย
+                        const saveText = targetSave ? ` ให้เซฟ [${targetSave}]` : "";
+                        showSystemMessage(`💰 เสกเงินสำเร็จ! ได้รับ +฿${amount.toLocaleString()}${saveText}`, "text-emerald-600 font-bold");
+                    } else {
+                        // ปรับข้อความเตือนให้ตรงกับวิธีใช้จริง
+                        showSystemMessage("⚠️ รูปแบบคำสั่งผิด! วิธีใช้: /give money <ชื่อเซฟออนไลน์> <จำนวนเงิน>", "text-rose-500");
+                    }
+                    break;
+                    
+                default:
+                    showSystemMessage(`❌ 不พบคำสั่ง /${command}`, "text-rose-500");
+                    break;
+            }
+        }
+
+    // ฟังก์ชันสำหรับดันข้อความบรรทัดใหม่ลงกล่องแชท
+    function showSystemMessage(text, textColorClass = "text-slate-500") {
+        const chatLogs = document.getElementById("chat-logs");
+        if (!chatLogs) return;
+
+        const msgDiv = document.createElement("div");
+        msgDiv.className = `text-[11px] leading-relaxed ${textColorClass}`;
+        msgDiv.innerText = text;
+
+        chatLogs.appendChild(msgDiv);
+        
+        // เลื่อนแถบ Scrollbar ลงมาล่างสุดอัตโนมัติเมื่อมีข้อความใหม่ๆ เข้ามา
+        chatLogs.scrollTop = chatLogs.scrollHeight;
     }
     </script>
 </body>
