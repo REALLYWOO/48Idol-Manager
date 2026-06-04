@@ -123,7 +123,7 @@
             </div>
             <div class="bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5 flex items-center gap-2">
                 <i class="fa-solid fa-coins text-amber-500"></i>
-                <div class="text-right"><p class="text-[9px] text-amber-600 font-bold">FUNDS</p><p class="text-xs font-bold text-amber-600">฿<span id="stat-cash">1,000,000</span></p></div>
+                <div class="text-right"><p class="text-[9px] text-amber-600 font-bold">FUNDS</p><p class="text-xs font-bold text-amber-600">฿<span id="stat-cash">150,000</span></p></div>
             </div>
         </div>
     </header>
@@ -139,12 +139,6 @@
                     <button id="tab-btn-music-studio" onclick="switchTab('music-studio')" class="modern-btn flex items-center justify-start gap-3">
                         <i class="fa-solid fa-compact-disc w-5 text-pink-500"></i>
                         <span>สตูดิโอผลิตเพลง</span>
-                    </button>
-
-                    <!-- 👇 วางเพิ่มตรงนี้ ปุ่มเสกเงินสีเหลืองทองสุดหรู 👇 -->
-                    <button onclick="cheatCash()" class="modern-btn flex items-center justify-start gap-3 bg-amber-500 text-white border-amber-600 hover:bg-amber-600 transition-all shadow-sm">
-                        <i class="fa-solid fa-wand-magic-sparkles w-5 text-yellow-200"></i>
-                        <span class="font-bold">✨ เสกเงินตรงนี้ง้าบ</span>
                     </button>
                 </nav>
             </div>
@@ -498,12 +492,21 @@
     <script>
         // Utilities
         function showMsg(title, text) { document.getElementById('msg-title').innerText = title; document.getElementById('msg-text').innerText = text; document.getElementById('msg-modal').classList.remove('hidden'); }
-
-        // 👇 วางฟังก์ชันเสกเงินตรงนี้ 👇
-        function cheatCash() {
-            state.cash += 1000000; // เพิ่มเงินในระบบ 1 ล้านบาท
-            updateGlobalUI();     // สั่งให้ระบบอัปเดตตัวเลขบนหน้าจอทันที
-            showMsg('SYSTEM CHEAT', '💰 เสกเงินสำเร็จ!\nเพิ่มเงินทุนให้บริษัทจำนวน 1,000,000 บาท เรียบร้อยแล้วครับท่านประธาน');
+        function getGradeClass(g) { return `grade-${g}`; }
+        function generateId() { return Math.random().toString(36).substr(2, 9); }
+        
+        function getFlagInnerHtml(name) {
+            if(!name) return '';
+            const charCount = Math.max(name.length, 3);
+            const fallbackSize = Math.min(Math.max(14, (172 / charCount) * 1.4), 64);
+            return `
+                <div class="w-full h-full flex items-center justify-center text-center font-black p-2 break-words" 
+                    style="container-type: inline-size; text-shadow: 0px 2px 4px rgba(0,0,0,0.6);">
+                    <span style="font-size: ${fallbackSize}px; font-size: clamp(14px, calc(100cqw / ${charCount} * 1.4), 64px); line-height: 1.15;">
+                        ${name}
+                    </span>
+                </div>
+            `;
         }
 
         function getFlagCssStr(flagObj) {
@@ -558,7 +561,7 @@
 
         const SAVE_KEY = 'CompanyIdolManager_SaveData';
         let currentDate = new Date(2026, 0, 1);
-        let state = { agencyName: "", cash: 1000000, week: 1, idols: [], groups: [], activeGroupId: null, currentDateValue: currentDate.getTime(), auditionPool: [] };
+        let state = { agencyName: "", cash: 150000, week: 1, idols: [], groups: [], activeGroupId: null, currentDateValue: currentDate.getTime(), auditionPool: [] };
         
         // --- STUDIO STATE ---
         let studioState = { groupId: null, senbatsu: [], centers: [] };
@@ -607,7 +610,7 @@
         function startGame() {
             const nameInput = document.getElementById('agency-name-input').value.trim();
             if(!nameInput) return showMsg('แจ้งเตือน', 'กรุณาตั้งชื่อบริษัท');
-            state = { agencyName: nameInput, cash: 1000000, week: 1, idols: [], groups: [], activeGroupId: null, auditionPool: [] };
+            state = { agencyName: nameInput, cash: 150000, week: 1, idols: [], groups: [], activeGroupId: null, auditionPool: [] };
             currentDate = new Date(2026, 0, 1);
             state.currentDateValue = currentDate.getTime();
             updateGlobalUI();
@@ -635,9 +638,78 @@
         }
 
         function advanceTime() {
-            state.week++; 
-            state.idols.forEach(i => { if(i.contractWeeks && i.contractWeeks > 0) i.contractWeeks--; });
-            updateGlobalUI();
+            // 1. เพิ่มเดือนในระบบเกมของคุณ
+            gameState.currentMonth++; 
+            
+            let isNewYear = false;
+            if (gameState.currentMonth > 12) {
+                gameState.currentMonth = 1;
+                gameState.currentYear++;
+                isNewYear = true; // ทำเครื่องหมายว่าครบรอบ 1 ปีแล้ว
+            }
+
+            // 2. ลูปคำนวณสถานะของเมมเบอร์ทุกคน
+            gameState.idols.forEach(idol => {
+                
+                // เงื่อนไข: เมื่อเวลาผ่านไป 1 ปี เมมเบอร์ทุกคนอายุเพิ่มขึ้น 1 ปี
+                if (isNewYear) {
+                    idol.age += 1;
+                }
+
+                // เงื่อนไข: เมมเบอร์ที่เซ็นสัญญาแล้ว สัญญาจะนับถอยหลัง (นับเป็นเดือน)
+                if (idol.status === 'เมมเบอร์' && idol.contract > 0) {
+                    idol.contract -= 1; // ลดราคาสัญญาลง 1 เดือน
+
+                    // เมื่อหมดสัญญา (เหลือ 0 เดือน)
+                    if (idol.contract === 0) {
+                        // สุ่มการตัดสินใจ (ตัวอย่าง: โอกาสต่อสัญญา 60% / จบการศึกษา 40%)
+                        const willRenew = Math.random() < 0.6; 
+
+                        if (willRenew) {
+                            idol.contract = 24; // ได้สัญญาใหม่ 2 ปี (24 เดือน)
+                            alert(`🎉 ${idol.name} ตัดสินใจ "ต่อสัญญา" กับวงต่อไปอีก 2 ปี!`);
+                        } else {
+                            idol.status = 'เด็กฝึก'; // จบการศึกษา ออกจากวง เปลี่ยนสถานะเป็นเด็กฝึก
+                            idol.contract = 0;
+                            alert(`🎓 ${idol.name} ได้ประกาศ "จบการศึกษา" แล้ว และย้ายกลับไปเป็น เด็กฝึก`);
+                        }
+                    }
+                }
+            });
+
+            saveGame();     // ฟังก์ชันเซฟเกมของคุณ
+            renderIdols();  // ฟังก์ชันวาด UI ใหม่ของคุณ
+        }
+
+        function removeToTrainee(idolId) {
+            const idol = gameState.idols.find(i => i.id === idolId);
+            if (!idol) return;
+
+            if (idol.status === 'เมมเบอร์') {
+                if (confirm(`คุณต้องการถอนตัว ${idol.name} ออกจากวงใช่หรือไม่? (สถานะจะเปลี่ยนเป็นเด็กฝึกและยกเลิกสัญญาเดิม)`)) {
+                    idol.status = 'เด็กฝึก';
+                    idol.contract = 0; // ล้างสัญญาเดิมออก
+                    alert(`⚠️ ${idol.name} ถูกถอนตัวออกจากวงและกลายเป็นเด็กฝึกแล้ว`);
+                    saveGame();
+                    renderIdols();
+                }
+            }
+        }
+
+        // ฟังก์ชันยกเลิกสัญญาหรือไล่ออก (เฉพาะสถานะเด็กฝึกเท่านั้น)
+        function fireTrainee(idolId) {
+            const idolIndex = gameState.idols.findIndex(i => i.id === idolId);
+            if (idolIndex === -1) return;
+
+            const idol = gameState.idols[idolIndex];
+            if (idol.status === 'เด็กฝึก') {
+                if (confirm(`❌ คุณต้องการยกเลิกสัญญาและไล่ ${idol.name} ออกจากค่ายอย่างถาวรใช่หรือไม่?`)) {
+                    gameState.idols.splice(idolIndex, 1); // ลบข้อมูลออกจากอาร์เรย์ของวงทันที
+                    alert(`ลบข้อมูลและฉีกสัญญาของ ${idol.name} เรียบร้อยแล้ว`);
+                    saveGame();
+                    renderIdols();
+                }
+            }
         }
 
         // --- IDOLS SYSTEM ---
@@ -651,11 +723,27 @@
                 if(!i.stats) { 
                     i.stats = { singing: 30, dancing: 30, music: 30, charm: 30 }; 
                     i.background = "เด็กทั่วไป"; i.avatar = generatePixelAvatar(); 
-                    i.activity = "ว่าง"; i.contractWeeks = 288;
+                    i.activity = "ว่าง"; i.contractWeeks = 288; // 288 สัปดาห์ ประมาณ 6 ปี
                 }
+
                 let groupObj = i.groupId ? state.groups.find(g=>g.id===i.groupId) : null;
                 let badgeStyle = groupObj ? getGroupFlagCss(groupObj) + ' border: 1px solid rgba(0,0,0,0.1); background-size: cover; background-position: center;' : '';
-                let statusBadge = groupObj ? `<span class="text-[9px] px-1.5 py-0.5 rounded font-bold shadow-sm" style="${badgeStyle}">วง ${groupObj.name} | ${i.team}</span>` : `<span class="bg-slate-100 text-slate-500 border border-slate-200 text-[9px] px-1.5 py-0.5 rounded font-bold">เด็กฝึกหัดทั่วไป</span>`;
+                
+                // --- ส่วนที่แก้ไข: ปรับปรุง Badge สถานะ ---
+                let statusBadge = groupObj 
+                    ? `<span class="text-[9px] px-1.5 py-0.5 rounded font-bold shadow-sm" style="${badgeStyle}">เมมเบอร์วง ${groupObj.name}</span>` 
+                    : `<span class="bg-slate-100 text-slate-500 border border-slate-200 text-[9px] px-1.5 py-0.5 rounded font-bold">เด็กฝึกหัด</span>`;
+                
+                // --- ส่วนที่แก้ไข: สร้างปุ่มกดตามสถานะ (ถอนตัว/ไล่ออก) ---
+                let actionButton = '';
+                if (groupObj) {
+                    // ถ้าเป็นเมมเบอร์ (อยู่ในวง) -> มีปุ่มถอนตัว
+                    actionButton = `<button onclick="removeFromGroup('${i.id}')" class="w-full text-center text-[10px] py-1 mt-2 border border-amber-200 text-amber-600 rounded hover:bg-amber-50 transition"><i class="fa-solid fa-user-minus mr-1"></i>ถอนตัวออกจากวง</button>`;
+                } else {
+                    // ถ้าเป็นเด็กฝึก (ไม่ได้อยู่วงไหนเลย) -> มีปุ่มไล่ออก/ยกเลิกสัญญา
+                    actionButton = `<button onclick="terminateContract('${i.id}')" class="w-full text-center text-[10px] py-1 mt-2 border border-red-200 text-red-600 rounded hover:bg-red-50 transition"><i class="fa-solid fa-user-xmark mr-1"></i>ไล่ออก / ยกเลิกสัญญา</button>`;
+                }
+
                 let specHtml = i.specialty ? `<div class="text-[11px] text-pink-600 mt-0.5 font-semibold"><i class="fa-solid fa-bolt mr-1"></i>จุดเด่น: ${i.specialty}</div>` : '';
                 let locBadge = `<span class="bg-blue-100 text-blue-700 border border-blue-200 text-[9px] px-1.5 py-0.5 rounded font-bold ml-1">${i.activity || 'ว่าง'}</span>`;
 
@@ -674,12 +762,15 @@
                                     <div>🎸 เล่นดนตรี: ${i.stats.music}</div><div>✨ เสน่ห์: ${i.stats.charm}</div>
                                 </div>
                                 <div class="mt-2 pt-2 border-t border-slate-100 flex flex-wrap gap-1 items-center">${statusBadge} ${locBadge}</div>
-                                <div class="text-[10px] text-slate-500 mt-1 font-medium"><i class="fa-solid fa-file-signature text-slate-400 mr-1"></i>สัญญาคงเหลือ: ${formatContract(i.contractWeeks)}</div>
+                                <div class="text-[10px] text-slate-500 mt-1 font-medium">
+                                    <i class="fa-solid fa-file-signature text-slate-400 mr-1"></i>สัญญาคงเหลือ: ${formatContract(i.contractWeeks)}
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="mt-3 pt-2 border-t border-slate-100">
+                    <div class="mt-3 pt-2 border-t border-slate-100 space-y-1">
                         <button onclick="openManageIdolModal('${i.id}')" class="modern-btn w-full text-center text-xs py-1 border-pink-200 text-pink-600 hover:bg-pink-50"><i class="fa-solid fa-sliders mr-1"></i>จัดการเมมเบอร์ & ฝึกซ้อม</button>
+                        ${actionButton}
                     </div>
                 </div>`;
             }).join('');
@@ -2006,30 +2097,6 @@
                 step2.classList.add('hidden');
                 step2.classList.remove('flex');
                 step1.classList.remove('hidden');
-            }
-        }
-    </script>
-
-    <script>
-        function spawnRich() {
-            // 1. ตรวจสอบและเพิ่มเงินเข้าตัวแปรระบบ
-            if (typeof state !== 'undefined' && state.cash !== undefined) {
-                state.cash += 1000000;
-                
-                // 2. บังคับให้หน้าจออัปเดต (ดักควบทุกชื่อฟังก์ชันที่เกมส่วนใหญ่ชอบใช้)
-                if (typeof updateUI === "function") updateUI();
-                else if (typeof render === "function") render();
-                else if (typeof updateDashboard === "function") updateDashboard();
-                else if (typeof showCash === "function") showCash();
-                
-                // 3. แจ้งเตือนให้รู้ว่าเงินเข้าแล้ว
-                if (typeof showMsg === "function") {
-                    showMsg('สูตรโกงทำงาน', 'เสกเงินสำเร็จ! +1,000,000 บาท');
-                } else {
-                    alert('💸 เสกเงินสำเร็จ! +1,000,000 บาท \n(หากตัวเลขบนจอไม่เปลี่ยน ให้ลองกดเปลี่ยนเมนูในเกมเพื่อให้หน้ารีเฟรชครับ)');
-                }
-            } else {
-                alert('❌ ไม่พบตัวแปรระบบเกม (state.cash) กรุณาตรวจสอบชื่อตัวแปรในโค้ดของคุณอีกครั้ง');
             }
         }
     </script>
