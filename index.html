@@ -86,14 +86,8 @@
 
             <h1 class="heading-font text-3xl text-pink-600 mb-6 tracking-wide">48IDOL MANAGER</h1>
             
-            <div class="space-y-4 text-left">
-                <div>
-                    <label class="text-xs font-bold text-slate-500 mb-1 block">ชื่อบริษัท (ตั้งใหม่กรณีสร้างค่ายใหม่)</label>
-                    <input type="text" id="agency-name-input" class="modern-input text-lg font-bold text-center">
-                </div>
-            </div>
-            
-            <div id="setup-buttons-container" class="mt-6 flex flex-col gap-3">
+            <!-- ส่วนนี้จะถูกเรนเดอร์เนื้อหาด้วย Javascript ตามปุ่มที่กด -->
+            <div id="setup-buttons-container" class="mt-6 flex flex-col gap-3 min-h-[120px] justify-center">
                 <!-- ปุ่มโหลดเกม หรือ สร้างบริษัทใหม่ จะถูกเรนเดอร์ผ่านฟังก์ชัน initSetupScreen() -->
             </div>
         </div>
@@ -160,6 +154,14 @@
 
             <div class="modern-panel p-3 bg-white/95 mt-auto shadow-md">
                 <button onclick="advanceTime()" class="modern-btn modern-btn-primary w-full py-3 text-sm flex items-center justify-center gap-2 shadow"><i class="fa-solid fa-forward-step"></i><span>ข้ามสัปดาห์</span></button>
+            </div>
+
+            <div id="online-status-trigger" class="cursor-pointer flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 transition-all active:scale-95 w-fit mt-2">
+                <div class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </div>
+                <span id="online-count-text" class="text-[11px] font-bold text-slate-600">ออนไลน์ (0)</span>
             </div>
         </section>
 
@@ -582,20 +584,56 @@
         // --- STUDIO STATE ---
         let studioState = { groupId: null, senbatsu: [], centers: [] };
 
-        // --- SAVE / LOAD ---
+        // --- SAVE / LOAD / SETUP UI ---
         function initSetupScreen() {
             const hasSave = localStorage.getItem(SAVE_KEY);
             const btnContainer = document.getElementById('setup-buttons-container');
             let html = ``;
             if(hasSave) {
-                html += `<button onclick="loadGame()" class="modern-btn modern-btn-success w-full text-base py-3 shadow-md flex items-center justify-center gap-2"><i class="fa-solid fa-folder-open"></i> โหลดเกมที่บันทึกไว้</button>
+                html += `<button onclick="showLoadGameInput()" class="modern-btn modern-btn-success w-full text-base py-3 shadow-md flex items-center justify-center gap-2"><i class="fa-solid fa-folder-open"></i> โหลดเกมที่บันทึกไว้</button>
                          <div class="flex items-center gap-4 py-2"><div class="flex-grow border-t"></div><span class="text-xs text-slate-400">หรือ</span><div class="flex-grow border-t"></div></div>`;
             }
-            html += `<button onclick="startGame()" class="modern-btn modern-btn-primary w-full text-base py-3 shadow-md">ก่อตั้งบริษัทใหม่ <i class="fa-solid fa-play ml-2"></i></button>`;
+            html += `<button onclick="showNewAgencyInput()" class="modern-btn modern-btn-primary w-full text-base py-3 shadow-md">ก่อตั้งบริษัทใหม่ <i class="fa-solid fa-play ml-2"></i></button>`;
             btnContainer.innerHTML = html;
             document.getElementById('setup-modal').classList.remove('hidden');
         }
 
+        // ฟังก์ชันใหม่: แสดงช่องกรอกเมื่อกดโหลดเกม
+        function showLoadGameInput() {
+            const btnContainer = document.getElementById('setup-buttons-container');
+            btnContainer.innerHTML = `
+                <div class="text-left mb-3 animate-[fadeIn_0.2s_ease-out]">
+                    <label class="text-xs font-bold text-slate-500 mb-1 block">ชื่อ Load เซฟออนไลน์</label>
+                    <input type="text" id="online-save-name-input" class="modern-input text-base font-bold text-center" placeholder="ระบุชื่อเซฟ...">
+                </div>
+                <!-- เพิ่มช่องกรอกรหัสผ่านตรงนี้ -->
+                <div class="text-left mb-4 animate-[fadeIn_0.2s_ease-out]">
+                    <label class="text-xs font-bold text-slate-500 mb-1 block">รหัสผ่านสำหรับโหลดเซฟ</label>
+                    <input type="password" id="online-save-password-input" class="modern-input text-base font-bold text-center" placeholder="ระบุรหัสผ่าน...">
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="initSetupScreen()" class="modern-btn w-1/3">ยกเลิก</button>
+                    <button onclick="loadGame()" class="modern-btn modern-btn-success w-2/3 shadow-md flex items-center justify-center gap-2"><i class="fa-solid fa-folder-open"></i> ยืนยันโหลด</button>
+                </div>
+            `;
+        }
+
+        // ฟังก์ชันใหม่: แสดงช่องกรอกเมื่อกดสร้างบริษัท
+        function showNewAgencyInput() {
+            const btnContainer = document.getElementById('setup-buttons-container');
+            btnContainer.innerHTML = `
+                <div class="text-left mb-4 animate-[fadeIn_0.2s_ease-out]">
+                    <label class="text-xs font-bold text-slate-500 mb-1 block">ชื่อบริษัท (ค่ายใหม่)</label>
+                    <input type="text" id="agency-name-input" class="modern-input text-lg font-bold text-center" placeholder="ระบุชื่อค่ายเพลง...">
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="initSetupScreen()" class="modern-btn w-1/3">ยกเลิก</button>
+                    <button onclick="startGame()" class="modern-btn modern-btn-primary w-2/3 shadow-md"><i class="fa-solid fa-play"></i> เริ่มเกม</button>
+                </div>
+            `;
+        }
+
+        // (ฟังก์ชัน saveGame ใช้ตัวเดิมได้เลยครับ)
         function saveGame() {
             state.currentDateValue = currentDate.getTime();
             try {
@@ -607,10 +645,33 @@
         }
 
         function loadGame() {
+            const saveNameInput = document.getElementById('online-save-name-input');
+            const savePasswordInput = document.getElementById('online-save-password-input');
+            
+            if(saveNameInput && !saveNameInput.value.trim()) {
+                return showMsg('แจ้งเตือน', 'กรุณาระบุชื่อ Load เซฟออนไลน์');
+            }
+            if(savePasswordInput && !savePasswordInput.value.trim()) {
+                return showMsg('แจ้งเตือน', 'กรุณากรอกรหัสผ่าน');
+            }
+
             const savedData = localStorage.getItem(SAVE_KEY);
-            if(!savedData) return showMsg('ERROR', 'ไม่พบข้อมูลเซฟเกม');
+            if(!savedData) return showMsg('ERROR', 'ไม่พบข้อมูลเซฟเกมในเบราว์เซอร์นี้');
+            
             try {
                 const parsed = JSON.parse(savedData);
+                
+                // เช็คชื่อค่าย
+                if (parsed.agencyName !== saveNameInput.value.trim()) {
+                    return showMsg('ERROR', 'ไม่พบชื่อเซฟเกมนี้ หรือชื่อเซฟไม่ถูกต้อง โปรดลองอีกครั้ง');
+                }
+
+                // --- จุดที่แก้ไข: บังคับเช็คแค่ onlinePassword เท่านั้น ---
+                if (!parsed.onlinePassword || parsed.onlinePassword !== savePasswordInput.value.trim()) {
+                    return showMsg('ERROR', 'รหัสผ่านไม่ถูกต้อง หรือเซฟนี้ไม่มีรหัสผ่านออนไลน์');
+                }
+
+                // ถ้าผ่านเงื่อนไข ค่อยโหลดข้อมูล
                 Object.assign(state, parsed);
                 state.auditionPool = state.auditionPool || []; 
                 currentDate = new Date(state.currentDateValue || new Date(2026, 0, 1).getTime());
@@ -624,9 +685,19 @@
         }
 
         function startGame() {
-            const nameInput = document.getElementById('agency-name-input').value.trim();
-            if(!nameInput) return showMsg('แจ้งเตือน', 'กรุณาตั้งชื่อบริษัท');
-            state = { agencyName: nameInput, cash: 150000, week: 1, idols: [], groups: [], activeGroupId: null, auditionPool: [] };
+            const nameInput = document.getElementById('agency-name-input');
+            if(nameInput && !nameInput.value.trim()) return showMsg('แจ้งเตือน', 'กรุณาตั้งชื่อบริษัท');
+            
+            // สร้างตัวแปรรับค่ารหัสผ่านเพิ่มเติม (ในตัวอย่างนี้สมมุติให้กรอกรหัส หรือใช้ระบบเก็บแบบง่าย)
+            state = { 
+                agencyName: nameInput.value.trim(), 
+                cash: 150000, 
+                week: 1, 
+                idols: [], 
+                groups: [], 
+                activeGroupId: null, 
+                auditionPool: [] 
+            };
             currentDate = new Date(2026, 0, 1);
             state.currentDateValue = currentDate.getTime();
             updateGlobalUI();
@@ -2118,245 +2189,522 @@
         }
     </script>
 
+    <!-- [ส่วนที่ 1] หน้าจอสำหรับ Login / Register "ชื่อบัญชีผู้เล่น" (HTML) -->
+    <div id="auth-overlay" class="fixed inset-0 bg-slate-950 bg-opacity-95 flex items-center justify-center z-[9999] hidden">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md mx-4 border border-slate-100">
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600 tracking-wide">IDOL MANAGER ONLINE</h1>
+                <p class="text-slate-500 text-xs mt-1 font-medium">กรุณาเข้าสู่ระบบ "บัญชีผู้เล่น" ก่อนเข้าสู่เกม</p>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">ชื่อผู้เล่น / Player ID</label>
+                    <input type="text" id="auth-username" placeholder="ภาษาอังกฤษหรือตัวเลข 4 ตัวขึ้นไป" 
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-slate-800 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">รหัสผ่านบัญชี (Password)</label>
+                    <input type="password" id="auth-password" placeholder="กรอกรหัสผ่านของคุณ" 
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-slate-800 text-sm">
+                </div>
+            </div>
+
+            <p id="auth-error" class="text-rose-500 text-xs mt-3 text-center font-semibold hidden"></p>
+
+            <div class="mt-6 space-y-2">
+                <button id="btn-login" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded-lg transition text-sm shadow-md active:scale-95">
+                    🔑 เข้าสู่ระบบบัญชีผู้เล่น
+                </button>
+                <button id="btn-register" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 rounded-lg transition border border-slate-300 text-sm active:scale-95">
+                    ✨ สมัครบัญชีผู้เล่นใหม่
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- [ส่วนที่ 2] โค้ดระบบควบคุม (JavaScript) -->
+
+    <div id="online-modal" class="hidden fixed inset-0 bg-black/60 z-[1000] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 class="font-bold text-slate-800"><i class="fa-solid fa-signal text-green-500 mr-2"></i> ผู้เล่นออนไลน์</h3>
+                <button onclick="toggleModal(false)" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4 max-h-[60vh] overflow-y-auto">
+                <ul id="online-players-list" class="space-y-2">
+                    </ul>
+            </div>
+        </div>
+    </div>
     <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-    import { getDatabase, ref, set, get, child, push, onChildAdded, query, limitToLast } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
-    const firebaseConfig = {
-        apiKey: "AIzaSyCyp5NRlZhkQ_i67uwucB_6Fgawon4eJUg",
-        authDomain: "idol-manager-game.firebaseapp.com",
-        databaseURL: "https://idol-manager-game-default-rtdb.firebaseio.com",
-        projectId: "idol-manager-game",
-        storageBucket: "idol-manager-game.firebasestorage.app",
-        messagingSenderId: "412035143990",
-        appId: "1:412035143990:web:99a6b23266f39b14ddfb97",
-        measurementId: "G-TSJ7BWZCXT"
-    };
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, set, get, child, push, onChildAdded, query, limitToLast, onValue, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCyp5NRlZhkQ_i67uwucB_6Fgawon4eJUg",
+            authDomain: "idol-manager-game.firebaseapp.com",
+            databaseURL: "https://idol-manager-game-default-rtdb.firebaseio.com",
+            projectId: "idol-manager-game",
+            storageBucket: "idol-manager-game.firebasestorage.app",
+            messagingSenderId: "412035143990",
+            appId: "1:412035143990:web:99a6b23266f39b14ddfb97",
+            measurementId: "G-TSJ7BWZCXT"
+        };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-    function injectOnlineButtons() {
-        if (document.getElementById('btn-save-online')) return;
+        const authOverlay = document.getElementById('auth-overlay');
+        const usernameInput = document.getElementById('auth-username');
+        const passwordInput = document.getElementById('auth-password');
+        const authError = document.getElementById('auth-error');
+        const btnLogin = document.getElementById('btn-login');
+        const btnRegister = document.getElementById('btn-register');
 
-        const localSaveBtn = document.querySelector('button[onclick="saveGame()"]');
-        
-        if (localSaveBtn) {
-        const saveOnlineBtn = document.createElement('button');
-        saveOnlineBtn.id = 'btn-save-online';
-        saveOnlineBtn.className = "bg-purple-50 text-purple-600 border border-purple-200 rounded-lg px-3 py-1.5 flex items-center gap-2 hover:bg-purple-100 hover:shadow-sm transition-all text-xs font-bold active:scale-95 shadow-sm";
-        saveOnlineBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-purple-500"></i> <span>เซฟออนไลน์</span>`;
-
-        const loadOnlineBtn = document.createElement('button');
-        loadOnlineBtn.id = 'btn-load-online';
-        loadOnlineBtn.className = "bg-slate-100 text-slate-700 border border-slate-300 rounded-lg px-3 py-1.5 flex items-center gap-2 hover:bg-slate-200 hover:shadow-sm transition-all text-xs font-bold active:scale-95 shadow-sm";
-        loadOnlineBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-down text-slate-500"></i> <span>โหลดออนไลน์</span>`;
-
-        localSaveBtn.after(saveOnlineBtn);
-        saveOnlineBtn.after(loadOnlineBtn);
-
-        saveOnlineBtn.addEventListener('click', () => {
-            if (typeof window.saveGame === 'function') {
-            window.saveGame();
+        // 1. ตรวจสอบสถานะการล็อกอินบัญชีผู้เล่น
+        function checkAuthStatus() {
+            if (!authOverlay) return;
+            const loggedInUser = localStorage.getItem('IdolManager_LoggedInUser');
+            if (loggedInUser) {
+                authOverlay.classList.add('hidden'); // ล็อกอินแล้ว ปล่อยให้เห็นหน้าจอตั้งไข่/สร้างค่ายของเกมปกติ
+                startUserDisplaySync(); // เริ่มระบบแสดงชื่อผู้เล่นต่อท้ายชื่อบริษัท
+            } else {
+                authOverlay.classList.remove('hidden'); // ยังไม่ล็อกอินบัญชี ห้ามทำอะไรทั้งนั้น
             }
-
-            const localData = localStorage.getItem('CompanyIdolManager_SaveData');
-            if (!localData) {
-            alert('❌ ไม่พบข้อมูลเซฟในเครื่อง! กรุณาสร้างค่ายและเริ่มเล่นเกมก่อนเซฟออนไลน์ครับ');
-            return;
-            }
-
-            const saveData = JSON.parse(localData);
-            const agencyName = saveData.agencyName ? saveData.agencyName.trim() : "";
-
-            if (!agencyName || agencyName === "---") {
-            alert('❌ ไม่สามารถเซฟออนไลน์ได้เนื่องจากค่ายเกมยังไม่มีชื่อหรืออยู่หน้าตั้งไข่');
-            return;
-            }
-
-            set(ref(db, 'saves/' + agencyName), saveData)
-            .then(() => {
-                alert(`💾 [คลาวด์สำเร็จ] บันทึกข้อมูลค่าย "${agencyName}" ขึ้นออนไลน์เรียบร้อย! คุณสามารถนำชื่อค่ายนี้ไปกดโหลดเล่นต่อบนเครื่องอื่นได้ทันทีครับ`);
-            })
-            .catch((error) => {
-                alert('❌ เซฟออนไลน์ล้มเหลว: ' + error.message);
-            });
-        });
-
-        loadOnlineBtn.addEventListener('click', () => {
-            const agencyName = prompt("กรุณากรอกชื่อบริษัท/ค่ายเกมที่คุณต้องการโหลดข้อมูลออนไลน์:");
-            if (!agencyName || !agencyName.trim()) return;
-
-            const dbRef = ref(db);
-            get(child(dbRef, `saves/${agencyName.trim()}`))
-            .then((snapshot) => {
-                if (snapshot.exists()) {
-                const onlineData = snapshot.val();
-                localStorage.setItem('CompanyIdolManager_SaveData', JSON.stringify(onlineData));
-                alert(`🎉 [โหลดสำเร็จ] ดึงข้อมูลออนไลน์ของค่าย "${agencyName.trim()}" มาเปิดบนเครื่องนี้เรียบร้อย หน้าเว็บจะรีเฟรชเข้าสู่เกมครับ`);
-                location.reload(); 
-                } else {
-                alert(`❌ ไม่พบข้อมูลเซฟออนไลน์ของค่ายชื่อ "${agencyName.trim()}" ในระบบ กรุณาตรวจสอบตัวอักษรพิมพ์เล็ก-ใหญ่ให้ถูกต้องนะครับ`);
-                }
-            })
-            .catch((error) => {
-                alert('❌ โหลดเซฟออนไลน์ล้มเหลว: ' + error.message);
-            });
-        });
-        }
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', injectOnlineButtons);
-    } else {
-        injectOnlineButtons();
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-        const chatInput = document.getElementById("chat-input");
-        const sendBtn = document.getElementById("send-chat-btn");
-
-        if (chatInput && sendBtn) {
-            // ฟังก์ชันหลักเมื่อผู้เล่นกดส่งข้อความ
-            function handleSendMessage() {
-                const message = chatInput.value.trim();
-                if (!message) return; // ถ้าช่องว่าง ไม่ต้องทำงาน
-
-                processChatMessage(message);
-                chatInput.value = ""; // เคลียร์ช่องพิมพ์
-            }
-
-            // รองรับการคลิกปุ่มส่ง
-            sendBtn.addEventListener("click", handleSendMessage);
-
-            // รองรับการกดปุ่ม Enter บนคีย์บอร์ดในช่องอินพุต
-            chatInput.addEventListener("keyup", (event) => {
-                if (event.key === "Enter") {
-                    handleSendMessage();
-                }
-            });
-        }
-    });
-
-    // ฟังก์ชันคัดกรองระหว่าง แชททั่วไป หรือ คำสั่งสแลช (/) - อัปเดตรองรับชื่อเซฟออนไลน์
-    function processChatMessage(playerMessage) {
-        // แยกแยะ: ถ้าไม่ใช่คำสั่งสแลช (/) แสดงว่าเป็นข้อความแชททั่วไป ให้ส่งขึ้นแชทโลก
-        if (!playerMessage.startsWith('/')) {
-            sendWorldChatMessage(playerMessage);
-            return;
         }
 
-        const args = playerMessage.slice(1).trim().split(/\s+/);
-        const command = args.shift().toLowerCase();
+        function showAuthError(message) {
+            if (!authError) return;
+            authError.innerText = message;
+            authError.classList.remove('hidden');
+        }
 
-        if (command === 'give') {
-            const subCommand = args[0]?.toLowerCase();
-            if (subCommand !== 'money') {
-                showSystemMessage(`❌ คำสั่งผิด: ต้องตามด้วย money`, "text-rose-500");
-                return;
-            }
+        // สมัครบัญชีผู้เล่นใหม่
+        if (btnRegister) {
+            btnRegister.addEventListener('click', () => {
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value.trim();
 
-            if (args.length === 2) {
-                const amount = parseInt(args[1], 10);
-                if (!isNaN(amount) && amount > 0) {
-                    if (typeof state !== 'undefined' && typeof state.cash !== 'undefined') {
-                        state.cash += amount;
-                        if (typeof updateGlobalUI === 'function') updateGlobalUI();
-                        showSystemMessage(`💰 เสกเงินสำเร็จ! เพิ่ม +฿${amount.toLocaleString()} เข้าช่อง FUND ของคุณเรียบร้อย`, "text-emerald-600 font-bold");
-                    }
+                if (username.length < 4 || password.length < 4) {
+                    showAuthError("⚠️ ID และ รหัสผ่าน ต้องยาว 4 ตัวอักษรขึ้นไป");
+                    return;
                 }
-            } 
-            else if (args.length === 3) {
-                const targetAgency = args[1].trim();
-                const amount = parseInt(args[2], 10);
-
-                if (!targetAgency || isNaN(amount) || amount <= 0) {
-                    showSystemMessage("⚠️ รูปแบบผิด! ใช้: /give money <ชื่อเซฟออนไลน์> <จำนวนเงิน>", "text-rose-500");
+                if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+                    showAuthError("⚠️ ID ต้องเป็นภาษาอังกฤษหรือตัวเลขเท่านั้น");
                     return;
                 }
 
-                showSystemMessage(`⏳ กำลังเชื่อมต่อฐานข้อมูล Firebase เพื่อส่งเงินให้ค่าย "${targetAgency}"...`, "text-amber-500");
+                const dbRef = ref(db);
+                get(child(dbRef, `accounts/${username}`)).then((snapshot) => {
+                    if (snapshot.exists()) {
+                        showAuthError("❌ มีคนใช้ชื่อบัญชีผู้เล่นนี้แล้ว กรุณาใช้ชื่ออื่น");
+                    } else {
+                        // เก็บข้อมูลบัญชีแยกไว้ที่ Node 'accounts'
+                        set(ref(db, 'accounts/' + username), { password: password })
+                        .then(() => {
+                            localStorage.setItem('IdolManager_LoggedInUser', username);
+                            localStorage.setItem('IdolManager_UserPassword', password);
+                            alert(`🎉 สมัครบัญชีผู้เล่น "${username}" สำเร็จ! สามารถเข้าสู่ระบบเพื่อไปตั้งชื่อบริษัทต่อได้เลยครับ`);
+                            location.reload();
+                        });
+                    }
+                });
+            });
+        }
+
+        // เข้าสู่ระบบบัญชีผู้เล่น
+        if (btnLogin) {
+            btnLogin.addEventListener('click', () => {
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value.trim();
+
+                if (!username || !password) {
+                    showAuthError("⚠️ กรุณากรอก ID และ รหัสผ่านให้ครบถ้วน");
+                    return;
+                }
 
                 const dbRef = ref(db);
-                get(child(dbRef, `saves/${targetAgency}`))
-                .then((snapshot) => {
+                get(child(dbRef, `accounts/${username}`)).then((snapshot) => {
                     if (snapshot.exists()) {
-                        const onlineSaveData = snapshot.val();
-                        onlineSaveData.cash = (onlineSaveData.cash || 0) + amount;
-
-                        set(ref(db, 'saves/' + targetAgency), onlineSaveData)
-                        .then(() => {
-                            showSystemMessage(`🚀 [Firebase อัปเดตสำเร็จ] เสกเงินให้ค่าย "${targetAgency}" บนระบบออนไลน์เรียบร้อย!`, "text-purple-600 font-bold");
-                            if (typeof state !== 'undefined' && state.agencyName === targetAgency) {
-                                state.cash = onlineSaveData.cash;
-                                if (typeof updateGlobalUI === 'function') updateGlobalUI();
-                            }
-                        });
+                        const accData = snapshot.val();
+                        if (accData.password === password) {
+                            localStorage.setItem('IdolManager_LoggedInUser', username);
+                            localStorage.setItem('IdolManager_UserPassword', password);
+                            alert(`🔑 ยินดีต้อนรับกลับครับคุณ ${username}! เข้าสู่ระบบเรียบร้อย`);
+                            location.reload();
+                        } else {
+                            showAuthError("❌ รหัสผ่านบัญชีไม่ถูกต้อง!");
+                        }
                     } else {
-                        showSystemMessage(`❌ ไม่พบชื่อค่าย/เซฟออนไลน์ "${targetAgency}"`, "text-rose-500");
+                        showAuthError("❌ ไม่พบชื่อบัญชีผู้เล่นนี้ในระบบ");
+                    }
+                });
+            });
+        }
+
+        // ระบบแอบส่องและแสดงชื่อผู้เล่นต่อท้ายชื่อบริษัทแบบ Realtime
+        function startUserDisplaySync() {
+            setInterval(() => {
+                const loggedInUser = localStorage.getItem('IdolManager_LoggedInUser');
+                const displayAgency = document.getElementById('display-agency-name');
+                if (displayAgency && loggedInUser && displayAgency.innerText !== "---") {
+                    const suffix = ` (${loggedInUser})`;
+                    if (!displayAgency.innerText.includes(suffix)) {
+                        displayAgency.innerText += suffix;
+                    }
+                }
+            }, 1000);
+        }
+
+
+        // 2. ระบบปุ่ม เซฟออนไลน์ / โหลดออนไลน์ (เชื่อมกับหน้าบริษัท 48IDOL MANAGER)
+        function injectOnlineButtons() {
+            if (document.getElementById('btn-save-online')) return;
+
+            const localSaveBtn = document.querySelector('button[onclick="saveGame()"]');
+            
+            if (localSaveBtn) {
+                const saveOnlineBtn = document.createElement('button');
+                saveOnlineBtn.id = 'btn-save-online';
+                saveOnlineBtn.className = "bg-purple-50 text-purple-600 border border-purple-200 rounded-lg px-3 py-1.5 flex items-center gap-2 hover:bg-purple-100 hover:shadow-sm transition-all text-xs font-bold active:scale-95 shadow-sm";
+                saveOnlineBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-purple-500"></i> <span>เซฟออนไลน์</span>`;
+
+                const loadOnlineBtn = document.createElement('button');
+                loadOnlineBtn.id = 'btn-load-online';
+                loadOnlineBtn.className = "bg-slate-100 text-slate-700 border border-slate-300 rounded-lg px-3 py-1.5 flex items-center gap-2 hover:bg-slate-200 hover:shadow-sm transition-all text-xs font-bold active:scale-95 shadow-sm";
+                loadOnlineBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-down text-slate-500"></i> <span>โหลดออนไลน์</span>`;
+
+                const logoutBtn = document.createElement('button');
+                logoutBtn.id = 'btn-logout-online';
+                logoutBtn.className = "bg-rose-50 text-rose-600 border border-rose-200 rounded-lg px-3 py-1.5 flex items-center gap-2 hover:bg-rose-100 transition-all text-xs font-bold active:scale-95 shadow-sm";
+                logoutBtn.innerHTML = `<i class="fa-solid fa-right-from-bracket"></i> <span>สลับบัญชี ID</span>`;
+
+                localSaveBtn.after(saveOnlineBtn);
+                saveOnlineBtn.after(loadOnlineBtn);
+                loadOnlineBtn.after(logoutBtn);
+
+                // กดปุ่มเซฟออนไลน์ (บันทึกข้อมูลค่ายเกม)
+                saveOnlineBtn.addEventListener('click', () => {
+                    if (typeof window.saveGame === 'function') {
+                        window.saveGame(); // เซฟลงเครื่องก่อนเพื่อให้ได้ข้อมูลล่าสุด
+                    }
+
+                    const localData = localStorage.getItem('CompanyIdolManager_SaveData');
+                    if (!localData) {
+                        alert('❌ ไม่พบข้อมูลบริษัทในเครื่อง! กรุณาก่อตั้งบริษัทและเริ่มเล่นก่อนครับ');
+                        return;
+                    }
+
+                    const saveData = JSON.parse(localData);
+                    const companyName = saveData.agencyName ? saveData.agencyName.trim() : "";
+
+                    if (!companyName || companyName === "---") {
+                        alert('❌ ไม่สามารถเซฟออนไลน์ได้ เนื่องจากยังไม่ได้ตั้งชื่อบริษัทหรืออยู่ในหน้าเลือกเด็ก');
+                        return;
+                    }
+
+                    // ฝังรหัสผ่านของผู้เล่นปัจจุบันลงไปในข้อมูลเซฟบริษัทด้วยเพื่อความปลอดภัย
+                    const userPass = localStorage.getItem('IdolManager_UserPassword');
+                    saveData.onlinePassword = userPass; 
+                    saveData.ownerNode = localStorage.getItem('IdolManager_LoggedInUser');
+
+                    set(ref(db, 'saves/' + companyName), saveData)
+                    .then(() => {
+                        alert(`💾 [คลาวด์สำเร็จ] บันทึกข้อมูลค่าย "${companyName}" ขึ้นออนไลน์เรียบร้อย! ค่ายนี้ถูกล็อกด้วยรหัสผ่านบัญชีของคุณแล้ว`);
+                    })
+                    .catch((error) => {
+                        alert('❌ เซฟออนไลน์ล้มเหลว: ' + error.message);
+                    });
+                });
+
+                // กดปุ่มโหลดออนไลน์ (มีระบบป้องกันคนอื่นแอบอ้างชื่อบริษัท)
+                loadOnlineBtn.addEventListener('click', () => {
+                    const companyName = prompt("กรุณากรอกชื่อบริษัทที่ต้องการโหลด:");
+                    if (!companyName || !companyName.trim()) return;
+
+                    const dbRef = ref(db);
+                    get(child(dbRef, `saves/${companyName.trim()}`))
+                    .then((snapshot) => {
+                        if (snapshot.exists()) {
+                            const onlineData = snapshot.val();
+                            
+                            // เช็ค onlinePassword
+                            const correctPassword = onlineData.onlinePassword; 
+
+                            if (!correctPassword) {
+                                alert("❌ เซฟนี้ไม่มีรหัสผ่านออนไลน์ครับ");
+                                return;
+                            }
+
+                            const inputPassword = prompt(`🔒 กรุณากรอกรหัสผ่านเพื่อโหลดเซฟ:`);
+                            
+                            if (inputPassword !== String(correctPassword)) {
+                                alert("❌ รหัสผ่านไม่ถูกต้อง!");
+                                return; 
+                            }
+
+                            // --- 🛑 ตรงนี้คือจุดที่แก้ไข ---
+                            // 1. บันทึกข้อมูลลง LocalStorage
+                            localStorage.setItem('CompanyIdolManager_SaveData', JSON.stringify(onlineData));
+                            
+                            // 2. อัปเดต state ของเกมโดยตรง (ไม่ต้องรีเฟรชหน้าเว็บ)
+                            Object.assign(state, onlineData);
+                            
+                            // 3. สั่งให้ UI อัปเดตข้อมูลใหม่ (ฟังก์ชันนี้ต้องมีอยู่ในโค้ดคุณอยู่แล้ว)
+                            updateGlobalUI(); 
+                            
+                            // 4. สั่งปิดหน้า Setup Modal ทันที
+                            const setupModal = document.getElementById('setup-modal');
+                            if (setupModal) setupModal.classList.add('hidden');
+                            
+                            // 5. เปลี่ยน Tab ไปที่หน้าเล่นเกม (เช่น groups หรือ dashboard)
+                            if (typeof switchTab === 'function') {
+                                switchTab('groups');
+                            }
+
+                            alert("🎉 โหลดข้อมูลสำเร็จ! เล่นต่อได้เลย");
+                            
+                            // ลบ location.reload() ทิ้งไปเลยครับ!
+                        } else {
+                            alert("❌ ไม่พบชื่อบริษัทนี้ในระบบ");
+                        }
+                    });
+                });
+
+                // ปุ่มสลับบัญชีผู้เล่น
+                logoutBtn.addEventListener('click', () => {
+                    if (confirm("ต้องการออกจากระบบบัญชีผู้เล่นเพื่อสลับ ID ใช่หรือไม่?")) {
+                        localStorage.removeItem('IdolManager_LoggedInUser');
+                        localStorage.removeItem('IdolManager_UserPassword');
+                        location.reload();
                     }
                 });
             }
         }
-    }
 
-    // ฟังก์ชันสำหรับส่งข้อความใหม่ขึ้น Firebase Realtime Database
-    function sendWorldChatMessage(messageText) {
-        // ใช้ชื่อค่ายเพลงปัจจุบันของผู้เล่นเป็นชื่อในแชท ถ้าไม่มีให้ใช้คำว่า ผู้เล่นไร้นาม
-        const senderName = (typeof state !== 'undefined' && state.agencyName) ? state.agencyName : "ผู้เล่นไร้นาม";
-        
-        if (!messageText.trim()) return;
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => { injectOnlineButtons(); checkAuthStatus(); });
+        } else {
+            injectOnlineButtons();
+            checkAuthStatus();
+        }
 
-        // ส่งข้อมูลไปเก็บไว้ที่ Node ชื่อ 'world_chat' บน Firebase
-        push(ref(db, 'world_chat'), {
-            sender: senderName,
-            text: messageText,
-            timestamp: Date.now() // บันทึกเวลาที่ส่ง
-        }).catch((error) => {
-            showSystemMessage(`❌ ส่งข้อความแชทโลกล้มเหลว: ${error.message}`, "text-rose-500");
-        });
-    }
+        // =================================================================
+        // ระบบกล่องแชทโลกและสูตรโกง (คงเดิมไว้ตามไฟล์เก่าของคุณ)
+        // =================================================================
+        document.addEventListener("DOMContentLoaded", () => {
+            const chatInput = document.getElementById("chat-input");
+            const sendBtn = document.getElementById("send-chat-btn");
 
-    // ฟังก์ชันสำหรับดันข้อความบรรทัดใหม่ลงกล่องแชท
-    function showSystemMessage(text, textColorClass = "text-slate-500") {
-        const chatLogs = document.getElementById("chat-logs");
-        if (!chatLogs) return;
-
-        const msgDiv = document.createElement("div");
-        msgDiv.className = `text-[11px] leading-relaxed ${textColorClass}`;
-        msgDiv.innerText = text;
-
-        chatLogs.appendChild(msgDiv);
-        
-        // เลื่อนแถบ Scrollbar ลงมาล่างสุดอัตโนมัติเมื่อมีข้อความใหม่ๆ เข้ามา
-        chatLogs.scrollTop = chatLogs.scrollHeight;
-    }
-
-    // ฟังก์ชันเริ่มทำงานระบบดักฟังแชทโลก (โหลดข้อความเก่า 30 ข้อความล่าสุด และรอรับข้อความใหม่)
-    function initWorldChat() {
-        // ดึงเฉพาะ 30 ข้อความล่าสุด เพื่อป้องกันไม่ให้เกมโหลดช้าหากในอนาคตมีแชทเยอะเกินไป
-        const chatQuery = query(ref(db, 'world_chat'), limitToLast(30));
-
-        // child_added จะทำงานทุกครั้งที่มีข้อความใหม่ถูกส่งขึ้นไปบน Node 'world_chat'
-        onChildAdded(chatQuery, (snapshot) => {
-            const chatData = snapshot.val();
-            if (chatData) {
-                const sender = chatData.sender;
-                const text = chatData.text;
-
-                // ตรวจสอบว่าเป็นข้อความที่เราพิมพ์เองหรือไม่ เพื่อไฮไลท์สีให้ต่างกัน
-                const isMyMessage = (typeof state !== 'undefined' && state.agencyName === sender);
-                
-                // ตั้งค่าสีข้อความ (ถ้าเป็นเราให้เป็นสีน้ำเงินเด่นๆ ถ้าคนอื่นให้เป็นสีแชททั่วไป)
-                const chatStyle = isMyMessage ? "text-blue-600 font-semibold" : "text-slate-700";
-
-                // แสดงผลออกทางหน้าจอเกม
-                showSystemMessage(`🌐 [แชทโลก] ${sender}: ${text}`, chatStyle);
+            if (chatInput && sendBtn) {
+                function handleSendMessage() {
+                    const message = chatInput.value.trim();
+                    if (!message) return;
+                    processChatMessage(message);
+                    chatInput.value = "";
+                }
+                sendBtn.addEventListener("click", handleSendMessage);
+                chatInput.addEventListener("keyup", (event) => {
+                    if (event.key === "Enter") handleSendMessage();
+                });
             }
         });
-    }
 
-    // เรียกใช้งานฟังก์ชันเปิดระบบแชทโลกทันทีที่ตัวเกมเริ่มทำงาน
-    initWorldChat();
-    </script>
+        function processChatMessage(playerMessage) {
+            if (!playerMessage.startsWith('/')) {
+                sendWorldChatMessage(playerMessage);
+                return;
+            }
+            const args = playerMessage.slice(1).trim().split(/\s+/);
+            const command = args.shift().toLowerCase();
+
+            if (command === 'give') {
+                const subCommand = args[0]?.toLowerCase();
+                if (subCommand !== 'money') {
+                    showSystemMessage(`❌ คำสั่งผิด: ต้องตามด้วย money`, "text-rose-500");
+                    return;
+                }
+                if (args.length === 2) {
+                    const amount = parseInt(args[1], 10);
+                    if (!isNaN(amount) && amount > 0) {
+                        if (typeof state !== 'undefined' && typeof state.cash !== 'undefined') {
+                            state.cash += amount;
+                            if (typeof updateGlobalUI === 'function') updateGlobalUI();
+                            showSystemMessage(`💰 เสกเงินสำเร็จ! เพิ่ม +฿${amount.toLocaleString()} เรียบร้อย`, "text-emerald-600 font-bold");
+                        }
+                    }
+                } 
+                else if (args.length === 3) {
+                    const targetAgency = args[1].trim();
+                    const amount = parseInt(args[2], 10);
+
+                    if (!targetAgency || isNaN(amount) || amount <= 0) {
+                        showSystemMessage("⚠️ รูปแบบผิด! ใช้: /give money <ชื่อค่ายออนไลน์> <จำนวนเงิน>", "text-rose-500");
+                        return;
+                    }
+
+                    showSystemMessage(`⏳ กำลังเชื่อมต่อเพื่อส่งเงินให้บริษัท "${targetAgency}"...`, "text-amber-500");
+
+                    const dbRef = ref(db);
+                    get(child(dbRef, `saves/${targetAgency}`))
+                    .then((snapshot) => {
+                        if (snapshot.exists()) {
+                            const onlineSaveData = snapshot.val();
+                            onlineSaveData.cash = (onlineSaveData.cash || 0) + amount;
+
+                            set(ref(db, 'saves/' + targetAgency), onlineSaveData)
+                            .then(() => {
+                                showSystemMessage(`🚀 [Firebase อัปเดต] เสกเงินให้บริษัท "${targetAgency}" สำเร็จ!`, "text-purple-600 font-bold");
+                                if (typeof state !== 'undefined' && state.agencyName === targetAgency) {
+                                    state.cash = onlineSaveData.cash;
+                                    if (typeof updateGlobalUI === 'function') updateGlobalUI();
+                                }
+                            });
+                        } else {
+                            showSystemMessage(`❌ ไม่พบชื่อบริษัท "${targetAgency}"`, "text-rose-500");
+                        }
+                    });
+                }
+            }
+        }
+
+        function sendWorldChatMessage(messageText) {
+            const loggedInUser = localStorage.getItem('IdolManager_LoggedInUser');
+            const senderName = loggedInUser ? loggedInUser : "ผู้เล่นไร้นาม";
+            if (!messageText.trim()) return;
+
+            push(ref(db, 'world_chat'), {
+                sender: senderName,
+                text: messageText,
+                timestamp: Date.now()
+            }).catch((error) => {
+                showSystemMessage(`❌ ส่งข้อความล้มเหลว: ${error.message}`, "text-rose-500");
+            });
+        }
+
+        function showSystemMessage(text, textColorClass = "text-slate-500") {
+            const chatLogs = document.getElementById("chat-logs");
+            if (!chatLogs) return;
+            const msgDiv = document.createElement("div");
+            msgDiv.className = `text-[11px] leading-relaxed ${textColorClass}`;
+            msgDiv.innerText = text;
+            chatLogs.appendChild(msgDiv);
+            chatLogs.scrollTop = chatLogs.scrollHeight;
+        }
+
+        function initWorldChat() {
+            const chatQuery = query(ref(db, 'world_chat'), limitToLast(30));
+            onChildAdded(chatQuery, (snapshot) => {
+                const chatData = snapshot.val();
+                if (chatData) {
+                    const sender = chatData.sender;
+                    const text = chatData.text;
+                    const loggedInUser = localStorage.getItem('IdolManager_LoggedInUser');
+                    const isMyMessage = (loggedInUser === sender);
+                    const chatStyle = isMyMessage ? "text-blue-600 font-semibold" : "text-slate-700";
+                    showSystemMessage(`🌐 [แชทโลก] ${sender} : ${text}`, chatStyle);
+                }
+            });
+        }
+
+        initWorldChat();
+        // 1. ฟังก์ชันอัปเดตสถานะออนไลน์
+        function initPresenceSystem() {
+                const loggedInUser = localStorage.getItem('IdolManager_LoggedInUser');
+                if (!loggedInUser) return;
+
+                const userStatusRef = ref(db, `online_players/${loggedInUser}`);
+                const connectedRef = ref(db, '.info/connected');
+
+                onValue(connectedRef, (snap) => {
+                    if (snap.val() === true) {
+                        set(userStatusRef, {
+                            agencyName: loggedInUser,
+                            lastSeen: serverTimestamp()
+                        });
+                        onDisconnect(userStatusRef).remove();
+                    }
+                });
+            }
+
+        // ฟังก์ชันเปิด/ปิดหน้าต่าง
+        window.toggleModal = function(show) {
+            const modal = document.getElementById('online-modal');
+            if (modal) {
+                if (show) modal.classList.remove('hidden');
+                else modal.classList.add('hidden');
+            }
+        };
+
+                        // 2. ฟังก์ชันดึงข้อมูลจาก Firebase มาแสดงผล
+        function initOnlineList() {
+            const onlineRef = ref(db, 'online_players');
+            onValue(onlineRef, (snapshot) => {
+                
+                // --- ส่วนที่เพิ่มเข้ามาเพื่อ Debug (เช็คข้อมูล) ---
+                console.log("Firebase ให้ข้อมูลมาว่า:", snapshot.val()); 
+                // ---------------------------------------------
+
+                const onlinePlayersList = document.getElementById('online-players-list');
+                const countText = document.getElementById('online-count-text'); 
+                
+                if (!onlinePlayersList) return;
+                
+                // เคลียร์รายชื่อเก่าออกก่อน
+                onlinePlayersList.innerHTML = '';
+                let count = 0;
+                
+                // วนลูปดึงรายชื่อผู้เล่นทุกคนที่ออนไลน์อยู่
+                snapshot.forEach((child) => {
+                    const data = child.val();
+                    // เช็คว่ามีข้อมูลคนนั้นไหม
+                    if (data && data.agencyName) {
+                        const li = document.createElement('li');
+                        li.className = "flex items-center gap-2 p-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-sm border border-slate-100 transition-colors";
+                        li.innerHTML = `
+                            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> 
+                            <span class="text-slate-700 font-medium">${data.agencyName}</span>
+                        `;
+                        onlinePlayersList.appendChild(li);
+                        count++;
+                    }
+                });
+                
+                // อัปเดตตัวเลขจำนวนผู้เล่น
+                if (countText) {
+                    countText.innerText = `ออนไลน์ (${count})`;
+                }
+            });
+        }
+
+                // 3. ผูกเหตุการณ์คลิกเปิดหน้าต่าง (เขียนแบบปลอดภัย ไม่ทำให้สคริปต์พัง)
+                const statusTrigger = document.getElementById('online-status-trigger');
+                if (statusTrigger) {
+                    statusTrigger.addEventListener('click', () => toggleModal(true));
+                }
+
+                // เรียกใช้งานระบบออนไลน์
+                initPresenceSystem();
+                initOnlineList();
+        </script>
+    <div id="online-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-100">
+            <div class="flex justify-between items-center p-4 border-b border-slate-100 bg-slate-50">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-signal text-green-500 text-xs"></i> รายชื่อผู้เล่นที่ออนไลน์
+                </h3>
+                <button onclick="window.toggleModal(false)" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-200 transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="p-4 max-h-[50vh] overflow-y-auto">
+                <ul id="online-players-list" class="space-y-2">
+                    </ul>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
