@@ -233,7 +233,7 @@
                 </div>
 
                 <!-- ================= STEP 1: วางแผนโปรเจกต์ 3 คอลัมน์ ================= -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div id="studio-step-1" class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                     <div class="md:col-span-2 modern-panel p-4 bg-white/95 border border-slate-200/80 shadow-sm rounded-xl space-y-3">
                         <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 border-b pb-2">
@@ -414,11 +414,13 @@
                                 <span class="text-[9px] text-pink-600 bg-pink-100/70 px-1.5 py-0.5 rounded font-bold">+ ฿25,000</span>
                             </label>
                         </div>
+                    </div> <div class="col-span-1 md:col-span-2 mt-2">
+                        <button onclick="goToSenbatsuStep()" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-sm font-bold py-3.5 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                            ถัดไป: เข้าสู่การคัดเลือกเซ็มบัตสึและเซ็นเตอร์ <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </button>
                     </div>
 
-                </div>
-
-                <script>
+                </div> <script>
                 function previewAlbumCover(input) {
                     const preview = document.getElementById('album-cover-preview');
                     const placeholder = document.getElementById('album-cover-placeholder');
@@ -435,58 +437,51 @@
                 </script>
 
                     <!-- ปุ่มดำเนินการต่อ -->
-                    <div class="col-span-1 lg:col-span-3 mt-2">
-                        <button onclick="goToSenbatsuStep()" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-sm font-bold py-3.5 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
-                            ถัดไป: เข้าสู่การคัดเลือกเซ็มบัตสึและเซ็นเตอร์ <i class="fa-solid fa-arrow-right ml-1"></i>
-                        </button>
-                    </div>
                 </div>
 
                 <!-- ================= STEP 2: เลือกเซ็มบัตสึ (ซ่อนไว้ตอนแรก) ================= -->
-                <div id="studio-step-2" class="hidden flex-col space-y-4 animate-[fadeIn_0.3s_ease-out]">
-                    <div class="flex items-center justify-between">
-                        <button onclick="goToPlanningStep()" class="modern-btn py-1.5 text-xs bg-slate-50 hover:bg-slate-100">
-                            <i class="fa-solid fa-arrow-left mr-1"></i> ย้อนกลับไปตั้งค่าโปรเจกต์
+                <div id="studio-step-2" class="hidden flex-col -mt-8 animate-[fadeIn_0.3s_ease-out]">
+                    
+                    <!-- ปุ่มย้อนกลับ -->
+                    <div class="flex justify-start items-center mb-1.5">
+                        <button onclick="goToPlanningStep()" class="modern-btn py-1.5 px-3.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 flex items-center gap-1.5 shrink-0 shadow-sm rounded-lg transition-all">
+                            <i class="fa-solid fa-arrow-left text-[10px]"></i> ย้อนกลับ
                         </button>
                     </div>
 
-                    <div class="modern-panel p-5 bg-white/95 border border-slate-200/80 shadow-md rounded-xl flex-grow flex flex-col min-h-[500px]">
-                        <div class="flex justify-between items-center border-b border-slate-200 pb-3 mb-4">
-                            <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-                                <i class="fa-solid fa-users text-amber-500 text-lg"></i> 4. คัดเลือกเซ็มบัตสึ และ เซ็นเตอร์ (Senbatsu)
+                    <!-- แผงคอลัมน์คัดเลือก -->
+                    <div class="modern-panel p-4 bg-white/95 border border-slate-200/80 shadow-md rounded-xl flex-grow flex flex-col min-h-[500px]">
+                        <!-- ส่วนหัวข้อ -->
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-200 pb-2 mb-3">
+                            <h3 class="text-xs sm:text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-users text-amber-500 text-base"></i> 4. คัดเลือกเซ็มบัตสึ และ เซ็นเตอร์
                             </h3>
                             <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-100 shadow-sm" id="senbatsu-count">เลือกแล้ว: 0 คน</span>
                         </div>
                         
-                        <!-- พื้นที่แสดงรายชื่อที่ถูกเลือก (Preview) -->
-                        <div class="mb-4 border border-slate-200 bg-slate-50/50 rounded-xl p-3 min-h-[100px] shadow-inner">
-                            <div class="text-xs font-bold text-slate-500 mb-2">รูปแบบฟอร์เมชั่น (เรียงตามลำดับที่เลือก)</div>
-                            <div id="studio-selected-preview" class="flex gap-3 overflow-x-auto custom-scrollbar pb-2 pt-1 px-1">
-                                <!-- จะถูกสร้างด้วย JS -->
+                        <!-- พื้นที่แสดงรายชื่อที่ถูกเลือก -->
+                        <div class="mb-3 border border-slate-200 bg-slate-50/50 rounded-xl p-3 min-h-[85px] shadow-inner">
+                            <div class="text-xs font-bold text-slate-500 mb-1.5">รูปแบบฟอร์เมชั่น</div>
+                            <div id="studio-selected-preview" class="flex gap-3 overflow-x-auto custom-scrollbar pb-1 pt-0.5 px-1">
+                                <!-- JS -->
                             </div>
                         </div>
-
+                        
+                        <!-- พื้นที่คัดเลือก -->
                         <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 flex-grow">
-                            <!-- ส่วนกรองวง (Group Filter) -->
                             <div class="col-span-1 lg:col-span-1 border-r border-slate-100 pr-2">
-                                <div class="text-xs font-bold text-slate-600 mb-2 bg-slate-100 p-2 rounded">ตัวกรองวง (Filter)</div>
-                                <div id="studio-group-filter" class="flex flex-col gap-2 overflow-y-auto custom-scrollbar max-h-[300px]">
-                                    <!-- จะถูกสร้างด้วย JS -->
-                                </div>
+                                <div class="text-xs font-bold text-slate-600 mb-2 bg-slate-100 p-2 rounded">ตัวกรองวง</div>
+                                <div id="studio-group-filter" class="flex flex-col gap-1.5 overflow-y-auto custom-scrollbar max-h-[300px]"></div>
                             </div>
-
-                            <!-- รายชื่อเมมเบอร์ให้เลือก -->
                             <div class="col-span-1 lg:col-span-3">
-                                <div class="text-xs font-bold text-slate-600 mb-2 bg-slate-100 p-2 rounded">รายชื่อเมมเบอร์ (คลิกที่ช่องเพื่อเลือกเข้าเซ็มบัตสึ)</div>
-                                <div id="studio-member-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2 overflow-y-auto max-h-[350px] custom-scrollbar pr-2">
-                                    <!-- จะถูกสร้างด้วย JS -->
-                                </div>
+                                <div class="text-xs font-bold text-slate-600 mb-2 bg-slate-100 p-2 rounded">รายชื่อเมมเบอร์</div>
+                                <div id="studio-member-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2 overflow-y-auto max-h-[360px] custom-scrollbar pr-2"></div>
                             </div>
                         </div>
-
-                        <div class="mt-6 pt-4 border-t border-slate-200">
-                            <button onclick="startSongProduction()" class="w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white text-base font-bold py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 transform hover:-translate-y-1">
-                                <i class="fa-solid fa-play text-xl"></i> ยืนยันการชำระเงิน ผลิตและวางจำหน่ายทันที
+                        
+                        <div class="mt-4 pt-3 border-t border-slate-200">
+                            <button onclick="startSongProduction()" class="w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white text-base font-bold py-3 rounded-xl shadow-lg transition-all">
+                                ยืนยันการผลิตและวางจำหน่าย
                             </button>
                         </div>
                     </div>
