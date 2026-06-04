@@ -2239,65 +2239,87 @@
     });
 
     // ฟังก์ชันคัดกรองระหว่าง แชททั่วไป หรือ คำสั่งสแลช (/) - อัปเดตรองรับชื่อเซฟออนไลน์
-        function processChatMessage(playerMessage) {
-            // ถ้าไม่ได้ขึ้นต้นด้วย / ให้แสดงผลเป็นข้อความแชทธรรมดา
-            if (!playerMessage.startsWith('/')) {
-                showSystemMessage(`[ผู้เล่น]: ${playerMessage}`, "text-slate-700");
+    function processChatMessage(playerMessage) {
+        if (!playerMessage.startsWith('/')) {
+            showSystemMessage(`[ผู้เล่น]: ${playerMessage}`, "text-slate-700");
+            return;
+        }
+
+        const args = playerMessage.slice(1).trim().split(/\s+/);
+        const command = args.shift().toLowerCase();
+
+        if (command === 'give') {
+            const subCommand = args[0]?.toLowerCase();
+            if (subCommand !== 'money') {
+                showSystemMessage(`❌ คำสั่งผิด: ต้องตามด้วย money`, "text-rose-500");
                 return;
             }
 
-            // แยกแยะคำสั่ง (เช่น /give money ARTEM1S 1000)
-            const args = playerMessage.slice(1).trim().split(/\s+/);
-            const command = args.shift().toLowerCase(); 
-
-            switch (command) {
-                case 'help':
-                    showSystemMessage("💡 คำสั่งที่มีระบบ: /give money <ชื่อเซฟออนไลน์> <จำนวนเงิน>", "text-amber-600 font-medium");
-                    break;
-                    
-                case 'give':
-                    const subCommand = args[0]?.toLowerCase(); // ดึงคำว่า 'money'
-                    
-                    let targetSave = "";
-                    let amount = 0;
-
-                    // ตรวจสอบโครงสร้างคำสั่งหลังจากคำว่า 'money'
-                    // กรณีพิมพ์แบบมีชื่อเซฟคั่นกลาง: /give money ARTEM1S 1000
-                    if (args[1] && isNaN(parseInt(args[1], 10))) {
-                        targetSave = args[1];                // คำแรกหลัง money คือชื่อเซฟ (ARTEM1S)
-                        amount = parseInt(args[2], 10);      // คำถัดไปคือจำนวนเงิน (1000)
-                    } 
-                    // กรณีพิมพ์แบบเก่า (ใส่แค่ตัวเลข): /give money 1000
-                    else {
-                        amount = parseInt(args[1], 10);      // คำแรกหลัง money คือจำนวนเงินทันที
+            // -----------------------------------------------------------------
+            // รูปแบบที่ 1: /give money <จำนวนเงิน> (เสกเงินเข้าค่ายปัจจุบันที่เรากำลังเล่น)
+            // -----------------------------------------------------------------
+            if (args.length === 2) {
+                const amount = parseInt(args[1], 10);
+                if (!isNaN(amount) && amount > 0) {
+                    if (typeof state !== 'undefined' && typeof state.cash !== 'undefined') {
+                        state.cash += amount;
+                        if (typeof updateGlobalUI === 'function') updateGlobalUI();
+                        showSystemMessage(`💰 เสกเงินสำเร็จ! เพิ่ม +฿${amount.toLocaleString()} เข้าช่อง FUND ของคุณเรียบร้อย`, "text-emerald-600 font-bold");
                     }
-                    
-                    if (subCommand === 'money' && !isNaN(amount) && amount > 0) {
-                        // ตรวจสอบและเชื่อมโยงกับระบบเงินในไฟล์จริงของคุณ
-                        if (typeof cash !== 'undefined') {
-                            cash += amount;
-                            // ถ้าเกมของคุณมีฟังก์ชันอัปเดตหน้าจอ UI ให้เรียกใช้ตรงนี้ (เช่น updateUI() )
-                            if (typeof updateUI === 'function') updateUI(); 
-                            
-                            // อัปเดตตัวเลขแสดงผลบนหน้าจอโดยตรง (กรณีอิงตามไอดีในโค้ดเก่า)
-                            const cashDisplay = document.getElementById("stat-cash");
-                            if (cashDisplay) cashDisplay.innerText = cash.toLocaleString();
-                        }
+                } else {
+                    showSystemMessage("⚠️ รูปแบบผิด! ใช้: /give money <จำนวนเงิน>", "text-rose-500");
+                }
+            } 
+            // -----------------------------------------------------------------
+            // รูปแบบที่ 2: /give money <เซฟออนไลน์> <จำนวนเงิน> (ไปแก้ไขเงินบน Firebase ของเซฟนั้นจริงๆ)
+            // -----------------------------------------------------------------
+            else if (args.length === 3) {
+                const targetAgency = args[1].trim();
+                const amount = parseInt(args[2], 10);
+
+                if (!targetAgency || isNaN(amount) || amount <= 0) {
+                    showSystemMessage("⚠️ รูปแบบผิด! ใช้: /give money <ชื่อเซฟออนไลน์> <จำนวนเงิน>", "text-rose-500");
+                    return;
+                }
+
+                showSystemMessage(`⏳ กำลังเชื่อมต่อฐานข้อมูล Firebase เพื่อส่งเงินให้ค่าย "${targetAgency}"...`, "text-amber-500");
+
+                // ดึงข้อมูลเซฟเดิมของค่ายเป้าหมายจาก Firebase ขึ้นมาก่อน เพื่อป้องกันข้อมูลส่วนอื่นหาย
+                const dbRef = ref(db);
+                get(child(dbRef, `saves/${targetAgency}`))
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const onlineSaveData = snapshot.val();
                         
-                        // ปรับแต่งข้อความแจ้งเตือนความสำเร็จให้แสดงชื่อเซฟด้วย
-                        const saveText = targetSave ? ` ให้เซฟ [${targetSave}]` : "";
-                        showSystemMessage(`💰 เสกเงินสำเร็จ! ได้รับ +฿${amount.toLocaleString()}${saveText}`, "text-emerald-600 font-bold");
+                        // บวกเงินเพิ่มเข้าไปในข้อมูลเดิมของค่ายออนไลน์นั้น
+                        onlineSaveData.cash = (onlineSaveData.cash || 0) + amount;
+
+                        // บันทึกข้อมูลที่อัปเดตแล้วกลับขึ้นไปบน Firebase Realtime Database
+                        set(ref(db, 'saves/' + targetAgency), onlineSaveData)
+                        .then(() => {
+                            showSystemMessage(`🚀 [Firebase อัปเดตสำเร็จ] เสกเงินให้ค่าย "${targetAgency}" บนระบบออนไลน์เรียบร้อย! เพิ่มขึ้น +฿${amount.toLocaleString()} (ยอดรวมปัจจุบันบนคลาวด์: ฿${onlineSaveData.cash.toLocaleString()})`, "text-purple-600 font-bold");
+                            
+                            // 💡 กรณีพิเศษ: ถ้าค่ายออนไลน์ที่เราพิมพ์เสกเงินให้ คือค่ายที่เรากำลังเล่นอยู่ ณ ตอนนี้ ให้ปรับเงินบนหน้าจอเราทันทีด้วย
+                            if (typeof state !== 'undefined' && state.agencyName === targetAgency) {
+                                state.cash = onlineSaveData.cash;
+                                if (typeof updateGlobalUI === 'function') updateGlobalUI();
+                            }
+                        })
+                        .catch((error) => {
+                            showSystemMessage(`❌ เกิดข้อผิดพลาดในการบันทึกข้อมูลลง Firebase: ${error.message}`, "text-rose-500");
+                        });
                     } else {
-                        // ปรับข้อความเตือนให้ตรงกับวิธีใช้จริง
-                        showSystemMessage("⚠️ รูปแบบคำสั่งผิด! วิธีใช้: /give money <ชื่อเซฟออนไลน์> <จำนวนเงิน>", "text-rose-500");
+                        showSystemMessage(`❌ ไม่พบชื่อค่าย/เซฟออนไลน์ "${targetAgency}" บนระบบ Firebase กรุณาตรวจสอบตัวอักษรพิมพ์เล็ก-ใหญ่ให้ถูกต้อง`, "text-rose-500");
                     }
-                    break;
-                    
-                default:
-                    showSystemMessage(`❌ 不พบคำสั่ง /${command}`, "text-rose-500");
-                    break;
+                })
+                .catch((error) => {
+                    showSystemMessage(`❌ ไม่สามารถดึงข้อมูลจาก Firebase ได้: ${error.message}`, "text-rose-500");
+                });
+            } else {
+                showSystemMessage("⚠️ รูปแบบผิด! ใช้: /give money <จำนวนเงิน> หรือ /give money <ชื่อเซฟออนไลน์> <จำนวนเงิน>", "text-rose-500");
             }
         }
+    }
 
     // ฟังก์ชันสำหรับดันข้อความบรรทัดใหม่ลงกล่องแชท
     function showSystemMessage(text, textColorClass = "text-slate-500") {
