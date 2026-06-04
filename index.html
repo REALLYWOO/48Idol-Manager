@@ -140,6 +140,12 @@
                         <i class="fa-solid fa-compact-disc w-5 text-pink-500"></i>
                         <span>สตูดิโอผลิตเพลง</span>
                     </button>
+
+                    <!-- 👇 วางเพิ่มตรงนี้ ปุ่มเสกเงินสีเหลืองทองสุดหรู 👇 -->
+                    <button onclick="cheatCash()" class="modern-btn flex items-center justify-start gap-3 bg-amber-500 text-white border-amber-600 hover:bg-amber-600 transition-all shadow-sm">
+                        <i class="fa-solid fa-wand-magic-sparkles w-5 text-yellow-200"></i>
+                        <span class="font-bold">✨ เสกเงินตรงนี้ง้าบ</span>
+                    </button>
                 </nav>
             </div>
             <div class="modern-panel p-3 bg-white/95 mt-auto shadow-md">
@@ -492,21 +498,12 @@
     <script>
         // Utilities
         function showMsg(title, text) { document.getElementById('msg-title').innerText = title; document.getElementById('msg-text').innerText = text; document.getElementById('msg-modal').classList.remove('hidden'); }
-        function getGradeClass(g) { return `grade-${g}`; }
-        function generateId() { return Math.random().toString(36).substr(2, 9); }
-        
-        function getFlagInnerHtml(name) {
-            if(!name) return '';
-            const charCount = Math.max(name.length, 3);
-            const fallbackSize = Math.min(Math.max(14, (172 / charCount) * 1.4), 64);
-            return `
-                <div class="w-full h-full flex items-center justify-center text-center font-black p-2 break-words" 
-                    style="container-type: inline-size; text-shadow: 0px 2px 4px rgba(0,0,0,0.6);">
-                    <span style="font-size: ${fallbackSize}px; font-size: clamp(14px, calc(100cqw / ${charCount} * 1.4), 64px); line-height: 1.15;">
-                        ${name}
-                    </span>
-                </div>
-            `;
+
+        // 👇 วางฟังก์ชันเสกเงินตรงนี้ 👇
+        function cheatCash() {
+            state.cash += 1000000; // เพิ่มเงินในระบบ 1 ล้านบาท
+            updateGlobalUI();     // สั่งให้ระบบอัปเดตตัวเลขบนหน้าจอทันที
+            showMsg('SYSTEM CHEAT', '💰 เสกเงินสำเร็จ!\nเพิ่มเงินทุนให้บริษัทจำนวน 1,000,000 บาท เรียบร้อยแล้วครับท่านประธาน');
         }
 
         function getFlagCssStr(flagObj) {
@@ -2009,6 +2006,30 @@
                 step2.classList.add('hidden');
                 step2.classList.remove('flex');
                 step1.classList.remove('hidden');
+            }
+        }
+    </script>
+
+    <script>
+        function spawnRich() {
+            // 1. ตรวจสอบและเพิ่มเงินเข้าตัวแปรระบบ
+            if (typeof state !== 'undefined' && state.cash !== undefined) {
+                state.cash += 1000000;
+                
+                // 2. บังคับให้หน้าจออัปเดต (ดักควบทุกชื่อฟังก์ชันที่เกมส่วนใหญ่ชอบใช้)
+                if (typeof updateUI === "function") updateUI();
+                else if (typeof render === "function") render();
+                else if (typeof updateDashboard === "function") updateDashboard();
+                else if (typeof showCash === "function") showCash();
+                
+                // 3. แจ้งเตือนให้รู้ว่าเงินเข้าแล้ว
+                if (typeof showMsg === "function") {
+                    showMsg('สูตรโกงทำงาน', 'เสกเงินสำเร็จ! +1,000,000 บาท');
+                } else {
+                    alert('💸 เสกเงินสำเร็จ! +1,000,000 บาท \n(หากตัวเลขบนจอไม่เปลี่ยน ให้ลองกดเปลี่ยนเมนูในเกมเพื่อให้หน้ารีเฟรชครับ)');
+                }
+            } else {
+                alert('❌ ไม่พบตัวแปรระบบเกม (state.cash) กรุณาตรวจสอบชื่อตัวแปรในโค้ดของคุณอีกครั้ง');
             }
         }
     </script>
