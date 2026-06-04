@@ -2120,8 +2120,7 @@
 
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
-
+    import { getDatabase, ref, set, get, child, push, onChildAdded, query, limitToLast } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
     const firebaseConfig = {
         apiKey: "AIzaSyCyp5NRlZhkQ_i67uwucB_6Fgawon4eJUg",
         authDomain: "idol-manager-game.firebaseapp.com",
@@ -2240,8 +2239,9 @@
 
     // ฟังก์ชันคัดกรองระหว่าง แชททั่วไป หรือ คำสั่งสแลช (/) - อัปเดตรองรับชื่อเซฟออนไลน์
     function processChatMessage(playerMessage) {
+        // แยกแยะ: ถ้าไม่ใช่คำสั่งสแลช (/) แสดงว่าเป็นข้อความแชททั่วไป ให้ส่งขึ้นแชทโลก
         if (!playerMessage.startsWith('/')) {
-            showSystemMessage(`[ผู้เล่น]: ${playerMessage}`, "text-slate-700");
+            sendWorldChatMessage(playerMessage);
             return;
         }
 
@@ -2255,9 +2255,6 @@
                 return;
             }
 
-            // -----------------------------------------------------------------
-            // รูปแบบที่ 1: /give money <จำนวนเงิน> (เสกเงินเข้าค่ายปัจจุบันที่เรากำลังเล่น)
-            // -----------------------------------------------------------------
             if (args.length === 2) {
                 const amount = parseInt(args[1], 10);
                 if (!isNaN(amount) && amount > 0) {
@@ -2266,13 +2263,8 @@
                         if (typeof updateGlobalUI === 'function') updateGlobalUI();
                         showSystemMessage(`💰 เสกเงินสำเร็จ! เพิ่ม +฿${amount.toLocaleString()} เข้าช่อง FUND ของคุณเรียบร้อย`, "text-emerald-600 font-bold");
                     }
-                } else {
-                    showSystemMessage("⚠️ รูปแบบผิด! ใช้: /give money <จำนวนเงิน>", "text-rose-500");
                 }
             } 
-            // -----------------------------------------------------------------
-            // รูปแบบที่ 2: /give money <เซฟออนไลน์> <จำนวนเงิน> (ไปแก้ไขเงินบน Firebase ของเซฟนั้นจริงๆ)
-            // -----------------------------------------------------------------
             else if (args.length === 3) {
                 const targetAgency = args[1].trim();
                 const amount = parseInt(args[2], 10);
@@ -2284,41 +2276,44 @@
 
                 showSystemMessage(`⏳ กำลังเชื่อมต่อฐานข้อมูล Firebase เพื่อส่งเงินให้ค่าย "${targetAgency}"...`, "text-amber-500");
 
-                // ดึงข้อมูลเซฟเดิมของค่ายเป้าหมายจาก Firebase ขึ้นมาก่อน เพื่อป้องกันข้อมูลส่วนอื่นหาย
                 const dbRef = ref(db);
                 get(child(dbRef, `saves/${targetAgency}`))
                 .then((snapshot) => {
                     if (snapshot.exists()) {
                         const onlineSaveData = snapshot.val();
-                        
-                        // บวกเงินเพิ่มเข้าไปในข้อมูลเดิมของค่ายออนไลน์นั้น
                         onlineSaveData.cash = (onlineSaveData.cash || 0) + amount;
 
-                        // บันทึกข้อมูลที่อัปเดตแล้วกลับขึ้นไปบน Firebase Realtime Database
                         set(ref(db, 'saves/' + targetAgency), onlineSaveData)
                         .then(() => {
-                            showSystemMessage(`🚀 [Firebase อัปเดตสำเร็จ] เสกเงินให้ค่าย "${targetAgency}" บนระบบออนไลน์เรียบร้อย! เพิ่มขึ้น +฿${amount.toLocaleString()} (ยอดรวมปัจจุบันบนคลาวด์: ฿${onlineSaveData.cash.toLocaleString()})`, "text-purple-600 font-bold");
-                            
-                            // 💡 กรณีพิเศษ: ถ้าค่ายออนไลน์ที่เราพิมพ์เสกเงินให้ คือค่ายที่เรากำลังเล่นอยู่ ณ ตอนนี้ ให้ปรับเงินบนหน้าจอเราทันทีด้วย
+                            showSystemMessage(`🚀 [Firebase อัปเดตสำเร็จ] เสกเงินให้ค่าย "${targetAgency}" บนระบบออนไลน์เรียบร้อย!`, "text-purple-600 font-bold");
                             if (typeof state !== 'undefined' && state.agencyName === targetAgency) {
                                 state.cash = onlineSaveData.cash;
                                 if (typeof updateGlobalUI === 'function') updateGlobalUI();
                             }
-                        })
-                        .catch((error) => {
-                            showSystemMessage(`❌ เกิดข้อผิดพลาดในการบันทึกข้อมูลลง Firebase: ${error.message}`, "text-rose-500");
                         });
                     } else {
-                        showSystemMessage(`❌ ไม่พบชื่อค่าย/เซฟออนไลน์ "${targetAgency}" บนระบบ Firebase กรุณาตรวจสอบตัวอักษรพิมพ์เล็ก-ใหญ่ให้ถูกต้อง`, "text-rose-500");
+                        showSystemMessage(`❌ ไม่พบชื่อค่าย/เซฟออนไลน์ "${targetAgency}"`, "text-rose-500");
                     }
-                })
-                .catch((error) => {
-                    showSystemMessage(`❌ ไม่สามารถดึงข้อมูลจาก Firebase ได้: ${error.message}`, "text-rose-500");
                 });
-            } else {
-                showSystemMessage("⚠️ รูปแบบผิด! ใช้: /give money <จำนวนเงิน> หรือ /give money <ชื่อเซฟออนไลน์> <จำนวนเงิน>", "text-rose-500");
             }
         }
+    }
+
+    // ฟังก์ชันสำหรับส่งข้อความใหม่ขึ้น Firebase Realtime Database
+    function sendWorldChatMessage(messageText) {
+        // ใช้ชื่อค่ายเพลงปัจจุบันของผู้เล่นเป็นชื่อในแชท ถ้าไม่มีให้ใช้คำว่า ผู้เล่นไร้นาม
+        const senderName = (typeof state !== 'undefined' && state.agencyName) ? state.agencyName : "ผู้เล่นไร้นาม";
+        
+        if (!messageText.trim()) return;
+
+        // ส่งข้อมูลไปเก็บไว้ที่ Node ชื่อ 'world_chat' บน Firebase
+        push(ref(db, 'world_chat'), {
+            sender: senderName,
+            text: messageText,
+            timestamp: Date.now() // บันทึกเวลาที่ส่ง
+        }).catch((error) => {
+            showSystemMessage(`❌ ส่งข้อความแชทโลกล้มเหลว: ${error.message}`, "text-rose-500");
+        });
     }
 
     // ฟังก์ชันสำหรับดันข้อความบรรทัดใหม่ลงกล่องแชท
@@ -2335,6 +2330,33 @@
         // เลื่อนแถบ Scrollbar ลงมาล่างสุดอัตโนมัติเมื่อมีข้อความใหม่ๆ เข้ามา
         chatLogs.scrollTop = chatLogs.scrollHeight;
     }
+
+    // ฟังก์ชันเริ่มทำงานระบบดักฟังแชทโลก (โหลดข้อความเก่า 30 ข้อความล่าสุด และรอรับข้อความใหม่)
+    function initWorldChat() {
+        // ดึงเฉพาะ 30 ข้อความล่าสุด เพื่อป้องกันไม่ให้เกมโหลดช้าหากในอนาคตมีแชทเยอะเกินไป
+        const chatQuery = query(ref(db, 'world_chat'), limitToLast(30));
+
+        // child_added จะทำงานทุกครั้งที่มีข้อความใหม่ถูกส่งขึ้นไปบน Node 'world_chat'
+        onChildAdded(chatQuery, (snapshot) => {
+            const chatData = snapshot.val();
+            if (chatData) {
+                const sender = chatData.sender;
+                const text = chatData.text;
+
+                // ตรวจสอบว่าเป็นข้อความที่เราพิมพ์เองหรือไม่ เพื่อไฮไลท์สีให้ต่างกัน
+                const isMyMessage = (typeof state !== 'undefined' && state.agencyName === sender);
+                
+                // ตั้งค่าสีข้อความ (ถ้าเป็นเราให้เป็นสีน้ำเงินเด่นๆ ถ้าคนอื่นให้เป็นสีแชททั่วไป)
+                const chatStyle = isMyMessage ? "text-blue-600 font-semibold" : "text-slate-700";
+
+                // แสดงผลออกทางหน้าจอเกม
+                showSystemMessage(`🌐 [แชทโลก] ${sender}: ${text}`, chatStyle);
+            }
+        });
+    }
+
+    // เรียกใช้งานฟังก์ชันเปิดระบบแชทโลกทันทีที่ตัวเกมเริ่มทำงาน
+    initWorldChat();
     </script>
 </body>
 </html>
