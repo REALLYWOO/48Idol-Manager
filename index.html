@@ -634,11 +634,16 @@
         }
 
         // (ฟังก์ชัน saveGame)
-        function saveGame() {
+        function saveGame(silent = false) {
             state.currentDateValue = currentDate.getTime();
             try {
                 localStorage.setItem(SAVE_KEY, JSON.stringify(state));
-                showMsg('SYSTEM', '💾 บันทึกข้อมูลเกมเรียบร้อยแล้ว!');
+                
+                // 🛑 ถ้าเป็นแบบ silent (ข้ามสัปดาห์) จะไม่แสดงหน้าต่างแจ้งเตือนนี้
+                if (!silent) {
+                    showMsg('SYSTEM', '💾 บันทึกข้อมูลเกมเรียบร้อยแล้ว!');
+                }
+                
             } catch (e) {
                 showMsg('ERROR', 'ไม่สามารถบันทึกเกมได้ (Storage อาจเต็ม หากอัพโหลดรูปภาพขนาดใหญ่เกินไป ลองเปลี่ยนเป็นรูปที่ขนาดเล็กลง)');
             }
@@ -724,48 +729,93 @@
             document.getElementById('stat-company-age').innerText = ageString;
         }
 
-        function advanceTime() {
-            // 1. เพิ่มเดือนในระบบเกมของคุณ
-            gameState.currentMonth++; 
-            
-            let isNewYear = false;
-            if (gameState.currentMonth > 12) {
-                gameState.currentMonth = 1;
-                gameState.currentYear++;
-                isNewYear = true; // ทำเครื่องหมายว่าครบรอบ 1 ปีแล้ว
+        async function advanceTime() {
+            if (typeof state === 'undefined') return;
+
+            if (typeof currentDate !== 'undefined' && currentDate instanceof Date) {
+                currentDate.setDate(currentDate.getDate() + 7);
             }
 
-            // 2. ลูปคำนวณสถานะของเมมเบอร์ทุกคน
-            gameState.idols.forEach(idol => {
-                
-                // เงื่อนไข: เมื่อเวลาผ่านไป 1 ปี เมมเบอร์ทุกคนอายุเพิ่มขึ้น 1 ปี
+            let oldYear = 2026 + Math.floor((state.week - 1) / 48);
+            state.week++; 
+
+            let newYear = 2026 + Math.floor((state.week - 1) / 48);
+            let isNewYear = (newYear > oldYear);
+
+            for (let idol of state.idols) {
                 if (isNewYear) {
+                    if (!idol.age) idol.age = 15;
                     idol.age += 1;
                 }
 
-                // เงื่อนไข: เมมเบอร์ที่เซ็นสัญญาแล้ว สัญญาจะนับถอยหลัง (นับเป็นเดือน)
-                if (idol.status === 'เมมเบอร์' && idol.contract > 0) {
-                    idol.contract -= 1; // ลดราคาสัญญาลง 1 เดือน
-
-                    // เมื่อหมดสัญญา (เหลือ 0 เดือน)
-                    if (idol.contract === 0) {
-                        // สุ่มการตัดสินใจ (ตัวอย่าง: โอกาสต่อสัญญา 60% / จบการศึกษา 40%)
-                        const willRenew = Math.random() < 0.6; 
-
-                        if (willRenew) {
-                            idol.contract = 24; // ได้สัญญาใหม่ 2 ปี (24 เดือน)
-                            alert(`🎉 ${idol.name} ตัดสินใจ "ต่อสัญญา" กับวงต่อไปอีก 2 ปี!`);
-                        } else {
-                            idol.status = 'เด็กฝึก'; // จบการศึกษา ออกจากวง เปลี่ยนสถานะเป็นเด็กฝึก
-                            idol.contract = 0;
-                            alert(`🎓 ${idol.name} ได้ประกาศ "จบการศึกษา" แล้ว และย้ายกลับไปเป็น เด็กฝึก`);
-                        }
+                if(idol.activity === 'พักงาน') {
+                    idol.fatigue = Math.max(0, (idol.fatigue || 0) - 25);
+                } else if(idol.activity && idol.activity !== 'ว่าง') {
+                    idol.fatigue = Math.min(100, (idol.fatigue || 0) + 15);
+                }
+                
+                if(idol.stats) {
+                    const skills = ['singing', 'dancing', 'music', 'charm'];
+                    const randomSkill = skills[Math.floor(Math.random() * skills.length)];
+                    if(idol.stats[randomSkill] < 100) {
+                        idol.stats[randomSkill] += Math.floor(Math.random() * 1);
                     }
                 }
-            });
 
-            saveGame();     // ฟังก์ชันเซฟเกมของคุณ
-            renderIdols();  // ฟังก์ชันวาด UI ใหม่ของคุณ
+                // ─── 🌟 ระบบแจ้งเตือนสัญญาฉบับแก้ไขประเภทตัวแปรสมบูรณ์ ───
+                if (idol.groupId) {
+                    if (!idol.maxContractWeeks) idol.maxContractWeeks = 288;
+
+                    if (idol.contractWeeks > 0) {
+                        idol.contractWeeks--;
+                    }
+
+                    if (idol.contractWeeks === 0) {
+                        // 🛠️ แก้บั๊กเด็ดขาด: แปลง ID ทั้งสองฝั่งเป็น String ก่อนเทียบ เพื่อแก้ไขปัญหาระบบหาวงไม่เจอ
+                        let groupObj = state.groups.find(g => String(g.id) === String(idol.groupId));
+                        let groupName = groupObj ? groupObj.name : "ไม่ระบุวง";
+                        let groupColor = groupObj ? groupObj.color : "#f59e0b"; 
+
+                        // 🖼️ ดึงลิงก์รูปภาพของไอดอลมาแสดงผล (รองรับชื่อตัวแปร .img ของระบบคุณ)
+                        let idolImg = idol.img || idol.image || 'https://via.placeholder.com/150';
+
+                        // เรียกใช้งานโมดอลพร้อมส่งข้อมูล: ชื่อ, ลิงก์รูปภาพจริง, ชื่อวงเพื่อป้ายธง, และสีประจำวงที่ถอดรหัสได้สำเร็จ
+                        let confirmRenew = await showContractModal(
+                            idol.name, 
+                            idolImg, 
+                            groupName,
+                            groupColor
+                        );
+
+                        if (confirmRenew) {
+                            idol.contractWeeks = 96;
+                            idol.maxContractWeeks = 96; 
+                            
+                            if (typeof showSystemMessage === 'function') {
+                                showSystemMessage(`🎉 [ต่อสัญญา]: ${idol.name} ต่อสัญญาฉบับใหม่กับวง ${groupName} อีก 2 ปีเต็ม`, "text-emerald-600 font-bold");
+                            }
+                        } else {
+                            if (typeof showSystemMessage === 'function') {
+                                showSystemMessage(`🎓 [หมดสัญญา]: ${idol.name} สิ้นสุดสัญญากับวง ${groupName} และย้ายกลับเป็นเด็กฝึกหัด`, "text-rose-500 font-bold");
+                            }
+
+                            idol.groupId = null;
+                            idol.team = null;
+                            idol.activity = "ว่าง";
+                            idol.contractWeeks = 288; 
+                            idol.maxContractWeeks = 288;
+                        }
+                    }
+                } else {
+                    idol.contractWeeks = 288;
+                    idol.maxContractWeeks = 288;
+                }
+            }
+
+            if (typeof saveGame === 'function') saveGame(true);     
+            if (typeof updateGlobalUI === 'function') updateGlobalUI();
+            if (typeof renderIdols === 'function') renderIdols();
+            if (typeof renderGroupList === 'function') renderGroupList();
         }
 
         function removeToTrainee(idolId) {
@@ -798,9 +848,71 @@
                 }
             }
         }
+
+        function showContractModal(name, image, groupName, groupColor) {
+            return new Promise((resolve) => {
+                document.getElementById('contract-idol-name').innerText = name;
+                
+                // 🖼️ แสดงรูปภาพเมมเบอร์ตามจริง
+                const imgElement = document.getElementById('contract-idol-img');
+                if (imgElement) {
+                    imgElement.src = image || 'https://via.placeholder.com/150';
+                }
+
+                // 🚩 แสดงชื่อวงบนป้ายธงหลังชื่อ
+                const groupText = document.getElementById('contract-group-text');
+                if (groupText) {
+                    groupText.innerText = groupName || 'ไม่ระบุวง';
+                }
+
+                // 🎨 เคลียร์ค่า Gradient ทิ้ง และระบายสีใหม่ตามสีวงให้กับ 3 ส่วนหลัก
+                const targetColor = groupColor || '#f59e0b'; // สีนิ่งถ้าไม่มีวงให้เป็นสีส้ม
+
+                const header = document.getElementById('contract-modal-header');
+                if (header) {
+                    header.style.backgroundImage = 'none'; // ล้างคลาส Gradient เดิม
+                    header.style.backgroundColor = targetColor;
+                }
+
+                const confirmBtn = document.getElementById('contract-confirm-btn');
+                if (confirmBtn) {
+                    confirmBtn.style.backgroundImage = 'none'; // ล้างคลาส Gradient เดิม
+                    confirmBtn.style.backgroundColor = targetColor;
+                }
+
+                const groupBadge = document.getElementById('contract-group-badge');
+                if (groupBadge) {
+                    groupBadge.style.backgroundImage = 'none';
+                    groupBadge.style.backgroundColor = targetColor;
+                }
+
+                // ควบคุมอนิเมชันการแสดงผลหน้าต่างแจ้งเตือน
+                const modal = document.getElementById('contract-modal');
+                const content = document.getElementById('contract-modal-content');
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    content.classList.remove('scale-95', 'opacity-0');
+                    content.classList.add('scale-100', 'opacity-100');
+                }, 10);
+
+                const handleConfirm = () => { cleanup(); resolve(true); };
+                const handleCancel = () => { cleanup(); resolve(false); };
+
+                const cleanup = () => {
+                    content.classList.remove('scale-100', 'opacity-100');
+                    content.classList.add('scale-95', 'opacity-0');
+                    setTimeout(() => { modal.classList.add('hidden'); }, 300);
+                    document.getElementById('contract-confirm-btn').removeEventListener('click', handleConfirm);
+                    document.getElementById('contract-cancel-btn').removeEventListener('click', handleCancel);
+                };
+
+                document.getElementById('contract-confirm-btn').addEventListener('click', handleConfirm);
+                document.getElementById('contract-cancel-btn').addEventListener('click', handleCancel);
+            });
+        }
         // --- IDOLS SYSTEM ---
         // ==========================================
-        // 1. ฟังก์ชันแสดงผลรายชื่อเด็กฝึก/เมมเบอร์
+        // 1. ฟังก์ชันแสดงผลรายชื่อเด็กฝึก/เมมเบอร์ (เวอร์ชันแยกสัญญาระหว่างเด็กฝึกและเมมเบอร์)
         // ==========================================
         function renderIdols() {
             const cont = document.getElementById('idol-cards-container');
@@ -836,6 +948,37 @@
                 let specHtml = i.specialty ? `<div class="text-[11px] text-pink-600 mt-0.5 font-semibold"><i class="fa-solid fa-bolt mr-1"></i>จุดเด่น: ${i.specialty}</div>` : '';
                 let locBadge = `<span class="bg-blue-100 text-blue-700 border border-blue-200 text-[9px] px-1.5 py-0.5 rounded font-bold ml-1">${i.activity || 'ว่าง'}</span>`;
 
+                // --- 📊 ส่วนที่เพิ่มใหม่: คำนวณและแยกแยะการแสดงผลสัญญาเชิงกลยุทธ์ ---
+                let contractSectionHtml = '';
+                if (groupObj) {
+                    // เมมเบอร์ปกติ: มีสัญญาและหลอดสถานะที่จะลดลงเรื่อยๆ ตามรอบสัญญาจริง
+                    const maxWeeks = i.maxContractWeeks || 288; // ใช้ฐานคำนวณตามรอบสัญญา (6 ปี หรือ 2 ปี)
+                    const currentWeeks = i.contractWeeks || 0;
+                    const percentage = Math.max(0, Math.min(100, (currentWeeks / maxWeeks) * 100)); // คำนวณ % ความยาวหลอดเพื่อให้มันเต็ม 100% ตอนกดต่อสัญญา
+
+                    // เปลี่ยนสีหลอดแจ้งเตือนตามสัดส่วนเวลาที่เหลือ
+                    let barColor = "bg-pink-500"; 
+                    if (currentWeeks <= 16) {
+                        barColor = "bg-rose-500 animate-pulse"; // สัญญาเหลือน้อยกว่า 4 เดือน (สีแดงกระพริบ)
+                    } else if (currentWeeks <= 48) {
+                        barColor = "bg-amber-500"; // สัญญาเหลือน้อยกว่า 1 ปี (สีส้ม)
+                    }
+
+                    contractSectionHtml = `
+                    <div class="text-[10px] text-slate-500 mt-1 font-medium">
+                        <div class="flex justify-between items-center mb-0.5">
+                            <span><i class="fa-solid fa-file-signature text-slate-400 mr-1"></i>สัญญาคงเหลือ:</span>
+                            <span class="font-bold text-slate-700">${formatContract(currentWeeks)}</span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden shadow-inner mt-1">
+                            <div class="${barColor} h-full transition-all duration-300" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>`;
+                } else {
+                    // ❌ เด็กฝึกหัด: บังคับให้เป็นค่าว่างเปล่า ย้ำไม่มีข้อมูลสัญญาหรือหลอด 6 ปีโผล่มากวนใจเด็ดขาด!
+                    contractSectionHtml = '';
+                }
+
                 return `
                 <div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow relative">
                     <div class="absolute top-4 right-4 ${getGradeClass(i.grade)} text-[11px] px-1.5 py-0.5 rounded border font-bold">Grade ${i.grade}</div>
@@ -851,9 +994,8 @@
                                     <div>🎸 เล่นดนตรี: ${i.stats.music}</div><div>✨ เสน่ห์: ${i.stats.charm}</div>
                                 </div>
                                 <div class="mt-2 pt-2 border-t border-slate-100 flex flex-wrap gap-1 items-center">${statusBadge} ${locBadge}</div>
-                                <div class="text-[10px] text-slate-500 mt-1 font-medium">
-                                    <i class="fa-solid fa-file-signature text-slate-400 mr-1"></i>สัญญาคงเหลือ: ${formatContract(i.contractWeeks)}
-                                </div>
+                                
+                                ${contractSectionHtml}
                             </div>
                         </div>
                     </div>
@@ -1090,9 +1232,48 @@
         function openManageIdolModal(idolId) {
             let i = state.idols.find(x => x.id === idolId);
             document.getElementById('am-title').innerHTML = `<i class="fa-solid fa-user-gear text-pink-500 mr-2"></i> จัดการข้อมูล & พัฒนาเมมเบอร์: ${i.name}`;
-            let totalMonths = Math.ceil(i.contractWeeks / 4);
-            let currentYears = Math.floor(totalMonths / 12);
-            let currentMonths = totalMonths % 12;
+            
+            // ตรวจสอบว่าอยู่สังกัดวงหรือไม่
+            let groupObj = i.groupId ? state.groups.find(g => g.id === i.groupId) : null;
+            let contractHtmlSection = '';
+
+            // --- 🔍 คัดกรองหน้าต่างแสดงผลสัญญาระหว่าง เด็กฝึก กับ เมมเบอร์ในวง ---
+            if (groupObj) {
+                // 1. ถ้าเป็น "เมมเบอร์ในวง" -> แสดงเวลาและหลอดสัญญาที่นับถอยหลังได้จริง
+                let totalMonths = Math.ceil(i.contractWeeks / 4);
+                let currentYears = Math.floor(totalMonths / 12);
+                let currentMonths = totalMonths % 12;
+
+                let maxWeeks = i.maxContractWeeks || 288; // คำนวณหลอดอิงตามรอบสัญญาปัจจุบัน
+                let pct = Math.min(100, Math.max(0, (i.contractWeeks / maxWeeks) * 100));
+                let barColor = 'bg-emerald-500'; 
+                
+                if (i.contractWeeks <= 16) barColor = 'bg-rose-500 animate-pulse'; 
+                else if (i.contractWeeks <= 48) barColor = 'bg-amber-500'; 
+
+                contractHtmlSection = `
+                    <div>
+                        <label class="text-[11px] font-bold text-slate-600 flex justify-between items-center mb-1.5">
+                            <span><i class="fa-solid fa-file-signature text-slate-400 mr-1"></i> ระยะเวลาสัญญาคงเหลือ</span>
+                            <span class="text-slate-800 bg-slate-200/80 px-2 py-0.5 rounded font-mono font-bold text-[10px] border">(${currentYears} ปี ${currentMonths} เดือน)</span>
+                        </label>
+                        <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden p-[1px] border border-slate-300/30">
+                            <div class="${barColor} h-full rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                        </div>
+                        <span class="text-[10px] text-slate-400 mt-1 block"><i class="fa-solid fa-lock text-slate-300 mr-1"></i> สัญญานี้จะลดลงเรื่อยๆ ทุกครั้งที่กดข้ามสัปดาห์</span>
+                    </div>
+                `;
+            } else {
+                // 2. ถ้าเป็น "เด็กฝึกหัด" -> ลบหลอดทิ้ง และแสดงเป็นป้ายสถานะเด็กฝึกไร้สัญญาแทน
+                contractHtmlSection = `
+                    <div class="bg-slate-100 p-2.5 rounded-lg border border-dashed border-slate-300 text-center mt-2">
+                        <span class="text-[11px] font-bold text-slate-500 block">
+                            <i class="fa-solid fa-user-clock text-amber-500 mr-1"></i> สถานะ: เด็กฝึกหัดในค่าย
+                        </span>
+                        <span class="text-[10px] text-slate-400 block mt-0.5">ไม่มีข้อผูกมัดสัญญา (เริ่มนับสัญญาเมื่อเข้าบรรจุลงวงหลัก)</span>
+                    </div>
+                `;
+            }
 
             let html = `
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1104,13 +1285,8 @@
                             <input type="file" id="edit-i-file" accept="image/*" class="modern-input text-xs" onchange="handleIdolImageUpload(event, '${i.id}')">
                             <button onclick="randomizeIdolAvatar('${i.id}')" class="modern-btn text-[10px] py-1 mt-1.5 w-full bg-white"><i class="fa-solid fa-user"></i> รีเซ็ตเป็นภาพเงาตัวละคร</button>
                         </div>
-                        <div>
-                            <label class="text-[11px] font-bold text-slate-600 block mb-0.5">ระยะเวลาสัญญา</label>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div><input type="number" id="edit-i-years" class="modern-input" placeholder="ปี" value="${currentYears}" min="0"> <span class="text-[10px] text-slate-400">ปี</span></div>
-                                <div><input type="number" id="edit-i-months" class="modern-input" placeholder="เดือน" value="${currentMonths}" min="0" max="11"> <span class="text-[10px] text-slate-400">เดือน</span></div>
-                            </div>
-                        </div>
+                        
+                        ${contractHtmlSection}
                     </div>
 
                     <div class="space-y-4">
@@ -1138,12 +1314,11 @@
             `;
             
             document.getElementById('am-content').innerHTML = html;
+            
             document.getElementById('am-confirm-btn').onclick = () => {
                 let nameInput = document.getElementById('edit-i-name').value.trim();
-                let yrsInput = parseInt(document.getElementById('edit-i-years').value) || 0;
-                let mosInput = parseInt(document.getElementById('edit-i-months').value) || 0;
                 if(nameInput) i.name = nameInput;
-                i.contractWeeks = ((yrsInput * 12) + mosInput) * 4;
+                
                 document.getElementById('action-modal').classList.add('hidden');
                 renderIdols();
             };
@@ -2840,6 +3015,55 @@
             <div class="p-4 max-h-[50vh] overflow-y-auto">
                 <ul id="online-players-list" class="space-y-2">
                     </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📄 หน้าต่างแจ้งเตือนต่อสัญญา (Contract Renewal Modal) -->
+    <div id="contract-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 transition-all duration-300">
+        <div id="contract-modal-content" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-100 transform transition-all scale-95 duration-300 opacity-0">
+            
+            <div id="contract-modal-header" class="p-5 text-white relative transition-all duration-300">
+                <div class="absolute top-3 right-4 opacity-10">
+                    <i class="fa-solid fa-file-signature text-6xl"></i>
+                </div>
+                <h3 class="font-bold text-lg flex items-center gap-2 heading-font">
+                    <i class="fa-solid fa-hourglass-half text-white/80 animate-pulse"></i> สัญญากำลังจะหมดอายุ!
+                </h3>
+                <p class="text-white/80 text-xs mt-0.5 font-light">กรุณาตัดสินใจเกี่ยวกับสัญญาของไอดอล</p>
+            </div>
+            
+            <div class="p-5 space-y-4">
+                <div class="flex items-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div class="relative">
+                        <img id="contract-idol-img" src="https://via.placeholder.com/150" alt="Idol" class="w-14 h-14 rounded-full object-cover border-2 border-white bg-slate-200 shadow-sm">
+                        <span class="absolute -bottom-1 -right-1 bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">⚠️</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h4 id="contract-idol-name" class="font-bold text-slate-800 text-base heading-font">ชื่อไอดอล</h4>
+                            <span id="contract-group-badge" class="text-[10px] font-bold text-white px-2 py-0.5 rounded-md shadow-sm flex items-center gap-1 transition-all duration-300">
+                                <i class="fa-solid fa-flag text-[9px]"></i> <span id="contract-group-text">วง</span>
+                            </span>
+                        </div>
+                        <p class="text-slate-500 text-xs mt-0.5 flex items-center gap-1">
+                            <i class="fa-solid fa-circle-exclamation text-amber-500"></i> สัญญาสิ้นสุดในสัปดาห์นี้
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="text-xs text-slate-600 leading-relaxed bg-amber-50/60 p-3.5 rounded-xl border border-amber-100 text-center font-medium">
+                    คุณต้องการที่จะต่อสัญญาเพื่อดึงตัวไอดอลคนนี้ให้อยู่ในทีมต่อไปหรือไม่?
+                </div>
+            </div>
+            
+            <div class="p-4 bg-slate-50 border-t border-slate-100 flex gap-2.5">
+                <button id="contract-cancel-btn" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2.5 rounded-xl text-xs transition-all active:scale-95">
+                    ปล่อยตัว (หมดสัญญา)
+                </button>
+                <button id="contract-confirm-btn" class="flex-1 text-white font-semibold py-2.5 rounded-xl text-xs transition-all active:scale-95 shadow-md text-center">
+                    ต่อสัญญาใหม่
+                </button>
             </div>
         </div>
     </div>
