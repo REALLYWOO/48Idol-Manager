@@ -633,7 +633,7 @@
             `;
         }
 
-        // (ฟังก์ชัน saveGame ใช้ตัวเดิมได้เลยครับ)
+        // (ฟังก์ชัน saveGame)
         function saveGame() {
             state.currentDateValue = currentDate.getTime();
             try {
@@ -798,9 +798,10 @@
                 }
             }
         }
-        // --- CHAT CONSOLE ---
-        // ฟังก์ชันหลักที่ทำงานเมื่อมีการส่งข้อความในแชท
         // --- IDOLS SYSTEM ---
+        // ==========================================
+        // 1. ฟังก์ชันแสดงผลรายชื่อเด็กฝึก/เมมเบอร์
+        // ==========================================
         function renderIdols() {
             const cont = document.getElementById('idol-cards-container');
             if(state.idols.length === 0) {
@@ -864,25 +865,122 @@
             }).join('');
         }
 
+        // ==========================================
+        // 2. ฟังก์ชันรองรับระบบปุ่มกดที่เพิ่มเข้ามาใหม่
+        // ==========================================
+
+        // ฟังก์ชันถอนตัวออกจากวง
+        function removeFromGroup(idolId) {
+            let idol = state.idols.find(i => i.id === idolId);
+            
+            if (idol) {
+                let oldGroupId = idol.groupId;
+                
+                // ล้างสถานะวงและทีม ปรับกิจกรรมให้กลับมาว่าง
+                idol.groupId = null;
+                idol.team = null;
+                idol.activity = "ว่าง";
+
+                // สั่งวาดหน้าจอรายชื่อเด็กฝึกใหม่ทันที (ปุ่มจะสลับเป็นปุ่มไล่ออกอัตโนมัติ)
+                renderIdols(); 
+                
+                // สั่งอัปเดต UI ส่วนอื่น ๆ ของเกม
+                if (typeof updateGlobalUI === 'function') updateGlobalUI();
+                if (typeof renderGroupList === 'function') renderGroupList();
+                if (typeof renderGroupDashboard === 'function' && state.activeGroupId === oldGroupId) {
+                    renderGroupDashboard(oldGroupId);
+                }
+                
+                showMsg('สำเร็จ', `นำ ${idol.name} ถอนตัวออกจากวงเรียบร้อยแล้ว`);
+            } else {
+                showMsg('ผิดพลาด', 'ไม่พบข้อมูลเมมเบอร์ในระบบ');
+            }
+        }
+
+        // ฟังก์ชันไล่ออก / ยกเลิกสัญญา
+        function terminateContract(idolId) {
+            let index = state.idols.findIndex(i => i.id === idolId);
+            
+            if (index !== -1) {
+                let name = state.idols[index].name;
+                
+                // ลบออกจากอาเรย์หลักของค่าย
+                state.idols.splice(index, 1);
+                
+                // รีเฟรชหน้าจอแสดงผล
+                renderIdols();
+                if (typeof updateGlobalUI === 'function') updateGlobalUI();
+                if (typeof renderGroupList === 'function') renderGroupList();
+                
+                showMsg('ยกเลิกสัญญา', `ทำการยกเลิกสัญญาและปล่อยตัว\n${name} ออกจากค่ายแล้ว`);
+            } else {
+                showMsg('ผิดพลาด', 'ไม่พบข้อมูลเด็กฝึกในระบบ');
+            }
+        }
+
+        function withdrawIdolFromGroup(idolId) {
+            // ค้นหาเด็กฝึกคนนั้นด้วย ID ใน state.idols หลัก
+            let idol = state.idols.find(i => i.id === idolId);
+            
+            if (idol) {
+                let oldGroupId = idol.groupId; // เก็บค่าไว้รีเฟรชหน้าจอทีม (ถ้ามี)
+                
+                // ล้างค่าสถานะวงและทีมให้กลับเป็นว่าง
+                idol.groupId = null;
+                idol.team = null;
+                idol.activity = "ว่าง"; // ตั้งสถานะให้กลับมาว่างพร้อมใช้งาน
+
+                // สั่งอัปเดตหน้าจอทั้งหมดในเกมของคุณ (แก้ชื่อฟังก์ชันให้ตรงกับที่มีในระบบ)
+                if (typeof renderIdols === 'function') renderIdols(); 
+                if (typeof renderGroups === 'function') renderGroups();
+                if (typeof updateGlobalUI === 'function') updateGlobalUI();
+                
+                showMsg('สำเร็จ', `นำ ${idol.name} ออกจากวงและทีมเรียบร้อยแล้ว`);
+            } else {
+                showMsg('เกิดข้อผิดพลาด', 'ไม่พบข้อมูลเด็กฝึกในระบบ');
+            }
+        }
+
+        function fireIdolFromCompany(idolId) {
+            // ค้นหาตำแหน่งของเด็กฝึกในอาร์เรย์หลักด้วย ID
+            let index = state.idols.findIndex(i => i.id === idolId);
+            
+            if (index !== -1) {
+                let name = state.idols[index].name;
+                
+                // ลบเด็กฝึกออกจากค่ายถาวร
+                state.idols.splice(index, 1);
+                
+                // สั่งอัปเดตหน้าจอทั้งหมดในเกมของคุณ (แก้ชื่อฟังก์ชันให้ตรงกับที่มีในระบบ)
+                if (typeof renderIdols === 'function') renderIdols();
+                if (typeof renderGroups === 'function') renderGroups();
+                if (typeof updateGlobalUI === 'function') updateGlobalUI();
+                
+                showMsg('ยกเลิกสัญญา', `ยกเลิกสัญญาและปล่อยตัว ${name} ออกจากค่ายแล้ว`);
+            } else {
+                showMsg('เกิดข้อผิดพลาด', 'ไม่พบข้อมูลเด็กฝึกในระบบ');
+            }
+        }
+
         // --- AUDITION SYSTEM ---
         const specialtyPool = ["Vocal (ร้องเพลง)", "Dance (เต้น)", "Visual (ภาพลักษณ์)", "Variety (วาไรตี้)"];
         const bioNames = ["Ale", "Daichi", "Kirua", "Melody", "Paolo", "Putter", "Wakiw", "Daisy", "Garfield", "Jigsaw", "Dylan", "Noah", "Lazer", "Thalay", "Sato", "Sorso", "Yuta", "Danish", "Hashi", "Flynn", "Asahi", "Haruto", "Leon", "Ryuto", "Pieah", "Kanomping", "Furby", "Ongsa", "Shibuay", "Dahlia", "Peipei", "Phandao", "Peanut", "Dia", "Krista", "Violin", "Kitasan", "Giao", "Metta"];
         const backgroundPool = [
-        "เคยเป็นศิลปินฝึกหัด", 
-        "เคยเดบิวต์", 
-        "เคยผ่านรายการ Survival", 
-        "นักดนตรี",
-        "อดีตเด็กฝึกค่ายอื่น", 
-        "เด็กทั่วไป",
-        "แบ็คอัพแดนเซอร์",
-        "นักร้องเปิดหมวก",
-        "ดารานักแสดง",
-        "นักร้องประสานเสียง",
-        "ลูกคุณหนูตระกูลดัง",
-        "นักกีฬาทั่วไป",
-        "อินฟลูเอนเซอร์",
-        "นายแบบ/นางแบบ"
-    ];
+            "เคยเป็นศิลปินฝึกหัด", 
+            "เคยเดบิวต์", 
+            "เคยผ่านรายการ Survival", 
+            "นักดนตรี",
+            "อดีตเด็กฝึกค่ายอื่น", 
+            "เด็กทั่วไป",
+            "แบ็คอัพแดนเซอร์",
+            "นักร้องเปิดหมวก",
+            "ดารานักแสดง",
+            "นักร้องประสานเสียง",
+            "ลูกคุณหนูตระกูลดัง",
+            "นักกีฬาทั่วไป",
+            "อินฟลูเอนเซอร์",
+            "นายแบบ/นางแบบ"
+        ];
 
         function renderAudition() {
             const optionsDiv = document.getElementById('audition-options');
@@ -934,6 +1032,10 @@
                 else if(grade === 'C') { minStat = 40; maxStat = 54; }
                 else if(grade === 'D') { minStat = 25; maxStat = 39; }
                 
+                // 1. สุ่มภูมิหลังออกมารับโบนัสก่อน
+                let bg = backgroundPool[Math.floor(Math.random() * backgroundPool.length)];
+
+                // 2. คำนวณค่าพลังพื้นฐานตามเกรด
                 let stats = {
                     singing: Math.floor(Math.random() * (maxStat - minStat + 1)) + minStat,
                     dancing: Math.floor(Math.random() * (maxStat - minStat + 1)) + minStat,
@@ -941,11 +1043,32 @@
                     charm: Math.floor(Math.random() * (maxStat - minStat + 1)) + minStat
                 };
 
+                // 3. ระบบคำนวณโบนัสตามประวัติของคุณ
+                if (bg === "แบ็คอัพแดนเซอร์") {
+                    stats.dancing += 15;
+                } else if (bg === "นักร้องประสานเสียง" || bg === "นักร้องเปิดหมวก") {
+                    stats.singing += 15;
+                } else if (bg === "นักดนตรี") {
+                    stats.music += 15;
+                } else if (bg === "อินฟลูเอนเซอร์" || bg === "ดารานักแสดง" || bg === "ลูกคุณหนูตระกูลดัง" || bg === "นายแบบ/นางแบบ") {
+                    stats.charm += 15;
+                } else if (bg === "เคยเป็นศิลปินฝึกหัด" || bg === "เคยผ่านรายการ Survival" || bg === "เคยเดบิวต์" || bg === "อดีตเด็กฝึกค่ายอื่น") {
+                    stats.singing += 8; stats.dancing += 8;
+                } else if (bg === "นักกีฬาทั่วไป") {
+                    stats.dancing += 8; stats.charm += 8;
+                }
+
+                // 4. ล็อกค่าพลังสูงสุดไม่ให้เกิน 100
+                stats.singing = Math.min(100, stats.singing);
+                stats.dancing = Math.min(100, stats.dancing);
+                stats.music = Math.min(100, stats.music);
+                stats.charm = Math.min(100, stats.charm);
+
                 state.auditionPool.push({
                     id: 'id_' + generateId(), name: bioNames[Math.floor(Math.random() * bioNames.length)], 
                     grade: grade, age: Math.floor(Math.random() * 8) + 14, 
                     specialty: specialtyPool[Math.floor(Math.random() * specialtyPool.length)],
-                    background: backgroundPool[Math.floor(Math.random() * backgroundPool.length)],
+                    background: bg, // ใส่ตัวแปร bg ที่สุ่มและคำนวณโบนัสแล้ว
                     stats: stats, avatar: generatePixelAvatar(), activity: "ว่าง", contractWeeks: 288
                 });
             }
@@ -1534,8 +1657,8 @@
             const songTitle = titleInput ? titleInput.value.trim() : '';
 
             if (songTitle === '') {
-                if (typeof showMsg === 'function') showMsg('❌ ไม่สามารถไปต่อได้', 'กรุณาระบุชื่อเพลงของคุณก่อนครับ');
-                else alert('กรุณาระบุชื่อเพลงของคุณก่อนครับ');
+                if (typeof showMsg === 'function') showMsg('❌ ไม่สามารถไปต่อได้', 'กรุณาระบุชื่อเพลงของคุณก่อน');
+                else alert('กรุณาระบุชื่อเพลงของคุณก่อน');
                 if (titleInput) titleInput.focus();
                 return; 
             }
@@ -2174,7 +2297,7 @@
                 if (typeof showMsg === 'function') {
                     showMsg('❌ ไม่สามารถไปต่อได้', 'กรุณาระบุชื่อเพลงของคุณ\nก่อนเข้าสู่ขั้นตอนการเลือกเซ็มบัตสึ');
                 } else {
-                    alert('กรุณาระบุชื่อเพลงของคุณก่อนเข้าสู่ขั้นตอนการเลือกเซ็มบัตสึครับ');
+                    alert('กรุณาระบุชื่อเพลงของคุณก่อนเข้าสู่ขั้นตอนการเลือกเซ็มบัตสึ');
                 }
                 
                 // โฟกัสไปที่ช่องกรอกชื่อเพลงเพื่อให้ผู้เล่นพิมพ์ได้สะดวกขึ้น
@@ -2322,7 +2445,7 @@
                         .then(() => {
                             localStorage.setItem('IdolManager_LoggedInUser', username);
                             localStorage.setItem('IdolManager_UserPassword', password);
-                            alert(`🎉 สมัครบัญชีผู้เล่น "${username}" สำเร็จ! สามารถเข้าสู่ระบบเพื่อไปตั้งชื่อบริษัทต่อได้เลยครับ`);
+                            alert(`🎉 สมัครบัญชีผู้เล่น "${username}" สำเร็จ! สามารถเข้าสู่ระบบเพื่อไปตั้งชื่อบริษัทต่อได้เลย`);
                             location.reload();
                         });
                     }
@@ -2348,7 +2471,7 @@
                         if (accData.password === password) {
                             localStorage.setItem('IdolManager_LoggedInUser', username);
                             localStorage.setItem('IdolManager_UserPassword', password);
-                            alert(`🔑 ยินดีต้อนรับกลับครับคุณ ${username}! เข้าสู่ระบบเรียบร้อย`);
+                            alert(`🔑 ยินดีต้อนรับกลับคุณ ${username}! เข้าสู่ระบบเรียบร้อย`);
                             location.reload();
                         } else {
                             showAuthError("❌ รหัสผ่านบัญชีไม่ถูกต้อง!");
@@ -2409,7 +2532,7 @@
 
                     const localData = localStorage.getItem('CompanyIdolManager_SaveData');
                     if (!localData) {
-                        alert('❌ ไม่พบข้อมูลบริษัทในเครื่อง! กรุณาก่อตั้งบริษัทและเริ่มเล่นก่อนครับ');
+                        alert('❌ ไม่พบข้อมูลบริษัทในเครื่อง! กรุณาก่อตั้งบริษัทและเริ่มเล่นก่อน');
                         return;
                     }
 
@@ -2450,7 +2573,7 @@
                             const correctPassword = onlineData.onlinePassword; 
 
                             if (!correctPassword) {
-                                alert("❌ เซฟนี้ไม่มีรหัสผ่านออนไลน์ครับ");
+                                alert("❌ เซฟนี้ไม่มีรหัสผ่านออนไลน์");
                                 return;
                             }
 
@@ -2482,7 +2605,6 @@
 
                             alert("🎉 โหลดข้อมูลสำเร็จ! เล่นต่อได้เลย");
                             
-                            // ลบ location.reload() ทิ้งไปเลยครับ!
                         } else {
                             alert("❌ ไม่พบชื่อบริษัทนี้ในระบบ");
                         }
