@@ -729,7 +729,11 @@
             document.getElementById('stat-company-age').innerText = ageString;
         }
 
-        async function advanceTime() {
+        // --- ระบบคิวจัดการสัญญา (ป้องกันการเด้งทับซ้อน) ---
+        window.pendingContractRenewals = [];
+        window.isContractModalOpen = false;
+
+        function advanceTime() {
             if (typeof state === 'undefined') return;
 
             if (typeof currentDate !== 'undefined' && currentDate instanceof Date) {
@@ -757,12 +761,10 @@
                 if(idol.stats) {
                     const skills = ['singing', 'dancing', 'music', 'charm'];
                     const randomSkill = skills[Math.floor(Math.random() * skills.length)];
-                    if(idol.stats[randomSkill] < 100) {
-                        idol.stats[randomSkill] += Math.floor(Math.random() * 1);
-                    }
+                    if(idol.stats[randomSkill] < 100) idol.stats[randomSkill] += Math.floor(Math.random() * 1);
                 }
 
-                // ─── 🌟 ระบบแจ้งเตือนสัญญาฉบับแก้ไขประเภทตัวแปรสมบูรณ์ ───
+                // ─── 🌟 ระบบสัญญาใหม่แบบมีคิวคัดกรอง ───
                 if (idol.groupId) {
                     if (!idol.maxContractWeeks) idol.maxContractWeeks = 288;
 
@@ -770,52 +772,25 @@
                         idol.contractWeeks--;
                     }
 
+                    // เมื่อสัญญาเหลือ 0 ให้ส่งเข้าคิว (ยังไม่เด้ง UI ทันทีเพื่อไม่ให้ Loop ค้าง)
                     if (idol.contractWeeks === 0) {
-                        // 🛠️ แก้บั๊กเด็ดขาด: แปลง ID ทั้งสองฝั่งเป็น String ก่อนเทียบ เพื่อแก้ไขปัญหาระบบหาวงไม่เจอ
-                        let groupObj = state.groups.find(g => String(g.id) === String(idol.groupId));
-                        let groupName = groupObj ? groupObj.name : "ไม่ระบุวง";
-                        let groupColor = groupObj ? groupObj.color : "#f59e0b"; 
-
-                        // 🖼️ ดึงลิงก์รูปภาพของไอดอลมาแสดงผล (รองรับชื่อตัวแปร .img ของระบบคุณ)
-                        let idolImg = idol.img || idol.image || 'https://via.placeholder.com/150';
-
-                        // เรียกใช้งานโมดอลพร้อมส่งข้อมูล: ชื่อ, ลิงก์รูปภาพจริง, ชื่อวงเพื่อป้ายธง, และสีประจำวงที่ถอดรหัสได้สำเร็จ
-                        let confirmRenew = await showContractModal(
-                            idol.name, 
-                            idolImg, 
-                            groupName,
-                            groupColor
-                        );
-
-                        if (confirmRenew) {
-                            idol.contractWeeks = 96;
-                            idol.maxContractWeeks = 96; 
-                            
-                            if (typeof showSystemMessage === 'function') {
-                                showSystemMessage(`🎉 [ต่อสัญญา]: ${idol.name} ต่อสัญญาฉบับใหม่กับวง ${groupName} อีก 2 ปีเต็ม`, "text-emerald-600 font-bold");
-                            }
-                        } else {
-                            if (typeof showSystemMessage === 'function') {
-                                showSystemMessage(`🎓 [หมดสัญญา]: ${idol.name} สิ้นสุดสัญญากับวง ${groupName} และย้ายกลับเป็นเด็กฝึกหัด`, "text-rose-500 font-bold");
-                            }
-
-                            idol.groupId = null;
-                            idol.team = null;
-                            idol.activity = "ว่าง";
-                            idol.contractWeeks = 288; 
-                            idol.maxContractWeeks = 288;
+                        if (!window.pendingContractRenewals.includes(idol.id)) {
+                            window.pendingContractRenewals.push(idol.id);
                         }
                     }
                 } else {
+                    // เด็กฝึก ไม่หักสัญญา
                     idol.contractWeeks = 288;
                     idol.maxContractWeeks = 288;
                 }
             }
 
-            if (typeof saveGame === 'function') saveGame(true);     
-            if (typeof updateGlobalUI === 'function') updateGlobalUI();
-            if (typeof renderIdols === 'function') renderIdols();
-            if (typeof renderGroupList === 'function') renderGroupList();
+            // สั่งรันคิวแจ้งเตือนเมื่อจบสัปดาห์
+            if (window.pendingContractRenewals.length > 0) {
+                processNextContractRenewal();
+            } else {
+                refreshGameSystem();
+            }
         }
 
         function removeToTrainee(idolId) {
@@ -849,66 +824,152 @@
             }
         }
 
-        function showContractModal(name, image, groupName, groupColor) {
-            return new Promise((resolve) => {
-                document.getElementById('contract-idol-name').innerText = name;
-                
-                // 🖼️ แสดงรูปภาพเมมเบอร์ตามจริง
-                const imgElement = document.getElementById('contract-idol-img');
-                if (imgElement) {
-                    imgElement.src = image || 'https://via.placeholder.com/150';
+        // ==========================================
+        // 🎬 ฟังก์ชันประมวลผลคิวต่อสัญญา (เวอร์ชันลื่นพิเศษ ไม่กระตุก)
+        // ==========================================
+        function processNextContractRenewal() {
+            if (window.isContractModalOpen) return; 
+            
+            if (window.pendingContractRenewals.length === 0) {
+                // 🎉 สัญญาหมดคิวรันแล้ว ค่อยสั่งเซฟเกมและเรนเดอร์ UI ทีเดียวตอนท้ายเพื่อลดภาระเครื่อง
+                refreshGameSystem();
+                return;
+            }
+
+            window.isContractModalOpen = true;
+            let idolId = window.pendingContractRenewals.shift(); 
+            let realIdol = state.idols.find(i => i.id === idolId);
+
+            if (!realIdol || !realIdol.groupId) {
+                window.isContractModalOpen = false;
+                processNextContractRenewal();
+                return;
+            }
+
+            // 🎨 ดึงข้อมูลวงและสีประจำวงมาประดับ UI
+            let myGroup = state.groups.find(g => String(g.id) === String(realIdol.groupId));
+            let groupNameText = myGroup ? myGroup.name : "ไม่ระบุวง";
+            let groupStyleStr = myGroup ? getGroupFlagCss(myGroup) : "background: #ec4899; color: white;";
+            let groupColorHex = (myGroup && (myGroup.flagBg || myGroup.color)) ? (myGroup.flagBg || myGroup.color) : "#ec4899";
+
+            // 🖼️ กำหนดข้อมูลรูปภาพ (ลดภาระโดยไม่เรนเดอร์การ์ดพื้นหลังซ้ำซ้อน)
+            document.getElementById('contract-idol-name').textContent = realIdol.name;
+            const imgEl = document.getElementById('contract-idol-img');
+            
+            // ตรวจสอบ fallback ป้องกันภาพเสีย
+            let targetSrc = realIdol.avatar || realIdol.image || realIdol.img;
+            if (!targetSrc) targetSrc = typeof generatePixelAvatar === 'function' ? generatePixelAvatar() : 'https://ui-avatars.com/api/?name=Idol';
+            imgEl.src = targetSrc;
+
+            // 🏷️ ป้ายธงวง
+            const groupBadge = document.getElementById('contract-group-badge');
+            const groupText = document.getElementById('contract-group-text');
+            if (groupBadge && groupText) {
+                groupText.textContent = groupNameText;
+                groupBadge.style.cssText = groupStyleStr + " font-weight: bold; border-radius: 0.375rem; padding: 0.125rem 0.5rem;";
+            }
+
+            // 🎨 สี Header กล่อง
+            const modalHeader = document.getElementById('contract-modal-header');
+            if (modalHeader) modalHeader.style.cssText = groupStyleStr + " padding: 1.25rem; border-top-left-radius: 1rem; border-top-right-radius: 1rem;";
+
+            // 🔘 ปุ่ม: ต่อสัญญา (ฟรี, รับ 2 ปี)
+            const confirmBtn = document.getElementById('contract-confirm-btn');
+            confirmBtn.style.backgroundColor = groupColorHex;
+            confirmBtn.innerHTML = `<i class="fa-solid fa-file-signature mr-1"></i> ต่อสัญญา 2 ปี`;
+            confirmBtn.onclick = function() {
+                realIdol.contractWeeks = 96; // 2 ปี
+                realIdol.maxContractWeeks = 96;
+                if (typeof showSystemMessage === 'function') {
+                    showSystemMessage(`📝 [ต่อสัญญาสำเร็จ]: ${realIdol.name} สังกัดวง ${groupNameText} ได้รับสัญญาใหม่ 2 ปี`, "text-emerald-600 font-bold");
                 }
+                closeContractModalAndNext();
+            };
 
-                // 🚩 แสดงชื่อวงบนป้ายธงหลังชื่อ
-                const groupText = document.getElementById('contract-group-text');
-                if (groupText) {
-                    groupText.innerText = groupName || 'ไม่ระบุวง';
+            // 🔘 ปุ่ม: ไม่ต่อสัญญา (กลับเป็นเด็กฝึก)
+            const cancelBtn = document.getElementById('contract-cancel-btn');
+            cancelBtn.innerHTML = `ไม่ต่อสัญญา (กลับเป็นเด็กฝึก)`;
+            cancelBtn.onclick = function() {
+                if (typeof showSystemMessage === 'function') {
+                    showSystemMessage(`🎓 [จบการศึกษา]: ${realIdol.name} สิ้นสุดสัญญากับวง ${groupNameText} และย้ายสถานะกลับเป็นเด็กฝึกหัด`, "text-rose-500 font-bold");
                 }
+                realIdol.groupId = null;
+                realIdol.team = null;
+                realIdol.activity = "ว่าง";
+                realIdol.contractWeeks = 288;
+                realIdol.maxContractWeeks = 288;
+                closeContractModalAndNext();
+            };
 
-                // 🎨 เคลียร์ค่า Gradient ทิ้ง และระบายสีใหม่ตามสีวงให้กับ 3 ส่วนหลัก
-                const targetColor = groupColor || '#f59e0b'; // สีนิ่งถ้าไม่มีวงให้เป็นสีส้ม
+            // 🎬 แสดงหน้าต่าง UI (เอาแอนิเมชันหน่วงเวลาออกเพื่อให้คลิกได้อย่างลื่นไหลฉับไว)
+            const modal = document.getElementById('contract-modal');
+            const content = document.getElementById('contract-modal-content');
+            modal.classList.remove('hidden');
+            content.classList.remove('scale-95', 'opacity-0');
+            content.classList.add('scale-100', 'opacity-100');
+        }
 
-                const header = document.getElementById('contract-modal-header');
-                if (header) {
-                    header.style.backgroundImage = 'none'; // ล้างคลาส Gradient เดิม
-                    header.style.backgroundColor = targetColor;
+        // ฟังก์ชันสั่งปิดและเรียกคิวคนถัดไป (ตัดความหน่วงออก)
+        function closeContractModalAndNext() {
+            const modal = document.getElementById('contract-modal');
+            modal.classList.add('hidden');
+            window.isContractModalOpen = false;
+            
+            // ใช้ requestAnimationFrame หรือ setTimeout 0 เพื่อเคลียร์ Stack เบราว์เซอร์ให้ประมวลผลราบรื่น
+            setTimeout(() => {
+                processNextContractRenewal(); 
+            }, 0);
+        }
+
+        // ฟังก์ชันรีเฟรชหน้าจอกลาง (รวบยอดทำทีเดียวตอนปิดคิว)
+        function refreshGameSystem() {
+            // 1. สั่งเรนเดอร์ UI และรูปภาพขึ้นหน้าจอทันที (ผู้เล่นจะรู้สึกว่าเกมเปลี่ยนหน้าฉับไว ไม่ค้าง)
+            if (typeof updateGlobalUI === 'function') updateGlobalUI();
+            if (typeof renderIdols === 'function') renderIdols();
+            if (typeof renderGroupList === 'function') renderGroupList();
+
+            // 2. ผลักระบบเซฟเกม (ซึ่งกิน CPU สูงมากจากข้อมูลรูปภาพ) ให้ไปทำงานเบื้องหลัง 
+            // ช่วยลดอาการกระตุกตอนกดปุ่มได้อย่างเห็นได้ชัด
+            if (window.saveContractTimeout) clearTimeout(window.saveContractTimeout);
+            window.saveContractTimeout = setTimeout(() => {
+                if (typeof saveGame === 'function') {
+                    saveGame(true);
                 }
+            }, 100); // ดีเลย์ 100ms ให้เบราว์เซอร์วาดภาพเสร็จก่อน
+        }
 
-                const confirmBtn = document.getElementById('contract-confirm-btn');
-                if (confirmBtn) {
-                    confirmBtn.style.backgroundImage = 'none'; // ล้างคลาส Gradient เดิม
-                    confirmBtn.style.backgroundColor = targetColor;
-                }
+        // ฟังก์ชันสั่งปิดและเรียกคิวคนถัดไป
+        function closeContractModalAndNext() {
+            const modal = document.getElementById('contract-modal');
+            const content = document.getElementById('contract-modal-content');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                window.isContractModalOpen = false;
+                processNextContractRenewal(); // 🔄 เรียกคนถัดไปในคิว
+            }, 200);
+        }
 
-                const groupBadge = document.getElementById('contract-group-badge');
-                if (groupBadge) {
-                    groupBadge.style.backgroundImage = 'none';
-                    groupBadge.style.backgroundColor = targetColor;
-                }
+        // ฟังก์ชันรีเฟรชหน้าจอกลาง
+        function refreshGameSystem() {
+            if (typeof saveGame === 'function') saveGame(true);
+            if (typeof updateGlobalUI === 'function') updateGlobalUI();
+            if (typeof renderIdols === 'function') renderIdols();
+            if (typeof renderGroupList === 'function') renderGroupList();
+        }
 
-                // ควบคุมอนิเมชันการแสดงผลหน้าต่างแจ้งเตือน
-                const modal = document.getElementById('contract-modal');
-                const content = document.getElementById('contract-modal-content');
-                modal.classList.remove('hidden');
-                setTimeout(() => {
-                    content.classList.remove('scale-95', 'opacity-0');
-                    content.classList.add('scale-100', 'opacity-100');
-                }, 10);
-
-                const handleConfirm = () => { cleanup(); resolve(true); };
-                const handleCancel = () => { cleanup(); resolve(false); };
-
-                const cleanup = () => {
-                    content.classList.remove('scale-100', 'opacity-100');
-                    content.classList.add('scale-95', 'opacity-0');
-                    setTimeout(() => { modal.classList.add('hidden'); }, 300);
-                    document.getElementById('contract-confirm-btn').removeEventListener('click', handleConfirm);
-                    document.getElementById('contract-cancel-btn').removeEventListener('click', handleCancel);
-                };
-
-                document.getElementById('contract-confirm-btn').addEventListener('click', handleConfirm);
-                document.getElementById('contract-cancel-btn').addEventListener('click', handleCancel);
-            });
+        // ฟังก์ชันสั่งคำนวณและอัปเดต UI ทั้งหมดหลังจากกดปุ่มเสร็จสิ้น
+        function refreshGameSystem() {
+            if (typeof saveGame === 'function') saveGame(true);
+            if (typeof updateGlobalUI === 'function') updateGlobalUI();
+            if (typeof renderIdols === 'function') renderIdols();
+            if (typeof renderGroupList === 'function') renderGroupList();
+            
+            // บันทึกลง LocalStorage อัตโนมัติป้องกันเกมค้าง
+            if (typeof SAVE_KEY !== 'undefined' && typeof state !== 'undefined') {
+                localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+            }
         }
         // --- IDOLS SYSTEM ---
         // ==========================================
@@ -1327,16 +1388,56 @@
 
         function handleIdolImageUpload(event, idolId) {
             const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    let i = state.idols.find(x => x.id === idolId);
-                    i.avatar = e.target.result;
-                    renderIdols();
-                    showMsg('สำเร็จ', 'อัพโหลดรูปภาพเมมเบอร์เรียบร้อย');
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // 🎨 สร้าง Canvas เพื่อทำหน้าที่เป็นโรงงานย่อขนาดรูปภาพ
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 200;  // ขนาดที่เหมาะสมที่สุดสำหรับการ์ดเมมเบอร์
+                    const MAX_HEIGHT = 200;
+                    let width = img.width;
+                    let height = img.height;
+
+                    // คำนวณสัดส่วนภาพ (Aspect Ratio) ไม่ให้ภาพเบี้ยว
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // 💾 แปลงเป็น Base64 ในรูปแบบ JPEG คุณภาพ 70% (ไฟล์จะเล็กลงมหาศาล สลัดอาการกระตุกทิ้งทันที)
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+                    // บันทึกเข้าสู่ตัวแปรไอเดล
+                    let idol = state.idols.find(x => x.id === idolId);
+                    if (idol) {
+                        idol.avatar = compressedBase64;
+                        idol.image = compressedBase64;
+                        idol.img = compressedBase64;
+                    }
+
+                    // สั่งอัปเดตการแสดงผลทันที
+                    if (typeof renderIdols === 'function') renderIdols();
+                    if (typeof saveGame === 'function') saveGame(true);
                 };
-                reader.readAsDataURL(file);
-            }
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
         }
 
         function randomizeIdolAvatar(idolId) {
@@ -3036,14 +3137,14 @@
             <div class="p-5 space-y-4">
                 <div class="flex items-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
                     <div class="relative">
-                        <img id="contract-idol-img" src="https://via.placeholder.com/150" alt="Idol" class="w-14 h-14 rounded-full object-cover border-2 border-white bg-slate-200 shadow-sm">
+                        <img id="contract-idol-img" src="" alt="Idol" onerror="this.src='https://ui-avatars.com/api/?name=Idol&background=cbd5e1&color=475569'" class="w-14 h-14 rounded-full object-cover border-2 border-white bg-slate-200 shadow-sm">
                         <span class="absolute -bottom-1 -right-1 bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">⚠️</span>
                     </div>
                     <div class="flex-1">
                         <div class="flex items-center gap-2 flex-wrap">
                             <h4 id="contract-idol-name" class="font-bold text-slate-800 text-base heading-font">ชื่อไอดอล</h4>
                             <span id="contract-group-badge" class="text-[10px] font-bold text-white px-2 py-0.5 rounded-md shadow-sm flex items-center gap-1 transition-all duration-300">
-                                <i class="fa-solid fa-flag text-[9px]"></i> <span id="contract-group-text">วง</span>
+                                <span id="contract-group-text">วง</span>
                             </span>
                         </div>
                         <p class="text-slate-500 text-xs mt-0.5 flex items-center gap-1">
@@ -3053,7 +3154,7 @@
                 </div>
                 
                 <div class="text-xs text-slate-600 leading-relaxed bg-amber-50/60 p-3.5 rounded-xl border border-amber-100 text-center font-medium">
-                    คุณต้องการที่จะต่อสัญญาเพื่อดึงตัวไอดอลคนนี้ให้อยู่ในทีมต่อไปหรือไม่?
+                    คุณต้องการที่จะต่อสัญญาเพื่อดึงตัวไอดอลคนนี้ให้อยู่ในวงต่อไปหรือไม่?
                 </div>
             </div>
             
