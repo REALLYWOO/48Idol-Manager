@@ -961,14 +961,106 @@
 
         // ฟังก์ชันสั่งคำนวณและอัปเดต UI ทั้งหมดหลังจากกดปุ่มเสร็จสิ้น
         function refreshGameSystem() {
-            if (typeof saveGame === 'function') saveGame(true);
             if (typeof updateGlobalUI === 'function') updateGlobalUI();
             if (typeof renderIdols === 'function') renderIdols();
             if (typeof renderGroupList === 'function') renderGroupList();
-            
-            // บันทึกลง LocalStorage อัตโนมัติป้องกันเกมค้าง
-            if (typeof SAVE_KEY !== 'undefined' && typeof state !== 'undefined') {
-                localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+
+            // ใช้ระบบหน่วงเซฟเพื่อไม่ให้ CPU ทำงานหนักเกินไป
+            if (window.saveContractTimeout) clearTimeout(window.saveContractTimeout);
+            window.saveContractTimeout = setTimeout(() => {
+                if (typeof saveGame === 'function') {
+                    saveGame(true);
+                }
+            }, 100);
+        }
+
+        // ==========================================
+        // ☁️ ระบบควบคุมหน้าต่างคลาวด์เซฟ-โหลด (In-game UI)
+        // ==========================================
+        window.currentCloudMode = 'save';
+
+        function openSaveOnlineModal() {
+            window.currentCloudMode = 'save';
+            setupCloudModalUI();
+        }
+
+        function openLoadOnlineModal() {
+            window.currentCloudMode = 'load';
+            setupCloudModalUI();
+        }
+
+        function setupCloudModalUI() {
+            const modal = document.getElementById('cloud-save-load-modal');
+            const content = document.getElementById('cloud-modal-content');
+            const title = document.getElementById('cloud-modal-title');
+            const icon = document.getElementById('cloud-modal-icon');
+            const alertBox = document.getElementById('cloud-modal-alert');
+            const tipTitle = document.getElementById('cloud-modal-tip-title');
+            const tipDesc = document.getElementById('cloud-modal-tip-desc');
+            const submitBtn = document.getElementById('cloud-submit-btn');
+            const inputField = document.getElementById('cloud-account-input');
+
+            // ดึงชื่อเก่ามาสแตนด์บายรอ
+            let savedName = (typeof state !== 'undefined' && state.playerName) ? state.playerName : "";
+            if (!savedName) savedName = localStorage.getItem('lastCloudAccount') || "";
+            inputField.value = savedName;
+
+            if (window.currentCloudMode === 'save') {
+                title.textContent = "บันทึกข้อมูลออนไลน์ (Cloud Save)";
+                icon.className = "fa-solid fa-cloud-arrow-up text-xs animate-bounce";
+                alertBox.className = "bg-emerald-50 text-emerald-800 p-3 rounded-xl border border-emerald-100 text-[11px] flex gap-2 items-start";
+                tipTitle.textContent = "คำแนะนำการบันทึกเซฟ";
+                tipDesc.textContent = "ระบบจะอัปโหลดข้อมูลค่ายปัจจุบันขึ้นคลาวด์ คุณสามารถใช้ชื่อเดิมเพื่อเซฟทับข้อมูลล่าสุดได้ตลอดเวลา";
+                submitBtn.className = "flex-1 text-white text-xs font-bold py-2 rounded-xl shadow-md bg-emerald-500 hover:bg-emerald-600 transition active:scale-95";
+                submitBtn.innerHTML = `<i class="fa-solid fa-floppy-disk mr-1"></i> อัปโหลดเซฟ`;
+            } else {
+                title.textContent = "โหลดข้อมูลออนไลน์ (Cloud Load)";
+                icon.className = "fa-solid fa-cloud-arrow-down text-xs animate-bounce";
+                alertBox.className = "bg-amber-50 text-amber-800 p-3 rounded-xl border border-amber-100 text-[11px] flex gap-2 items-start";
+                tipTitle.textContent = "⚠️ ข้อควรระวังก่อนโหลด";
+                tipDesc.textContent = "การโหลดไฟล์เซฟจากคลาวด์จะนำข้อมูลมาเขียนทับเซฟปัจจุบันของคุณทันที โปรดตรวจสอบชื่อให้ถูกต้อง";
+                submitBtn.className = "flex-1 text-white text-xs font-bold py-2 rounded-xl shadow-md bg-sky-500 hover:bg-sky-600 transition active:scale-95";
+                submitBtn.innerHTML = `<i class="fa-solid fa-download mr-1"></i> ดาวน์โหลดเซฟ`;
+            }
+
+            submitBtn.onclick = submitCloudAction;
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 30);
+        }
+
+        function closeCloudModal() {
+            const modal = document.getElementById('cloud-save-load-modal');
+            const content = document.getElementById('cloud-modal-content');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 150);
+        }
+
+        function submitCloudAction() {
+            const accountName = document.getElementById('cloud-account-input').value.trim();
+            if (!accountName) {
+                if (typeof showSystemMessage === 'function') {
+                    showSystemMessage("⚠️ กรุณากรอกชื่อบัญชีก่อนทำรายการ", "text-rose-500 font-bold");
+                }
+                return;
+            }
+
+            localStorage.setItem('lastCloudAccount', accountName);
+            if (typeof state !== 'undefined') state.playerName = accountName;
+
+            closeCloudModal();
+
+            // ส่งค่าไปประมวลผลที่ฟังก์ชันดั้งเดิมของระบบเกม
+            if (window.currentCloudMode === 'save') {
+                uploadSaveOnline(accountName);
+            } else {
+                downloadSaveOnline(accountName);
             }
         }
         // --- IDOLS SYSTEM ---
@@ -2773,11 +2865,118 @@
             }, 1000);
         }
 
-
         // 2. ระบบปุ่ม เซฟออนไลน์ / โหลดออนไลน์ (เชื่อมกับหน้าบริษัท 48IDOL MANAGER)
         function injectOnlineButtons() {
             if (document.getElementById('btn-save-online')) return;
 
+            // ☁️ 1. สร้างและฝัง HTML หน้าต่างโมดอลคลาวด์ในเกมโดยอัตโนมัติ (ไม่ต้องไปไล่หาที่วางในไฟล์)
+            if (!document.getElementById('custom-cloud-modal')) {
+                const modalHtml = `
+                <div id="custom-cloud-modal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div id="custom-cloud-content" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform scale-95 opacity-0 transition-all duration-200 border border-slate-100">
+                        <div id="custom-cloud-header" class="p-4 text-white flex justify-between items-center bg-gradient-to-r from-purple-500 to-indigo-600">
+                            <h3 class="text-xs font-bold flex items-center gap-2">
+                                <i id="custom-cloud-icon" class="fa-solid fa-cloud"></i>
+                                <span id="custom-cloud-title">ระบบคลาวด์</span>
+                            </h3>
+                            <button id="custom-cloud-close" class="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors">
+                                <i class="fa-solid fa-xmark text-base"></i>
+                            </button>
+                        </div>
+                        <div class="p-5 space-y-4">
+                            <div id="custom-cloud-alert" class="bg-purple-50 text-purple-800 p-3 rounded-xl border border-purple-100 text-[11px] flex gap-2 items-start">
+                                <i class="fa-solid fa-circle-info text-xs mt-0.5 text-purple-500"></i>
+                                <p id="custom-cloud-text" class="text-slate-600 leading-relaxed"></p>
+                            </div>
+                            <div id="custom-cloud-input-container" class="space-y-1">
+                                <label id="custom-cloud-label" class="block text-[11px] font-bold text-slate-500 tracking-wide">กรอกข้อมูล</label>
+                                <input type="text" id="custom-cloud-input" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all text-slate-700">
+                            </div>
+                        </div>
+                        <div class="p-3 bg-slate-50 border-t border-slate-100 flex gap-2">
+                            <button id="custom-cloud-cancel" class="flex-1 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-100 transition active:scale-95">ยกเลิก</button>
+                            <button id="custom-cloud-submit" class="flex-1 text-white text-xs font-bold py-2 rounded-xl shadow-md transition active:scale-95 bg-purple-500 hover:bg-purple-600">ยืนยัน</button>
+                        </div>
+                    </div>
+                </div>`;
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = modalHtml;
+                document.body.appendChild(tempDiv.firstElementChild);
+            }
+
+            // ⚙️ 2. ฟังก์ชันตัวช่วยควบคุมหน้าต่างคลาวด์แปรผันตามสถานการณ์ (Helper Engine)
+            const openCloudEngine = (options) => {
+                const modal = document.getElementById('custom-cloud-modal');
+                const content = document.getElementById('custom-cloud-content');
+                const header = document.getElementById('custom-cloud-header');
+                const title = document.getElementById('custom-cloud-title');
+                const icon = document.getElementById('custom-cloud-icon');
+                const alertBox = document.getElementById('custom-cloud-alert');
+                const text = document.getElementById('custom-cloud-text');
+                const label = document.getElementById('custom-cloud-label');
+                const input = document.getElementById('custom-cloud-input');
+                const submitBtn = document.getElementById('custom-cloud-submit');
+                const cancelBtn = document.getElementById('custom-cloud-cancel');
+                const closeBtn = document.getElementById('custom-cloud-close');
+                const inputContainer = document.getElementById('custom-cloud-input-container');
+
+                title.textContent = options.title || "ระบบคลาวด์";
+                text.innerHTML = options.text || "";
+                icon.className = options.icon || "fa-solid fa-cloud";
+                
+                // สลับธีมสี UI ตามโหมดการทำงาน
+                if (options.theme === 'purple') {
+                    header.className = "p-4 text-white flex justify-between items-center bg-gradient-to-r from-purple-500 to-indigo-600";
+                    alertBox.className = "bg-purple-50 text-purple-800 p-3 rounded-xl border border-purple-100 text-[11px] flex gap-2 items-start";
+                    submitBtn.className = "flex-1 text-white text-xs font-bold py-2 rounded-xl shadow-md bg-purple-500 hover:bg-purple-600 transition active:scale-95";
+                } else if (options.theme === 'sky') {
+                    header.className = "p-4 text-white flex justify-between items-center bg-gradient-to-r from-sky-500 to-indigo-600";
+                    alertBox.className = "bg-sky-50 text-sky-800 p-3 rounded-xl border border-sky-100 text-[11px] flex gap-2 items-start";
+                    submitBtn.className = "flex-1 text-white text-xs font-bold py-2 rounded-xl shadow-md bg-sky-500 hover:bg-sky-600 transition active:scale-95";
+                } else if (options.theme === 'amber') {
+                    header.className = "p-4 text-white flex justify-between items-center bg-gradient-to-r from-amber-500 to-orange-500";
+                    alertBox.className = "bg-amber-50 text-amber-800 p-3 rounded-xl border border-amber-100 text-[11px] flex gap-2 items-start";
+                    submitBtn.className = "flex-1 text-white text-xs font-bold py-2 rounded-xl shadow-md bg-amber-500 hover:bg-amber-600 transition active:scale-95";
+                }
+
+                if (options.showInput) {
+                    inputContainer.classList.remove('hidden');
+                    label.textContent = options.inputLabel || "กรอกข้อมูล:";
+                    input.value = options.inputValue || "";
+                    input.type = options.inputType || "text";
+                    input.placeholder = options.inputPlaceholder || "";
+                } else {
+                    inputContainer.classList.add('hidden');
+                }
+
+                const closeModal = () => {
+                    content.classList.remove('scale-100', 'opacity-100');
+                    content.classList.add('scale-95', 'opacity-0');
+                    setTimeout(() => modal.classList.add('hidden'), 150);
+                };
+
+                cancelBtn.onclick = closeModal;
+                closeBtn.onclick = closeModal;
+
+                submitBtn.onclick = () => {
+                    const val = input.value.trim();
+                    if (options.showInput && !val && options.required) {
+                        alert("⚠️ กรุณากรอกข้อมูลในช่องให้ครบถ้วน");
+                        return;
+                    }
+                    closeModal();
+                    if (options.onSubmit) options.onSubmit(val);
+                };
+
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    content.classList.remove('scale-95', 'opacity-0');
+                    content.classList.add('scale-100', 'opacity-100');
+                    if (options.showInput) input.focus();
+                }, 30);
+            };
+
+            // 🧱 3. สร้างปุ่มบนแถบเมนูหลักเกมเหมือนเดิม
             const localSaveBtn = document.querySelector('button[onclick="saveGame()"]');
             
             if (localSaveBtn) {
@@ -2800,15 +2999,15 @@
                 saveOnlineBtn.after(loadOnlineBtn);
                 loadOnlineBtn.after(logoutBtn);
 
-                // กดปุ่มเซฟออนไลน์ (บันทึกข้อมูลค่ายเกม)
+                // 💾 [โหมดเซฟออนไลน์]: ไม่ต้องพิมพ์ชื่อ ระบบอ่านค่าบริษัทอัปโหลดทันทีพร้อมโมดอลแจ้งสวยๆ
                 saveOnlineBtn.addEventListener('click', () => {
                     if (typeof window.saveGame === 'function') {
-                        window.saveGame(); // เซฟลงเครื่องก่อนเพื่อให้ได้ข้อมูลล่าสุด
+                        window.saveGame(); 
                     }
 
                     const localData = localStorage.getItem('CompanyIdolManager_SaveData');
                     if (!localData) {
-                        alert('❌ ไม่พบข้อมูลบริษัทในเครื่อง! กรุณาก่อตั้งบริษัทและเริ่มเล่นก่อน');
+                        openCloudEngine({ title: 'เกิดข้อผิดพลาด', theme: 'amber', text: '❌ ไม่พบข้อมูลบริษัทในเครื่อง! กรุณาก่อตั้งบริษัทและเริ่มเล่นก่อน', showInput: false });
                         return;
                     }
 
@@ -2816,84 +3015,128 @@
                     const companyName = saveData.agencyName ? saveData.agencyName.trim() : "";
 
                     if (!companyName || companyName === "---") {
-                        alert('❌ ไม่สามารถเซฟออนไลน์ได้ เนื่องจากยังไม่ได้ตั้งชื่อบริษัทหรืออยู่ในหน้าเลือกเด็ก');
+                        openCloudEngine({ title: 'เกิดข้อผิดพลาด', theme: 'amber', text: '❌ ไม่สามารถเซฟออนไลน์ได้ เนื่องจากยังไม่ได้ตั้งชื่อบริษัทหรืออยู่ในหน้าเลือกเด็ก', showInput: false });
                         return;
                     }
 
-                    // ฝังรหัสผ่านของผู้เล่นปัจจุบันลงไปในข้อมูลเซฟบริษัทด้วยเพื่อความปลอดภัย
                     const userPass = localStorage.getItem('IdolManager_UserPassword');
                     saveData.onlinePassword = userPass; 
                     saveData.ownerNode = localStorage.getItem('IdolManager_LoggedInUser');
 
                     set(ref(db, 'saves/' + companyName), saveData)
                     .then(() => {
-                        alert(`💾 [คลาวด์สำเร็จ] บันทึกข้อมูลค่าย "${companyName}" ขึ้นออนไลน์เรียบร้อย! ค่ายนี้ถูกล็อกด้วยรหัสผ่านบัญชีของคุณแล้ว`);
+                        openCloudEngine({
+                            title: 'บันทึกคลาวด์สำเร็จ',
+                            theme: 'purple',
+                            icon: 'fa-solid fa-cloud-arrow-up text-purple-500 animate-bounce',
+                            text: `💾 บันทึกข้อมูลค่ายเพลง <b>"${companyName}"</b> ขึ้นระบบคลาวด์ออนไลน์เรียบร้อยแล้ว! ค่ายนี้ถูกล็อกความปลอดภัยด้วยรหัสผ่านบัญชีของคุณแล้ว`,
+                            showInput: false
+                        });
                     })
                     .catch((error) => {
-                        alert('❌ เซฟออนไลน์ล้มเหลว: ' + error.message);
+                        openCloudEngine({ title: 'เซฟล้มเหลว', theme: 'amber', text: '❌ เซฟออนไลน์ล้มเหลว: ' + error.message, showInput: false });
                     });
                 });
 
-                // กดปุ่มโหลดออนไลน์ (มีระบบป้องกันคนอื่นแอบอ้างชื่อบริษัท)
+                // 📥 [โหมดโหลดออนไลน์]: ล่ารายชื่อและถามรหัสผ่านผ่าน In-game UI ไร้รอยต่อ
                 loadOnlineBtn.addEventListener('click', () => {
-                    const companyName = prompt("กรุณากรอกชื่อบริษัทที่ต้องการโหลด:");
-                    if (!companyName || !companyName.trim()) return;
+                    openCloudEngine({
+                        title: 'ดาวน์โหลดจากคลาวด์',
+                        theme: 'sky',
+                        icon: 'fa-solid fa-cloud-arrow-down text-sky-500 animate-bounce',
+                        text: 'กรุณากรอกชื่อบริษัทค่ายเพลงที่คุณต้องการดึงข้อมูลกลับมาเล่นต่อ:',
+                        showInput: true,
+                        required: true,
+                        inputLabel: 'ชื่อบริษัทเป้าหมาย:',
+                        inputPlaceholder: 'ระบุชื่อบริษัท...',
+                        onSubmit: (companyName) => {
+                            if (!companyName) return;
 
-                    const dbRef = ref(db);
-                    get(child(dbRef, `saves/${companyName.trim()}`))
-                    .then((snapshot) => {
-                        if (snapshot.exists()) {
-                            const onlineData = snapshot.val();
-                            
-                            // เช็ค onlinePassword
-                            const correctPassword = onlineData.onlinePassword; 
+                            const dbRef = ref(db);
+                            get(child(dbRef, `saves/${companyName}`))
+                            .then((snapshot) => {
+                                if (snapshot.exists()) {
+                                    const onlineData = snapshot.val();
+                                    const correctPassword = onlineData.onlinePassword; 
 
-                            if (!correctPassword) {
-                                alert("❌ เซฟนี้ไม่มีรหัสผ่านออนไลน์");
-                                return;
-                            }
+                                    if (!correctPassword) {
+                                        openCloudEngine({ title: 'เกิดข้อผิดพลาด', theme: 'amber', text: '❌ ข้อมูลค่ายนี้ไม่มีรหัสผ่านความปลอดภัยออนไลน์ซิงค์ไว้', showInput: false });
+                                        return;
+                                    }
 
-                            const inputPassword = prompt(`🔒 กรุณากรอกรหัสผ่านเพื่อโหลดเซฟ:`);
-                            
-                            if (inputPassword !== String(correctPassword)) {
-                                alert("❌ รหัสผ่านไม่ถูกต้อง!");
-                                return; 
-                            }
+                                    // เรียกรับรหัสผ่านต่อทันทีผ่านดีเลย์กัน UI ซ้อนทับ
+                                    setTimeout(() => {
+                                        openCloudEngine({
+                                            title: '🔒 การยืนยันสิทธิ์เข้าถึงค่าย',
+                                            theme: 'sky',
+                                            icon: 'fa-solid fa-lock text-amber-500',
+                                            text: `ค่ายเพลง <b>"${companyName}"</b> เป็นพื้นที่ส่วนบุคคล โปรดระบุรหัสผ่านออนไลน์เพื่อดาวน์โหลดเซฟข้อมูล`,
+                                            showInput: true,
+                                            required: true,
+                                            inputType: 'password',
+                                            inputLabel: 'รหัสผ่านของคุณ:',
+                                            inputPlaceholder: 'กรอกรหัสผ่านบัญชี...',
+                                            onSubmit: (inputPassword) => {
+                                                if (inputPassword !== String(correctPassword)) {
+                                                    setTimeout(() => {
+                                                        openCloudEngine({ title: 'รหัสผ่านผิดพลาด', theme: 'amber', text: '❌ รหัสผ่านไม่ถูกต้อง! ไม่สามารถดาวน์โหลดค่ายนี้ได้', showInput: false });
+                                                    }, 200);
+                                                    return; 
+                                                }
 
-                            // --- 🛑 ตรงนี้คือจุดที่แก้ไข ---
-                            // 1. บันทึกข้อมูลลง LocalStorage
-                            localStorage.setItem('CompanyIdolManager_SaveData', JSON.stringify(onlineData));
-                            
-                            // 2. อัปเดต state ของเกมโดยตรง (ไม่ต้องรีเฟรชหน้าเว็บ)
-                            Object.assign(state, onlineData);
-                            
-                            // 3. สั่งให้ UI อัปเดตข้อมูลใหม่ (ฟังก์ชันนี้ต้องมีอยู่ในโค้ดคุณอยู่แล้ว)
-                            updateGlobalUI(); 
-                            
-                            // 4. สั่งปิดหน้า Setup Modal ทันที
-                            const setupModal = document.getElementById('setup-modal');
-                            if (setupModal) setupModal.classList.add('hidden');
-                            
-                            // 5. เปลี่ยน Tab ไปที่หน้าเล่นเกม (เช่น groups หรือ dashboard)
-                            if (typeof switchTab === 'function') {
-                                switchTab('groups');
-                            }
+                                                // ประมวลผลถอดรหัสเข้าตัวเกมโดยตรง
+                                                localStorage.setItem('CompanyIdolManager_SaveData', JSON.stringify(onlineData));
+                                                Object.assign(state, onlineData);
+                                                
+                                                if (typeof updateGlobalUI === 'function') updateGlobalUI(); 
+                                                
+                                                const setupModal = document.getElementById('setup-modal');
+                                                if (setupModal) setupModal.classList.add('hidden');
+                                                
+                                                if (typeof switchTab === 'function') {
+                                                    switchTab('groups');
+                                                }
 
-                            alert("🎉 โหลดข้อมูลสำเร็จ! เล่นต่อได้เลย");
-                            
-                        } else {
-                            alert("❌ ไม่พบชื่อบริษัทนี้ในระบบ");
+                                                setTimeout(() => {
+                                                    openCloudEngine({
+                                                        title: 'ยินดีต้อนรับกลับ!',
+                                                        theme: 'sky',
+                                                        icon: 'fa-solid fa-circle-check text-emerald-500',
+                                                        text: `🎉 ทำการเชื่อมต่อดึงข้อมูลค่าย <b>"${companyName}"</b> เสร็จสิ้น ระบบอัปเดตหน้าจอหลักพร้อมให้คุณบริหารต่อเรียบร้อย!`,
+                                                        showInput: false
+                                                    });
+                                                }, 200);
+                                            }
+                                        });
+                                    }, 220);
+
+                                } else {
+                                    setTimeout(() => {
+                                        openCloudEngine({ title: 'ไม่พบข้อมูล', theme: 'amber', text: `❌ ไม่พบชื่อบริษัท <b>"${companyName}"</b> บนระบบออนไลน์ โปรดสะกดใหม่อีกครั้ง`, showInput: false });
+                                    }, 200);
+                                }
+                            })
+                            .catch((error) => {
+                                alert('เกิดข้อผิดพลาดในการรับส่งข้อมูล: ' + error.message);
+                            });
                         }
                     });
                 });
 
-                // ปุ่มสลับบัญชีผู้เล่น
+                // 🚪 [ปุ่มสลับบัญชี]: เปลี่ยนตัวยืนยันโมดอลเพื่อให้คุมโทนลื่นไหล
                 logoutBtn.addEventListener('click', () => {
-                    if (confirm("ต้องการออกจากระบบบัญชีผู้เล่นเพื่อสลับ ID ใช่หรือไม่?")) {
-                        localStorage.removeItem('IdolManager_LoggedInUser');
-                        localStorage.removeItem('IdolManager_UserPassword');
-                        location.reload();
-                    }
+                    openCloudEngine({
+                        title: 'ออกจากระบบค่าย',
+                        theme: 'amber',
+                        icon: 'fa-solid fa-right-from-bracket text-rose-500',
+                        text: 'คุณต้องการออกจากระบบบัญชีผู้เล่นปัจจุบัน เพื่อเคลียร์เซฟเก่าและเตรียมสลับไอดีผู้เล่นอื่นใช่หรือไม่?',
+                        showInput: false,
+                        onSubmit: () => {
+                            localStorage.removeItem('IdolManager_LoggedInUser');
+                            localStorage.removeItem('IdolManager_UserPassword');
+                            location.reload();
+                        }
+                    });
                 });
             }
         }
@@ -3164,6 +3407,51 @@
                 </button>
                 <button id="contract-confirm-btn" class="flex-1 text-white font-semibold py-2.5 rounded-xl text-xs transition-all active:scale-95 shadow-md text-center">
                     ต่อสัญญาใหม่
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cloud-save-load-modal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+        <div id="cloud-modal-content" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform scale-95 opacity-0 transition-all duration-200 border border-slate-100">
+            
+            <div id="cloud-modal-header" class="p-4 text-white flex justify-between items-center bg-gradient-to-r from-sky-500 to-indigo-600">
+                <h3 class="text-sm font-bold flex items-center gap-2Heading">
+                    <i id="cloud-modal-icon" class="fa-solid fa-cloud-arrow-up text-xs animate-bounce"></i>
+                    <span id="cloud-modal-title">ระบบคลาวด์เซฟออนไลน์</span>
+                </h3>
+                <button onclick="closeCloudModal()" class="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+            
+            <div class="p-5 space-y-4">
+                <div id="cloud-modal-alert" class="bg-sky-50 text-sky-800 p-3 rounded-xl border border-sky-100 text-[11px] flex gap-2 items-start">
+                    <i class="fa-solid fa-circle-info text-xs mt-0.5 text-sky-500"></i>
+                    <div>
+                        <p class="font-bold mb-0.5" id="cloud-modal-tip-title">คำแนะนำการบันทึก</p>
+                        <p class="text-slate-600 leading-relaxed" id="cloud-modal-tip-desc">กรุณากรอกชื่อผู้เล่นหรือรหัสอ้างอิงคลาวด์เพื่อบันทึกข้อมูล</p>
+                    </div>
+                </div>
+                
+                <div class="space-y-1">
+                    <label class="block text-[11px] font-bold text-slate-500 tracking-wide">ชื่อบัญชี / คีย์อ้างอิงคลาวด์</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i class="fa-solid fa-user-tag text-xs"></i>
+                        </span>
+                        <input type="text" id="cloud-account-input" placeholder="กรอกชื่อเพื่อใช้อ้างอิงเซฟ..." 
+                            class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition-all text-slate-700">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-3.5 bg-slate-50 border-t border-slate-100 flex gap-2">
+                <button onclick="closeCloudModal()" class="flex-1 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-100 transition active:scale-95">
+                    ยกเลิก
+                </button>
+                <button id="cloud-submit-btn" class="flex-1 text-white text-xs font-bold py-2 rounded-xl shadow-md transition active:scale-95">
+                    ยืนยัน
                 </button>
             </div>
         </div>
