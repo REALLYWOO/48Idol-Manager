@@ -66,7 +66,7 @@
 
     <div class="city-bg"><div class="city-skyline"></div></div>
 
-    <div id="msg-modal" class="fixed inset-0 bg-slate-900/70 z-[300] flex items-center justify-center p-4 hidden backdrop-blur-sm">
+    <div id="msg-modal" class="fixed inset-0 bg-slate-900/70 z-[10000] flex items-center justify-center p-4 hidden backdrop-blur-sm">
         <div class="modern-panel w-full max-w-sm p-6 text-center border-t-4 border-t-pink-500 shadow-2xl">
             <h3 id="msg-title" class="heading-font text-pink-600 mb-2 uppercase tracking-wider text-sm">SYSTEM</h3>
             <p id="msg-text" class="text-sm text-slate-700 mb-6 leading-relaxed whitespace-pre-line"></p>
@@ -133,6 +133,10 @@
                         <i class="fa-solid fa-compact-disc w-5 text-pink-500"></i>
                         <span>สตูดิโอผลิตเพลง</span>
                     </button>
+                    <button id="tab-btn-charts" onclick="switchTab('charts')" class="modern-btn flex items-center justify-start gap-3">
+                        <i class="fa-solid fa-trophy w-5 text-amber-500"></i>
+                        <span>ผลงาน & ชาร์ตเพลง</span>
+                    </button>
                 </nav>
             </div>
             
@@ -156,12 +160,19 @@
                 <button onclick="advanceTime()" class="modern-btn modern-btn-primary w-full py-3 text-sm flex items-center justify-center gap-2 shadow"><i class="fa-solid fa-forward-step"></i><span>ข้ามสัปดาห์</span></button>
             </div>
 
-            <div id="online-status-trigger" class="cursor-pointer flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 transition-all active:scale-95 w-fit mt-2">
-                <div class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            <div class="flex gap-2 mt-2">
+                <div id="online-status-trigger" class="cursor-pointer flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 transition-all active:scale-95 w-fit">
+                    <div class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </div>
+                    <span id="online-count-text" class="text-[11px] font-bold text-slate-600">ออนไลน์ (0)</span>
                 </div>
-                <span id="online-count-text" class="text-[11px] font-bold text-slate-600">ออนไลน์ (0)</span>
+                
+                <div onclick="if(typeof window.openFriendsModal === 'function') window.openFriendsModal()" class="cursor-pointer flex items-center gap-2 px-3 py-1.5 bg-pink-50 border border-pink-200 rounded-lg shadow-sm hover:bg-pink-100 transition-all active:scale-95 w-fit">
+                    <i class="fa-solid fa-user-group text-pink-500 text-xs"></i>
+                    <span class="text-[11px] font-bold text-pink-600">รายชื่อเพื่อน</span>
+                </div>
             </div>
         </section>
 
@@ -317,7 +328,7 @@
                                             <input type="radio" name="release-type" value="album" class="sr-only" onchange="if(typeof updateStudioTotalCostLive === 'function') updateStudioTotalCostLive()">
                                             <div class="flex items-center gap-1.5 justify-center">
                                                 <i class="fa-solid fa-compact-disc text-amber-500 text-sm"></i>
-                                                <span class="text-xs font-bold text-slate-700">อัลบั้มเต็ม</span>
+                                                <span class="text-xs font-bold text-slate-700">อัลบั้ม</span>
                                             </div>
                                             <span class="text-[9px] text-slate-400 font-medium mt-1">ต้นทุน ฿120k</span>
                                         </label>
@@ -492,9 +503,87 @@
                         </div>
                     </div>
                 </div> </div>
+            <div id="tab-content-charts" class="hidden space-y-4">
+                <div class="modern-panel p-5 bg-white/95 shadow-md">
+                    
+                    <div class="flex border-b border-slate-200 mb-4 gap-2">
+                        <button onclick="switchMusicTab('my-releases')" id="tab-btn-releases" class="flex-1 py-2.5 text-center font-bold text-xs border-b-2 border-pink-500 text-pink-600 transition-all">
+                            <i class="fa-solid fa-compact-disc mr-1"></i> ผลงานของคุณ
+                        </button>
 
+                        <button onclick="switchMusicTab('global-charts')" id="tab-btn-charts" class="flex-1 py-2.5 text-center font-bold text-xs border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-all">
+                            <i class="fa-solid fa-trophy mr-1"></i> ชาร์ตเพลงประจำสัปดาห์
+                        </button>
+                    </div>
+
+                    <div id="music-tab-releases" class="space-y-4">
+                        
+                        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200/60 shadow-inner min-h-[300px]">
+                            <h3 class="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider">
+                                <i class="fa-solid fa-music text-pink-500 mr-1"></i> คลังผลงานเพลงทั้งหมดของค่าย
+                            </h3>
+                            <div id="player-works-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                </div>
+                        </div>
+
+                        <div id="release-group-selection" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        </div>
+                        
+                        <div id="release-songs-view" class="hidden space-y-4">
+                            <button onclick="backToGroupSelection()" class="text-xs font-bold text-slate-500 hover:text-slate-700 flex items-center gap-1 mb-2 bg-slate-100 px-3 py-1.5 rounded-lg transition">
+                                <i class="fa-solid fa-arrow-left"></i> กลับไปหน้าเลือกวง
+                            </button>
+                            <h4 id="selected-group-title" class="font-bold text-sm text-slate-700 flex items-center gap-2 mb-3"></h4>
+                            <div id="release-songs-list" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="music-tab-charts" class="hidden space-y-3">
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex justify-between items-center mb-2">
+                            <span class="text-[11px] font-bold text-slate-500"><i class="fa-solid fa-circle-info"></i> อัปเดตอันดับแบบเรียลไทม์ตามยอดขายเพลงทั่วโลก</span>
+                        </div>
+                        <div id="global-music-charts-list" class="space-y-2 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="song-detail-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300 p-4">
+                <div id="song-detail-content" class="bg-white rounded-2xl max-w-3xl w-full overflow-hidden shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[90vh]">
+                    <div class="p-4 bg-slate-800 text-white font-bold flex justify-between items-center shrink-0">
+                        <span id="modal-song-title-display" class="text-sm truncate mr-2"><i class="fa-solid fa-compact-disc text-pink-400 mr-2"></i>รายละเอียดผลงาน</span>
+                        <button onclick="closeSongDetailModal()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 text-white transition"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div class="p-5 flex-grow overflow-y-auto bg-slate-50 custom-scrollbar">
+                        <div class="text-center mb-6">
+                            <h3 id="modal-song-name" class="text-2xl font-black text-slate-800">ชื่อเพลง</h3>
+                            <p id="modal-song-badge" class="inline-block px-3 py-1 bg-pink-100 border border-pink-200 text-sm font-bold text-pink-600 rounded-full mt-2 shadow-sm">1st Single</p>
+                            <p id="modal-song-group" class="text-xs font-bold text-slate-500 mt-2">วง ...</p>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-inner min-h-[250px]">
+                            <div class="text-xs font-bold text-slate-500 mb-3 text-center uppercase tracking-wider border-b pb-2"><i class="fa-solid fa-users-viewfinder"></i> รูปแบบฟอร์เมชั่น (Formation)</div>
+                            <div id="modal-song-formation" class="flex gap-3 overflow-y-auto flex-wrap justify-center custom-scrollbar p-2 items-center"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
     </main>
+            <div id="song-formation-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 hidden">
+                <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-100">
+                    <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                        <div>
+                            <h3 id="modal-custom-song-title" class="font-bold text-slate-800 text-sm heading-font">ชื่อเพลง</h3>
+                            <p id="modal-custom-song-subtitle" class="text-[11px] font-bold text-pink-500 mt-0.5"></p>
+                        </div>
+                        <button onclick="closeSongFormationModal()" class="text-slate-400 hover:text-slate-600 transition p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+                    </div>
+                    <div id="modal-custom-formation-container" class="p-5 flex-grow overflow-y-auto space-y-6 bg-slate-50/50 custom-scrollbar">
+                        </div>
+                </div>
+            </div>
 
     <div id="action-modal" class="fixed inset-0 bg-slate-900/60 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="modern-panel w-full max-w-2xl p-6 shadow-2xl flex flex-col max-h-[90vh]">
@@ -746,6 +835,7 @@
             let newYear = 2026 + Math.floor((state.week - 1) / 48);
             let isNewYear = (newYear > oldYear);
 
+            // 1. วงลูปอัปเดตสถานะของไอดอลรายบุคคลประจำสัปดาห์
             for (let idol of state.idols) {
                 if (isNewYear) {
                     if (!idol.age) idol.age = 15;
@@ -764,7 +854,7 @@
                     if(idol.stats[randomSkill] < 100) idol.stats[randomSkill] += Math.floor(Math.random() * 1);
                 }
 
-                // ─── 🌟 ระบบสัญญาใหม่แบบมีคิวคัดกรอง ───
+                // ─── ระบบสัญญาใหม่แบบมีคิวคัดกรอง ───
                 if (idol.groupId) {
                     if (!idol.maxContractWeeks) idol.maxContractWeeks = 288;
 
@@ -772,20 +862,50 @@
                         idol.contractWeeks--;
                     }
 
-                    // เมื่อสัญญาเหลือ 0 ให้ส่งเข้าคิว (ยังไม่เด้ง UI ทันทีเพื่อไม่ให้ Loop ค้าง)
                     if (idol.contractWeeks === 0) {
                         if (!window.pendingContractRenewals.includes(idol.id)) {
                             window.pendingContractRenewals.push(idol.id);
                         }
                     }
                 } else {
-                    // เด็กฝึก ไม่หักสัญญา
                     idol.contractWeeks = 288;
                     idol.maxContractWeeks = 288;
                 }
-            }
+            } // <--- สิ้นสุด Loop ไอดอลตรงนี้
 
-            // สั่งรันคิวแจ้งเตือนเมื่อจบสัปดาห์
+            // ====================================================================
+            // 📊 🌟 [ฝังเพิ่ม] ระบบอัปเดตชาร์ตเพลงแบบไดนามิก (อันดับขึ้น/ลง/ยอดขายเพิ่ม)
+            // ====================================================================
+            if (state.releases && state.releases.length > 0) {
+                state.releases.forEach(rel => {
+                    if (rel.rank) {
+                        // สุ่มอันดับแปรปรวน (ขึ้นสูงสุด 3 อันดับ หรือตก 2 อันดับ)
+                        let change = Math.floor(Math.random() * 6) - 2; 
+                        rel.rank += change;
+                        
+                        // ล็อกอันดับไม่ให้เกิน 100 และไม่ต่ำกว่า 1
+                        if (rel.rank < 1) rel.rank = 1;
+                        if (rel.rank > 100) rel.rank = 100;
+                        
+                        // ถ้ายอดขายดี/อันดับสูง จะยิ่งบวกยอดขายเพิ่มทุกสัปดาห์
+                        let salesBoost = Math.floor(Math.random() * (3000 / Math.max(1, rel.rank)));
+                        rel.sales = (rel.sales || 0) + salesBoost;
+                        
+                        // คำนวณรายได้กำไรที่เพิ่มขึ้น (ซิงเกิล/อัลบั้ม)
+                        let extraRevenue = salesBoost * (rel.type === 'album' ? 450 : 150);
+                        rel.revenue = (rel.revenue || 0) + extraRevenue;
+                        rel.profit = rel.revenue - (rel.cost || 0);
+
+                        // บวกเงินเข้าค่ายหลักของบริษัทโดยตรง (อิงตามรายได้เพิ่มในสัปดาห์นั้น)
+                        if (typeof state.money !== 'undefined') {
+                            state.money += extraRevenue;
+                        }
+                    }
+                });
+            }
+            // ====================================================================
+
+            // 2. สั่งรันคิวแจ้งเตือนเมื่อจบสัปดาห์ หรือสั่งอัปเดตระบบเกมต่อไป
             if (window.pendingContractRenewals.length > 0) {
                 processNextContractRenewal();
             } else {
@@ -921,21 +1041,26 @@
             }, 0);
         }
 
-        // ฟังก์ชันรีเฟรชหน้าจอกลาง (รวบยอดทำทีเดียวตอนปิดคิว)
+        // ฟังก์ชันรีเฟรชหน้าจอกลาง (เวอร์ชันรวมร่างสมบูรณ์ ตัวเดียวจบ)
         function refreshGameSystem() {
-            // 1. สั่งเรนเดอร์ UI และรูปภาพขึ้นหน้าจอทันที (ผู้เล่นจะรู้สึกว่าเกมเปลี่ยนหน้าฉับไว ไม่ค้าง)
             if (typeof updateGlobalUI === 'function') updateGlobalUI();
             if (typeof renderIdols === 'function') renderIdols();
             if (typeof renderGroupList === 'function') renderGroupList();
 
-            // 2. ผลักระบบเซฟเกม (ซึ่งกิน CPU สูงมากจากข้อมูลรูปภาพ) ให้ไปทำงานเบื้องหลัง 
-            // ช่วยลดอาการกระตุกตอนกดปุ่มได้อย่างเห็นได้ชัด
+            // 🌟 ซิงค์ข้อมูลแท็บเพลงย่อยปัจจุบันให้ทำงานแบบไดนามิกตอนกดข้ามสัปดาห์
+            if (window.currentMusicTab === 'my-releases') {
+                if (typeof renderMusicReleasesMenu === 'function') renderMusicReleasesMenu();
+            } else if (window.currentMusicTab === 'music-charts') {
+                if (typeof renderGlobalCharts === 'function') renderGlobalCharts();
+            }
+
+            // ใช้ระบบหน่วงเซฟเพื่อไม่ให้ CPU ทำงานหนักเกินไปตอนกดปุ่มข้ามสัปดาห์
             if (window.saveContractTimeout) clearTimeout(window.saveContractTimeout);
             window.saveContractTimeout = setTimeout(() => {
                 if (typeof saveGame === 'function') {
                     saveGame(true);
                 }
-            }, 100); // ดีเลย์ 100ms ให้เบราว์เซอร์วาดภาพเสร็จก่อน
+            }, 100); // ดีเลย์ 100ms ให้เบราว์เซอร์วาดภาพหน้าจอเสร็จก่อนค่อยเซฟลงเครื่อง
         }
 
         // ฟังก์ชันสั่งปิดและเรียกคิวคนถัดไป
@@ -949,29 +1074,6 @@
                 window.isContractModalOpen = false;
                 processNextContractRenewal(); // 🔄 เรียกคนถัดไปในคิว
             }, 200);
-        }
-
-        // ฟังก์ชันรีเฟรชหน้าจอกลาง
-        function refreshGameSystem() {
-            if (typeof saveGame === 'function') saveGame(true);
-            if (typeof updateGlobalUI === 'function') updateGlobalUI();
-            if (typeof renderIdols === 'function') renderIdols();
-            if (typeof renderGroupList === 'function') renderGroupList();
-        }
-
-        // ฟังก์ชันสั่งคำนวณและอัปเดต UI ทั้งหมดหลังจากกดปุ่มเสร็จสิ้น
-        function refreshGameSystem() {
-            if (typeof updateGlobalUI === 'function') updateGlobalUI();
-            if (typeof renderIdols === 'function') renderIdols();
-            if (typeof renderGroupList === 'function') renderGroupList();
-
-            // ใช้ระบบหน่วงเซฟเพื่อไม่ให้ CPU ทำงานหนักเกินไป
-            if (window.saveContractTimeout) clearTimeout(window.saveContractTimeout);
-            window.saveContractTimeout = setTimeout(() => {
-                if (typeof saveGame === 'function') {
-                    saveGame(true);
-                }
-            }, 100);
         }
 
         // ==========================================
@@ -1569,7 +1671,8 @@
 
         // --- NAVIGATION ROUTING ---
         function switchTab(tabId) {
-            ['idols', 'groups', 'audition', 'music-studio'].forEach(id => {
+            // 1. เพิ่ม 'charts' เข้าไปใน Array
+            ['idols', 'groups', 'audition', 'music-studio', 'charts'].forEach(id => {
                 const contentEl = document.getElementById(`tab-content-${id}`);
                 const btnEl = document.getElementById(`tab-btn-${id}`);
                 if (contentEl) contentEl.classList.add('hidden');
@@ -1579,15 +1682,23 @@
             const targetBtn = document.getElementById(`tab-btn-${tabId}`);
             if (targetContent) targetContent.classList.remove('hidden');
             if (targetBtn) targetBtn.classList.add('modern-btn-info');
-            
-            // ใช้ try...catch ครอบไว้เพื่อรับประกันว่าปุ่มสลับหน้าจะไม่ค้างเด็ดขาด
             try {
                 if(tabId === 'idols') renderIdols();
                 if(tabId === 'audition') renderAudition();
                 if(tabId === 'groups') renderGroupMain();
                 if(tabId === 'music-studio') {
-                    if (typeof initMusicStudio === 'function') {
-                        initMusicStudio();
+                    if (typeof initMusicStudio === 'function') initMusicStudio();
+                }
+                // 2. เพิ่มเงื่อนไขให้เรนเดอร์หน้าชาร์ต
+                if(tabId === 'charts') {
+                    if (typeof renderChartsTab === 'function') renderChartsTab();
+                    // ✨ เพิ่มบรรทัดนี้ลงไปเพื่อให้เวลาเปิดหน้าชาร์ตแล้ว ระบบจะดึง "ช่องผลงานแยกวง" ขึ้นมาแสดงผลทันทีครับ
+                    if (typeof switchChartSubTab === 'function') switchChartSubTab('works');
+                    
+                    // 🌟 ใส่คำสั่งที่คุณถามไว้ตรงนี้เลยครับ! 
+                    // ใส่ดัก typeof ไว้เผื่อกรณีที่ฟังก์ชันยังโหลดไม่เสร็จ จะได้ไม่เกิด Error ครับ
+                    if (typeof switchMusicTab === 'function') {
+                        switchMusicTab(false);
                     }
                 }
             } catch (error) {
@@ -1959,27 +2070,36 @@
             `;
         }
 
+        function getOrdinalSuffix(i) {
+            let j = i % 10, k = i % 100;
+            if (j == 1 && k != 11) return i + "st";
+            if (j == 2 && k != 12) return i + "nd";
+            if (j == 3 && k != 13) return i + "rd";
+            return i + "th";
+        }
+
         function startSongProduction() {
             let currentSenbatsu = (typeof studioState !== 'undefined' && studioState.senbatsu) ? studioState.senbatsu : [];
             let currentCenters = (typeof studioState !== 'undefined' && studioState.centers) ? studioState.centers : [];
-
+            
             if (currentSenbatsu.length === 0) {
                 if (typeof showMsg === 'function') showMsg('แจ้งเตือน', 'กรุณาเลือกเซ็มบัตสึอย่างน้อย 1 คน');
-                else alert('กรุณาเลือกเซ็มบัตสึอย่างน้อย 1 คน');
                 return;
             }
             
             let title = document.getElementById('music-title')?.value.trim() || 'เพลงใหม่ที่ไม่มีชื่อ';
             let releaseTypeEl = document.querySelector('input[name="release-type"]:checked');
             let releaseType = releaseTypeEl ? releaseTypeEl.value : 'single';
-            
             let cost = releaseType === 'single' ? 25000 : 120000;
             
-            if (document.getElementById('hire-songwriter')) cost += parseInt(document.getElementById('hire-songwriter').value) || 0;
-            if (document.getElementById('hire-composer')) cost += parseInt(document.getElementById('hire-composer').value) || 0;
-            if (document.getElementById('hire-choreographer')) cost += parseInt(document.getElementById('hire-choreographer').value) || 0;
-            if (document.getElementById('hire-mv')) cost += parseInt(document.getElementById('hire-mv').value) || 0;
+            // ดึงรูปปกอัลบั้ม (ถ้าอัปโหลดไว้)
+            let coverPreview = document.getElementById('album-cover-preview');
+            let coverImageBase64 = (coverPreview && !coverPreview.classList.contains('hidden')) ? coverPreview.src : null;
 
+            // คำนวณต้นทุน
+            ['hire-songwriter', 'hire-composer', 'hire-choreographer', 'hire-mv'].forEach(id => {
+                if (document.getElementById(id)) cost += parseInt(document.getElementById(id).value) || 0;
+            });
             ['merch-photo', 'merch-handshake', 'merch-2shot', 'merch-calendar', 'merch-plushie'].forEach(id => {
                 let el = document.getElementById(id);
                 if (el && el.checked) {
@@ -1991,33 +2111,69 @@
                 }
             });
 
-            if (state.cash < cost) {
-                let msg = `ต้องการเงินทุนอย่างน้อย ฿${cost.toLocaleString()} สำหรับการผลิตโปรเจกต์นี้\n(ปัจจุบันมี ฿${state.cash.toLocaleString()})`;
-                if (typeof showMsg === 'function') showMsg('เงินทุนไม่พอ', msg);
-                else alert(msg);
-                return;
-            }
-
+            if (state.cash < cost) return showMsg('เงินทุนไม่พอ', `ต้องการเงินทุน ฿${cost.toLocaleString()}`);
             state.cash -= cost;
-            if (typeof updateGlobalUI === 'function') updateGlobalUI();
 
+            let totalStats = 0;
             let idols = state.idols || [];
-            let centerNames = currentCenters.length > 0
-                ? currentCenters.map(id => idols.find(i => i.id === id)?.name || 'ไม่ทราบชื่อ').join(', ') 
-                : "ไม่มีการระบุ (No Center)";
+            currentSenbatsu.forEach(id => {
+                let idol = idols.find(i => i.id === id);
+                if(idol && idol.stats) totalStats += (idol.stats.singing + idol.stats.dancing + idol.stats.charm);
+            });
+
+            let powerScore = totalStats + (cost / 500) + Math.floor(Math.random() * 500);
+            let rank = 100;
+            if (powerScore > 4000) rank = Math.floor(Math.random() * 3) + 1; 
+            else if (powerScore > 2500) rank = Math.floor(Math.random() * 7) + 4; 
+            else if (powerScore > 1000) rank = Math.floor(Math.random() * 40) + 11; 
+            else rank = Math.floor(Math.random() * 50) + 51;
+
+            let salesCount = Math.floor(powerScore * (Math.random() * 10 + 5)); 
+            let pricePerUnit = releaseType === 'album' ? 450 : 150;
+            let revenue = salesCount * pricePerUnit;
+            state.cash += revenue;
+
+            let targetGroupId = (typeof studioState !== 'undefined' && studioState.groupId && studioState.groupId !== 'none') ? studioState.groupId : null;
+            let activeGroup = targetGroupId ? state.groups.find(g => g.id === targetGroupId) : null;
             
-            let winMsg = `ผลงาน "${title}" ถูกปล่อยออกสู่ตลาดแล้ว!\n\n` +
-                        `👑 เซ็นเตอร์: ${centerNames}\n` +
-                        `✨ จำนวนเซ็มบัตสึ: ${currentSenbatsu.length} คน\n` +
-                        `💰 งบประมาณที่ใช้ทั้งหมด: ฿${cost.toLocaleString()}`;
-                        
-            if (typeof showMsg === 'function') {
-                showMsg('🎉 ผลิตเพลงและวางจำหน่ายสำเร็จ!', winMsg);
-            } else {
-                alert(winMsg);
-            }
+            // นับลำดับซิงเกิลแยกตามประเภท (Single/Album) ของวงนั้นๆ
+            let groupSameTypeReleasesCount = state.releases ? state.releases.filter(r => r.groupId === targetGroupId && r.type === releaseType).length : 0;
+            let singleNumber = groupSameTypeReleasesCount + 1;
+
+            let newRelease = {
+                id: 'rel_' + Date.now(),
+                title: title,
+                type: releaseType,
+                singleNo: singleNumber,
+                coverImage: coverImageBase64, // เก็บรูปปก
+                cost: cost,
+                revenue: revenue,
+                profit: revenue - cost,
+                sales: salesCount,
+                rank: rank,
+                lastRank: rank,
+                senbatsuCount: currentSenbatsu.length,
+                senbatsuIds: [...currentSenbatsu], // เก็บ ID ไว้ใช้วาดฟอร์เมชั่น
+                centerIds: [...currentCenters],
+                groupId: targetGroupId,
+                groupName: activeGroup ? activeGroup.name : 'เด็กฝึกหัด',
+                groupFlagCss: activeGroup ? getGroupFlagCss(activeGroup) : 'background: #cbd5e1; color: #64748b;', 
+                agencyName: state.agencyName || 'ค่ายไม่ทราบชื่อ',
+                ownerId: localStorage.getItem('IdolManager_LoggedInUser') || 'guest',
+                date: document.getElementById('stat-date') ? document.getElementById('stat-date').innerText : 'ไม่ระบุวัน'
+            };
+
+            if (!state.releases) state.releases = [];
+            state.releases.unshift(newRelease);
+
+            if (typeof window.uploadGlobalChart === 'function') window.uploadGlobalChart(newRelease);
+            if (typeof updateGlobalUI === 'function') updateGlobalUI();
+            if (typeof saveGame === 'function') saveGame(true);
+
+            showMsg('🎉 โปรเจกต์เสร็จสิ้น!', `ผลงาน "${title}" ถูกปล่อยออกสู่ตลาดและขึ้นชาร์ตออนไลน์โลกแล้ว!`);
             
             initMusicStudio();
+            switchTab('charts');
         }
 
         function goToSenbatsuStep() {
@@ -2651,6 +2807,441 @@
             document.addEventListener('DOMContentLoaded', initStudioCostListeners);
         } else {
             initStudioCostListeners();
+        }
+
+        // ==========================================
+        // ระบบเรนเดอร์หน้าจอผลงานและชาร์ตเพลง (Charts)
+        // ==========================================
+        window.currentChartMode = 'local';
+
+        function switchChartMode(mode) {
+            window.currentChartMode = mode;
+            const btnLocal = document.getElementById('btn-chart-local');
+            const btnGlobal = document.getElementById('btn-chart-global');
+            const title = document.getElementById('charts-list-title');
+            const dashboard = document.getElementById('charts-summary-dashboard');
+
+            if (mode === 'local') {
+                btnLocal.className = "text-xs font-bold px-4 py-1.5 rounded-md bg-white text-pink-600 shadow-sm transition-all border border-slate-200";
+                btnGlobal.className = "text-xs font-bold px-4 py-1.5 rounded-md text-slate-500 hover:text-slate-700 transition-all border border-transparent";
+                title.innerText = "ประวัติการวางจำหน่ายของค่าย";
+                dashboard.classList.remove('hidden');
+                renderChartsTab();
+            } else {
+                btnGlobal.className = "text-xs font-bold px-4 py-1.5 rounded-md bg-white text-blue-600 shadow-sm transition-all border border-slate-200";
+                btnLocal.className = "text-xs font-bold px-4 py-1.5 rounded-md text-slate-500 hover:text-slate-700 transition-all border border-transparent";
+                title.innerHTML = '<i class="fa-solid fa-earth-americas text-blue-500"></i> ชาร์ตเพลงระดับโลก (Top 50 Global Sales)';
+                dashboard.classList.add('hidden'); // ซ่อนสรุปการเงินค่ายตัวเอง
+                renderGlobalCharts();
+            }
+        }
+
+        // ตัวสร้างกล่องข้อมูลเพลง
+        function generateChartHtml(r, isGlobal = false) {
+            let rankColor = "bg-slate-100 text-slate-600 border-slate-200";
+            let rankIcon = "";
+            let rankValue = isGlobal && r.globalRank ? r.globalRank : r.rank; 
+
+            // ประเมินสี Rank และแจกมงกุฎ
+            if (rankValue === 1) { rankColor = "bg-gradient-to-r from-yellow-300 to-amber-400 text-amber-900 border-yellow-400 shadow-md scale-105 z-10"; rankIcon = "👑"; }
+            else if (rankValue <= 3) { rankColor = "bg-gradient-to-r from-slate-200 to-slate-300 text-slate-700 border-slate-400 shadow-sm"; rankIcon = "🥈"; }
+            else if (rankValue <= 10) { rankColor = "bg-rose-100 text-rose-700 border-rose-200"; rankIcon = "🔥"; }
+            else if (rankValue <= 50) { rankColor = "bg-blue-50 text-blue-600 border-blue-200"; }
+
+            let profitClass = r.profit >= 0 ? "text-emerald-500 bg-emerald-50" : "text-rose-500 bg-rose-50";
+            let profitText = r.profit >= 0 ? `+฿${r.profit.toLocaleString()}` : `-฿${Math.abs(r.profit).toLocaleString()}`;
+            let typeIcon = r.type === 'album' ? '<i class="fa-solid fa-compact-disc text-amber-500"></i> อัลบั้มเต็ม' : '<i class="fa-solid fa-music text-pink-500"></i> ซิงเกิล';
+
+            // วาดรูปเมมเบอร์จิ๋วซ้อนกัน (สูงสุด 5 คน)
+            let avatarsHtml = '';
+            if (r.senbatsuAvatars && r.senbatsuAvatars.length > 0) {
+                avatarsHtml = `<div class="flex -space-x-1.5 mr-1">` + 
+                    r.senbatsuAvatars.map(img => `<img src="${img}" class="w-5 h-5 rounded-full border border-white object-cover shadow-sm bg-slate-200">`).join('') +
+                    (r.senbatsuCount > 5 ? `<div class="w-5 h-5 rounded-full bg-slate-100 border border-white flex items-center justify-center text-[8px] font-bold text-slate-500 shadow-sm z-10">+${r.senbatsuCount - 5}</div>` : '') +
+                    `</div>`;
+            } else {
+                avatarsHtml = `<i class="fa-solid fa-users text-slate-400 mr-1"></i> ${r.senbatsuCount} คน`;
+            }
+
+            // แผ่นป้ายธงวง
+            let groupBadgeHtml = `<span class="text-[9px] px-1.5 py-0.5 rounded font-bold shadow-sm inline-block align-middle border border-black/10 truncate max-w-[120px]" style="${r.groupFlagCss || 'background: #cbd5e1; color: #64748b;'}">${r.groupName || 'เด็กฝึก'}</span>`;
+
+            // โชว์ชื่อค่าย (เฉพาะในหน้าชาร์ตออนไลน์)
+            let agencyBadge = isGlobal ? `<div class="text-[9px] text-blue-500 font-bold mb-0.5 uppercase tracking-wide"><i class="fa-solid fa-building text-blue-400"></i> ค่าย: ${r.agencyName || 'ค่ายนิรนาม'}</div>` : '';
+
+            return `
+            <div class="bg-white border border-slate-200 p-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md transition-all relative overflow-hidden">
+                <div class="flex items-center gap-4">
+                    <div class="${rankColor} w-14 h-14 rounded-lg flex flex-col items-center justify-center font-black border flex-shrink-0 relative">
+                        <span class="text-[9px] font-bold uppercase tracking-widest opacity-80 mb-0.5">Rank</span>
+                        <span class="text-lg leading-none">${rankValue}</span>
+                        ${rankIcon ? `<div class="absolute -top-2 -right-2 text-base drop-shadow-md">${rankIcon}</div>` : ''}
+                    </div>
+                    <div>
+                        ${agencyBadge}
+                        <div class="flex items-center gap-2 mb-1 flex-wrap">
+                            <h4 class="font-bold text-slate-800 text-base truncate max-w-[150px] sm:max-w-[200px]">${r.title}</h4>
+                            ${groupBadgeHtml}
+                        </div>
+                        <div class="flex items-center gap-3 text-[10px] font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded w-fit border border-slate-100">
+                            <span class="flex items-center gap-1 border-r pr-2">${typeIcon}</span>
+                            <div class="flex items-center border-r pr-2" title="จำนวนเซ็มบัตสึ">${avatarsHtml}</div>
+                            <span><i class="fa-solid fa-calendar text-slate-400"></i> ${r.date || 'Unknown'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-2 w-full md:w-auto text-right text-[11px] font-mono mt-2 md:mt-0 bg-slate-50 md:bg-transparent p-2 md:p-0 rounded-lg">
+                    <div class="flex flex-col md:items-end">
+                        <span class="text-slate-400 font-sans font-bold text-[9px] uppercase">ยอดขาย (ก๊อปปี้)</span>
+                        <span class="font-bold text-slate-700">${(r.sales || 0).toLocaleString()}</span>
+                    </div>
+                    <div class="flex flex-col md:items-end">
+                        <span class="text-slate-400 font-sans font-bold text-[9px] uppercase">ต้นทุน</span>
+                        <span class="font-bold text-slate-500">฿${(r.cost || 0).toLocaleString()}</span>
+                    </div>
+                    <div class="col-span-2 md:col-span-1 flex flex-col md:items-end mt-1 md:mt-0 p-1.5 md:p-0 rounded ${profitClass} md:bg-transparent">
+                        <span class="font-sans font-bold text-[9px] uppercase opacity-80">กำไรสุทธิ</span>
+                        <span class="font-black text-sm">${profitText}</span>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        // ==========================================
+        // 🔍 3. เปิดป๊อปอัปดูฟอร์เมชั่น จัดเต็มรายบุคคล
+        // ==========================================
+        function openSongDetailModal(songId, isOnline = false) {
+            // ค้นหาข้อมูลเพลงตามสถานะ Online / Offline
+            const song = isOnline 
+                ? (window.currentChartData || []).find(s => s.id === songId)
+                : (state.releases || []).find(s => s.id === songId);
+                
+            if (!song) {
+                console.error("ไม่พบข้อมูลเพลง ID:", songId);
+                return;
+            }
+
+            // 1. ตั้งค่าข้อมูลส่วนหัวข้อของหน้าต่างป๊อปอัป
+            const nameEl = document.getElementById('modal-song-name');
+            const groupEl = document.getElementById('modal-song-group');
+            const badgeEl = document.getElementById('modal-song-badge');
+            const formationContainer = document.getElementById('modal-song-formation');
+
+            if (nameEl) nameEl.innerText = song.title;
+            if (groupEl) groupEl.innerText = `สังกัดวง: ${song.groupName || 'เพลงของค่ายคุณ'}`;
+            
+            if (badgeEl) {
+                let typeLabel = song.type === 'album' ? 'Album' : 'Single';
+                if (typeof getOrdinalSuffix === 'function') {
+                    badgeEl.innerText = `${getOrdinalSuffix(song.singleNo || 1)} ${typeLabel}`;
+                } else {
+                    badgeEl.innerText = `#${song.singleNo || 1} ${typeLabel}`;
+                }
+            }
+
+            if (!formationContainer) return;
+            
+            // 2. เตรียมข้อมูลสมาชิก (รองรับทั้งระบบ ID ในเครื่อง และระบบชื่อตรงๆ จากชาร์ตออนไลน์)
+            let sIds = song.senbatsuIds || [];
+            let cIds = song.centerIds || [];
+            let directMembers = song.senbatsu || song.members || [];
+            
+            let html = '';
+
+            if (sIds.length > 0) {
+                // --- รูปแบบที่ 1: ดึงข้อมูลผ่าน ID (สำหรับเพลงในค่ายคุณ) ---
+                let centersOrdered = cIds.filter(id => sIds.includes(id));
+                let normalMembers = sIds.filter(id => !cIds.includes(id));
+                let sortedIds = [...centersOrdered, ...normalMembers];
+                let totalCenters = centersOrdered.length;
+
+                sortedIds.forEach((id, index) => {
+                    let member = state.idols ? state.idols.find(i => i.id === id) : null;
+                    let memberName = member ? member.name : `Member (ID: ${id.toString().substring(0,4)})`;
+                    let memberAvatar = member ? (member.avatar || 'https://via.placeholder.com/150') : 'https://via.placeholder.com/150';
+                    
+                    let isCenter = cIds.includes(id);
+                    let positionLabel = isCenter ? (totalCenters > 1 ? `C${index + 1}` : `C`) : `S${index + 1}`;
+                    
+                    let slotStyle = isCenter 
+                        ? 'border-yellow-400 bg-gradient-to-b from-amber-50 to-yellow-50/70 shadow-md ring-2 ring-yellow-400/30' 
+                        : 'border-slate-200 bg-white hover:border-slate-300';
+
+                    html += `
+                    <div class="p-3 border rounded-xl flex flex-col items-center justify-center text-center relative transition-all ${slotStyle} m-1 w-24 shrink-0">
+                        <div class="absolute top-1.5 left-1.5 bg-slate-800 text-white text-[9px] font-mono px-1.5 py-0.5 rounded-md leading-none font-bold shadow-sm">
+                            ${positionLabel}
+                        </div>
+                        ${isCenter ? `<div class="absolute -top-2.5 text-yellow-500 drop-shadow-sm text-sm z-10"><i class="fa-solid fa-crown"></i></div>` : ''}
+                        <div class="relative mb-1.5 mt-2">
+                            <img src="${memberAvatar}" class="w-12 h-12 rounded-full object-cover border-2 ${isCenter ? 'border-yellow-400' : 'border-slate-200'} bg-slate-50 shadow-sm">
+                        </div>
+                        <span class="font-bold text-[11px] truncate w-full text-slate-800 mb-0.5">${memberName}</span>
+                        <span class="text-[9px] font-bold ${isCenter ? 'text-amber-600' : 'text-slate-400'} uppercase tracking-wider">
+                            ${isCenter ? 'Center' : 'Senbatsu'}
+                        </span>
+                    </div>`;
+                });
+            } else if (directMembers.length > 0) {
+                // --- รูปแบบที่ 2: ดึงข้อมูลเป็นรายชื่อตรงๆ (สำหรับชาร์ตออนไลน์ / เซฟเวอร์ชันเก่า) ---
+                directMembers.forEach((member, i) => {
+                    let name = typeof member === 'string' ? member : (member.name || 'ไม่ระบุชื่อ');
+                    let avatar = (member && member.avatar) ? member.avatar : 'https://via.placeholder.com/150';
+                    
+                    // ตรวจสอบว่าเป็นเซ็นเตอร์ไหม (เช็คจากชื่อหรือตำแหน่งแรก)
+                    let isCenter = i === 0; 
+                    if (song.centerName && name === song.centerName) isCenter = true;
+
+                    let positionLabel = isCenter ? 'C' : `S${i + 1}`;
+                    let slotStyle = isCenter 
+                        ? 'border-yellow-400 bg-gradient-to-b from-amber-50 to-yellow-50/70 shadow-md ring-2 ring-yellow-400/30' 
+                        : 'border-slate-200 bg-white hover:border-slate-300';
+
+                    html += `
+                    <div class="p-3 border rounded-xl flex flex-col items-center justify-center text-center relative transition-all ${slotStyle} m-1 w-24 shrink-0">
+                        <div class="absolute top-1.5 left-1.5 bg-slate-800 text-white text-[9px] font-mono px-1.5 py-0.5 rounded-md leading-none font-bold shadow-sm">
+                            ${positionLabel}
+                        </div>
+                        ${isCenter ? `<div class="absolute -top-2.5 text-yellow-500 drop-shadow-sm text-sm z-10"><i class="fa-solid fa-crown"></i></div>` : ''}
+                        <div class="relative mb-1.5 mt-2">
+                            <img src="${avatar}" class="w-12 h-12 rounded-full object-cover border-2 ${isCenter ? 'border-yellow-400' : 'border-slate-200'} bg-slate-50 shadow-sm">
+                        </div>
+                        <span class="font-bold text-[11px] truncate w-full text-slate-800 mb-0.5">${name}</span>
+                        <span class="text-[9px] font-bold ${isCenter ? 'text-amber-600' : 'text-slate-400'} uppercase tracking-wider">
+                            ${isCenter ? 'Center' : 'Senbatsu'}
+                        </span>
+                    </div>`;
+                });
+            } else {
+                // --- รูปแบบที่ 3: กรณีไม่มีข้อมูลสมาชิกอยู่เลย ---
+                html = `<div class="text-xs text-slate-400 italic py-10 text-center w-full">ไม่พบข้อมูลรายชื่อเมมเบอร์บนเพลงนี้ (จำนวนเซ็มบัตสึรวม: ${song.senbatsuCount || 0} คน)</div>`;
+            }
+            
+            formationContainer.innerHTML = html;
+
+            // 3. แสดงผลโมดอลพร้อมเอฟเฟกต์ Fade Smooth ตามดีไซน์ดั้งเดิมของคุณ
+            const modal = document.getElementById('song-detail-modal');
+            const content = document.getElementById('song-detail-content');
+            if (modal) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    if (content) {
+                        content.classList.remove('scale-95');
+                        content.classList.add('scale-100');
+                    }
+                }, 20);
+            }
+        }
+
+        // ฟังก์ชันปิดป๊อปอัป
+        function closeSongDetailModal() {
+            const modal = document.getElementById('song-detail-modal');
+            const content = document.getElementById('song-detail-content');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('opacity-0');
+            }, 300);
+        }
+
+        // 📌 เรนเดอร์ชาร์ต: ค่ายของคุณ
+        function renderChartsTab() {
+            const historyList = document.getElementById('charts-history-list');
+            if (!historyList) return;
+            
+            // หาวงที่มีผลงานออกมาแล้ว
+            let groupsWithReleases = [];
+            if (state.groups) {
+                groupsWithReleases = state.groups.filter(g => state.releases.some(r => r.groupId === g.id));
+            }
+            let hasTraineeReleases = state.releases.some(r => !r.groupId);
+
+            let html = `<div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-2">`;
+            
+            groupsWithReleases.forEach(g => {
+                html += `
+                    <div onclick="window.renderGroupDiscography('${g.id}')" class="cursor-pointer bg-white p-4 rounded-xl shadow-sm border border-slate-200 hover:border-pink-400 hover:shadow-md transition-all text-center flex flex-col items-center gap-3">
+                        <div class="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold shadow-inner" style="${getGroupFlagCss(g)}">${g.name.substring(0,2)}</div>
+                        <span class="font-bold text-slate-700 text-sm">${g.name}</span>
+                        <span class="text-[10px] bg-slate-100 px-2 py-0.5 rounded-md text-slate-500">${state.releases.filter(r=>r.groupId===g.id).length} ผลงาน</span>
+                    </div>`;
+            });
+
+            if (hasTraineeReleases) {
+                html += `
+                    <div onclick="window.renderGroupDiscography('none')" class="cursor-pointer bg-white p-4 rounded-xl shadow-sm border border-slate-200 hover:border-pink-400 hover:shadow-md transition-all text-center flex flex-col items-center gap-3">
+                        <div class="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold bg-slate-200 text-slate-500 shadow-inner">ฝึก</div>
+                        <span class="font-bold text-slate-700 text-sm">เด็กฝึกหัด</span>
+                        <span class="text-[10px] bg-slate-100 px-2 py-0.5 rounded-md text-slate-500">${state.releases.filter(r=>!r.groupId).length} ผลงาน</span>
+                    </div>`;
+            }
+            
+            html += `</div>`;
+            if(state.releases.length === 0) html = `<div class="text-center text-sm text-slate-400 p-12 border border-dashed rounded-xl bg-slate-50">ยังไม่มีผลงานในค่ายของคุณ</div>`;
+            historyList.innerHTML = html;
+        }
+
+        // 2. เมื่อกดที่โลโก้วง ให้โชว์หน้าปกเพลง
+        window.renderGroupDiscography = function(groupId) {
+            const historyList = document.getElementById('charts-history-list');
+            let groupReleases = state.releases.filter(r => (groupId === 'none' ? !r.groupId : r.groupId === groupId));
+            
+            let html = `
+                <div class="mb-4 flex items-center gap-2">
+                    <button onclick="renderChartsTab()" class="text-xs bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded-lg text-slate-700 font-bold transition-colors"><i class="fa-solid fa-arrow-left"></i> กลับไปค่าย</button>
+                    <span class="font-bold text-slate-700 text-sm">ผลงานของวง</span>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-2">
+            `;
+            
+            groupReleases.forEach(r => {
+                html += `
+                    <div onclick="window.showReleaseDetails('${r.id}')" class="cursor-pointer bg-white rounded-xl shadow-sm border border-slate-200 hover:border-pink-400 hover:shadow-md transition-all overflow-hidden flex flex-col">
+                        <img src="${r.coverImage || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(r.title) + '&background=random&color=fff&size=200'}" class="w-full aspect-square object-cover border-b border-slate-100">
+                        <div class="p-3 text-center">
+                            <div class="font-bold text-slate-800 text-sm truncate" title="${r.title}">${r.title}</div>
+                            <div class="text-[10px] text-pink-600 font-bold mt-1">${r.releaseLabel || 'ผลงานพิเศษ'}</div>
+                        </div>
+                    </div>`;
+            });
+            html += `</div>`;
+            historyList.innerHTML = html;
+        }
+
+        // 3. ป๊อปอัปดูรายละเอียดเพลง (กดได้จากทั้งหน้าปกและหน้าชาร์ต)
+        window.showReleaseDetails = function(releaseId, isGlobal = false) {
+            // ดึงข้อมูลเพลง (รองรับทั้งแบบในเครื่องและแบบออนไลน์)
+            let r = state.releases.find(x => x.id === releaseId);
+            if(isGlobal && window.currentChartData) r = window.currentChartData.find(x => x.id === releaseId);
+            if(!r) return;
+            
+            let msg = `วง: ${r.groupName || 'ไม่มีวง'}\n`;
+            msg += `รูปแบบ: ${r.releaseLabel || 'ไม่ระบุ'}\n`;
+            msg += `👑 เซ็นเตอร์: ${r.centerName || 'ไม่มีเซ็นเตอร์'}\n`;
+            msg += `👯‍♀️ จำนวนเซมบัตสึ: ${r.senbatsuCount || 0} คน\n`;
+            msg += `📦 ยอดขาย: ${r.sales ? r.sales.toLocaleString() : 0} ชุด\n`;
+            msg += `🏆 อันดับชาร์ต: #${r.rank || '-'}`;
+            
+            if (typeof showMsg === 'function') {
+                showMsg(`ผลงาน: ${r.title}`, msg);
+            } else {
+                alert(`ผลงาน: ${r.title}\n\n${msg}`);
+            }
+        };
+
+        // 4. หน้าตาของชาร์ต (แบบลิสต์แนวตั้ง ยกเลิกรูปคนออก ใส่ป้ายวงและข้อมูลแทน)
+        function generateChartHtml(r, isGlobal = false) {
+            let rankColor = "bg-slate-100 text-slate-600 border-slate-200";
+            let rankIcon = "";
+            let rankValue = isGlobal && r.globalRank ? r.globalRank : r.rank; 
+
+            // ประเมินสี Rank และแจกมงกุฎ
+            if (rankValue === 1) { rankColor = "bg-gradient-to-r from-yellow-300 to-amber-400 text-amber-900 border-yellow-400 shadow-md scale-105 z-10"; rankIcon = "👑"; }
+            else if (rankValue <= 3) { rankColor = "bg-gradient-to-r from-slate-200 to-slate-300 text-slate-700 border-slate-400 shadow-sm"; rankIcon = "🥈"; }
+            else if (rankValue <= 10) { rankColor = "bg-rose-100 text-rose-700 border-rose-200"; rankIcon = "🔥"; }
+            else if (rankValue <= 50) { rankColor = "bg-blue-50 text-blue-600 border-blue-200"; }
+
+            let profitClass = r.profit >= 0 ? "text-emerald-500 bg-emerald-50" : "text-rose-500 bg-rose-50";
+            let profitText = r.profit >= 0 ? `+฿${r.profit.toLocaleString()}` : `-฿${Math.abs(r.profit).toLocaleString()}`;
+            let typeIcon = r.type === 'album' ? '<i class="fa-solid fa-compact-disc text-amber-500"></i> อัลบั้มเต็ม' : '<i class="fa-solid fa-music text-pink-500"></i> ซิงเกิล';
+
+            // วาดรูปเมมเบอร์จิ๋วซ้อนกัน (สูงสุด 5 คน)
+            let avatarsHtml = '';
+            if (r.senbatsuAvatars && r.senbatsuAvatars.length > 0) {
+                avatarsHtml = `<div class="flex -space-x-1.5 mr-1">` + 
+                    r.senbatsuAvatars.map(img => `<img src="${img}" class="w-5 h-5 rounded-full border border-white object-cover shadow-sm bg-slate-200">`).join('') +
+                    (r.senbatsuCount > 5 ? `<div class="w-5 h-5 rounded-full bg-slate-100 border border-white flex items-center justify-center text-[8px] font-bold text-slate-500 shadow-sm z-10">+${r.senbatsuCount - 5}</div>` : '') +
+                    `</div>`;
+            } else {
+                avatarsHtml = `<i class="fa-solid fa-users text-slate-400 mr-1"></i> ${r.senbatsuCount} คน`;
+            }
+
+            // แผ่นป้ายธงวง
+            let groupBadgeHtml = `<span class="text-[9px] px-1.5 py-0.5 rounded font-bold shadow-sm inline-block align-middle border border-black/10 truncate max-w-[120px]" style="${r.groupFlagCss || 'background: #cbd5e1; color: #64748b;'}">${r.groupName || 'เด็กฝึก'}</span>`;
+
+            // โชว์ชื่อค่าย (เฉพาะในหน้าชาร์ตออนไลน์)
+            let agencyBadge = isGlobal ? `<div class="text-[9px] text-blue-500 font-bold mb-0.5 uppercase tracking-wide"><i class="fa-solid fa-building text-blue-400"></i> ค่าย: ${r.agencyName || 'ค่ายนิรนาม'}</div>` : '';
+
+            // ✨ เพิ่ม onclick และ cursor-pointer ที่แท็ก div นอกสุดตรงนี้ครับ เพื่อให้กดป๊อปอัปเด้งขึ้นมาได้จริง
+            return `
+            <div onclick="openSongDetailModal('${r.id}')" class="cursor-pointer bg-white border border-slate-200 p-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md transition-all relative overflow-hidden">
+                <div class="flex items-center gap-4">
+                    <div class="${rankColor} w-14 h-14 rounded-lg flex flex-col items-center justify-center font-black border flex-shrink-0 relative">
+                        <span class="text-[9px] font-bold uppercase tracking-widest opacity-80 mb-0.5">Rank</span>
+                        <span class="text-lg leading-none">${rankValue}</span>
+                        ${rankIcon ? `<div class="absolute -top-2 -right-2 text-base drop-shadow-md">${rankIcon}</div>` : ''}
+                    </div>
+                    <div>
+                        ${agencyBadge}
+                        <div class="flex items-center gap-2 mb-1 flex-wrap">
+                            <h4 class="font-bold text-slate-800 text-base truncate max-w-[150px] sm:max-w-[200px]">${r.title}</h4>
+                            ${groupBadgeHtml}
+                        </div>
+                        <div class="flex items-center gap-3 text-[10px] font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded w-fit border border-slate-100">
+                            <span class="flex items-center gap-1 border-r pr-2">${typeIcon}</span>
+                            <div class="flex items-center border-r pr-2" title="จำนวนเซ็มบัตสึ">${avatarsHtml}</div>
+                            <span><i class="fa-solid fa-calendar text-slate-400"></i> ${r.date || 'Unknown'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-2 w-full md:w-auto text-right text-[11px] font-mono mt-2 md:mt-0 bg-slate-50 md:bg-transparent p-2 md:p-0 rounded-lg">
+                    <div class="flex flex-col md:items-end">
+                        <span class="text-slate-400 font-sans font-bold text-[9px] uppercase">ยอดขาย (ก๊อปปี้)</span>
+                        <span class="font-bold text-slate-700">${(r.sales || 0).toLocaleString()}</span>
+                    </div>
+                    <div class="flex flex-col md:items-end">
+                        <span class="text-slate-400 font-sans font-bold text-[9px] uppercase">ต้นทุน</span>
+                        <span class="font-bold text-slate-500">฿${(r.cost || 0).toLocaleString()}</span>
+                    </div>
+                    <div class="col-span-2 md:col-span-1 flex flex-col md:items-end mt-1 md:mt-0 p-1.5 md:p-0 rounded ${profitClass} md:bg-transparent">
+                        <span class="font-sans font-bold text-[9px] uppercase opacity-80">กำไรสุทธิ</span>
+                        <span class="font-black text-sm">${profitText}</span>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        // 📌 เรนเดอร์ชาร์ต: แข่งขันออนไลน์
+        function renderGlobalCharts() {
+            const historyList = document.getElementById('charts-history-list');
+            if (!historyList) return;
+
+            historyList.innerHTML = `<div class="text-center p-12 bg-slate-50 rounded-xl border border-dashed border-slate-200"><i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-500"></i><p class="text-xs text-slate-500 mt-3 font-bold">กำลังเชื่อมต่อข้อมูลจากเซิร์ฟเวอร์คลาวด์โลก...</p></div>`;
+
+            // ดึงข้อมูลผ่าน Firebase (รับรองว่าใช้กับรหัสที่คุณแนบมาได้ทันที)
+            if (typeof get === 'function' && typeof ref === 'function' && typeof db !== 'undefined') {
+                get(child(ref(db), 'global_charts')).then((snapshot) => {
+                    if (snapshot.exists()) {
+                        let data = snapshot.val();
+                        let allReleases = Object.values(data);
+                        
+                        // จัดอันดับเรียงตามยอดขาย (Sales) จากมากไปน้อย
+                        allReleases.sort((a, b) => (b.sales || 0) - (a.sales || 0));
+                        
+                        // คัดมาแค่ Top 50 
+                        allReleases = allReleases.slice(0, 50);
+
+                        let html = '';
+                        allReleases.forEach((r, index) => {
+                            r.globalRank = index + 1; // บังคับเซตอันดับจริงให้ตามยอดขายชาร์ต
+                            html += generateChartHtml(r, true);
+                        });
+                        historyList.innerHTML = html;
+
+                    } else {
+                        historyList.innerHTML = `<div class="text-center text-sm text-slate-400 p-12 border border-dashed rounded-xl bg-slate-50">ยังไม่มีประวัติผลงานบนชาร์ตโลกเลย! รีบผลิตเพลงส่งขึ้นชาร์ตเป็นคนแรกสิ!</div>`;
+                    }
+                }).catch(error => {
+                    historyList.innerHTML = `<div class="text-center text-sm text-rose-500 p-12 border border-rose-200 rounded-xl bg-rose-50"><i class="fa-solid fa-triangle-exclamation mb-2 text-2xl"></i><br>โหลดชาร์ตล้มเหลว: โปรดตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</div>`;
+                });
+            }
         }
 
         window.onload = () => { initSetupScreen(); };
@@ -3342,9 +3933,1133 @@
                     statusTrigger.addEventListener('click', () => toggleModal(true));
                 }
 
-                // เรียกใช้งานระบบออนไลน์
-                initPresenceSystem();
-                initOnlineList();
+                // =================================================================
+                // 🌟 ระบบเพื่อน, แชทส่วนตัว และชาร์ตเพื่อน (Friends & Competitors System)
+                // =================================================================
+                
+                let currentActiveChatFriend = null;
+                let privateChatListener = null;
+
+                // ฟังก์ชันอัปโหลดชาร์ตโลก (ถูกเรียกจากหน้าสตูดิโอ)
+                window.uploadGlobalChart = function(releaseData) {
+                    push(ref(db, 'global_charts'), releaseData).catch(e => console.log("อัปโหลดชาร์ตล้มเหลว", e));
+                };
+
+                // 1. ผสมปุ่มเพิ่มเพื่อนในรายชื่อคนออนไลน์ (อัปเดต: เป็นเพื่อนแล้วเปลี่ยนเป็นปุ่มแชท)
+                function initOnlineListWithFriends() {
+                    const onlineRef = ref(db, 'online_players');
+                    const myId = localStorage.getItem('IdolManager_LoggedInUser');
+                    const onlinePlayersList = document.getElementById('online-players-list');
+                    const countText = document.getElementById('online-count-text'); 
+                    if (!onlinePlayersList) return;
+                    
+                    let currentFriends = {};
+                    let lastOnlineSnapshot = null;
+
+                    // ฟังก์ชันสำหรับวาด UI รายชื่อคนออนไลน์
+                    function updateOnlineUI() {
+                        if (!lastOnlineSnapshot) return;
+                        onlinePlayersList.innerHTML = '';
+                        let count = 0;
+                        
+                        lastOnlineSnapshot.forEach((childSnap) => {
+                            const data = childSnap.val();
+                            if (data && data.agencyName) {
+                                const isMe = data.agencyName === myId;
+                                const isFriend = currentFriends[data.agencyName] === true; // เช็คว่าเป็นเพื่อนกันหรือยัง
+                                
+                                const li = document.createElement('li');
+                                li.className = "flex justify-between items-center p-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-sm border border-slate-100 transition-colors";
+                                
+                                let leftHtml = `<div class="flex items-center gap-2"><div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div><span class="text-slate-700 font-medium">${data.agencyName} ${isMe ? '(คุณ)' : ''}</span></div>`;
+                                
+                                let rightHtml = '';
+                                if (isMe) {
+                                    rightHtml = '';
+                                } else if (isFriend) {
+                                    // สถานะ: เป็นเพื่อนกันแล้ว -> แสดงปุ่มแชทสีเขียว กดแล้วปิดหน้าต่างออนไลน์แล้ววาร์ปไปห้องแชททันที
+                                    rightHtml = `
+                                        <button onclick="if(typeof window.toggleModal === 'function') window.toggleModal(false); if(typeof window.openFriendsModal === 'function') { window.openFriendsModal(); setTimeout(() => window.openFriendChat('${data.agencyName}'), 150); }" class="text-[10px] bg-emerald-100 text-emerald-600 px-2.5 py-1 rounded-lg font-bold hover:bg-emerald-200 transition-all flex items-center gap-1">
+                                            <i class="fa-solid fa-comment"></i> แชท
+                                        </button>`;
+                                } else {
+                                    // สถานะ: ยังไม่เป็นเพื่อน -> แสดงปุ่มเพิ่มเพื่อนสีชมพูตามปกติ
+                                    rightHtml = `<button onclick="window.addFriend('${data.agencyName}')" class="text-[10px] bg-pink-100 text-pink-600 px-2 py-1 rounded-lg font-bold hover:bg-pink-200 transition-all">+ เพิ่มเพื่อน</button>`;
+                                }
+                                
+                                li.innerHTML = leftHtml + rightHtml;
+                                onlinePlayersList.appendChild(li);
+                                count++;
+                            }
+                        });
+                        if (countText) countText.innerText = `ออนไลน์ (${count})`;
+                    }
+
+                    // [Realtime] คอยดึงและอัปเดตรายชื่อเพื่อนปัจจุบันของฉัน
+                    if (myId) {
+                        onValue(ref(db, `accounts/${myId}/friends`), (snapshot) => {
+                            currentFriends = snapshot.val() || {};
+                            updateOnlineUI(); // อัปเดตปุ่มทันทีเมื่อมีการเพิ่ม/ลบเพื่อน
+                        });
+                    }
+
+                    // [Realtime] คอยดึงรายชื่อคนออนไลน์ตามปกติ
+                    onValue(onlineRef, (snapshot) => {
+                        lastOnlineSnapshot = snapshot;
+                        updateOnlineUI();
+                    });
+                }
+                
+                // สลับให้ใช้ฟังก์ชันใหม่แทนของเดิม
+                initOnlineList = initOnlineListWithFriends;
+
+                // 2. ฟังก์ชันเพิ่มเพื่อน (อัปเดตให้แจ้งเตือนในเกม)
+                window.addFriend = function(targetId) {
+                    const myId = localStorage.getItem('IdolManager_LoggedInUser');
+                    if (!myId) {
+                        if (typeof showMsg === 'function') {
+                            showMsg('แจ้งเตือน', 'กรุณาล็อกอินบัญชีผู้เล่นก่อนเพิ่มเพื่อน');
+                        } else {
+                            alert("กรุณาล็อกอินบัญชีผู้เล่นก่อนเพิ่มเพื่อน");
+                        }
+                        return;
+                    }
+                    
+                    // บันทึกแบบ 2 ทาง (ฉันเป็นเพื่อนเขา, เขาเป็นเพื่อนฉัน)
+                    set(ref(db, `accounts/${myId}/friends/${targetId}`), true);
+                    set(ref(db, `accounts/${targetId}/friends/${myId}`), true);
+                    
+                    // เปลี่ยนมาใช้กล่องแจ้งเตือนในเกม (UI สวยๆ ไม่เด้งหลุดออกจากตัวเกม)
+                    if (typeof showMsg === 'function') {
+                        showMsg('ระบบเพื่อน', `🎉 เพิ่ม ${targetId} เป็นเพื่อนสำเร็จ! คุณสามารถแชทและแข่งชาร์ตเพลงกันได้แล้ว`);
+                    } else {
+                        alert(`🎉 เพิ่ม ${targetId} เป็นเพื่อนสำเร็จ! คุณสามารถแชทและแข่งชาร์ตเพลงกันได้แล้ว`);
+                    }
+                };
+
+                // 3. เปิดหน้าต่างเพื่อน
+                window.openFriendsModal = function() {
+                    document.getElementById('friends-modal').classList.remove('hidden');
+                    loadFriendsList();
+                };
+
+                // 4. โหลดรายชื่อเพื่อนฝั่งซ้าย
+                function loadFriendsList() {
+                    const myId = localStorage.getItem('IdolManager_LoggedInUser');
+                    if (!myId) return;
+
+                    onValue(ref(db, `accounts/${myId}/friends`), (snapshot) => {
+                        const container = document.getElementById('friends-list-container');
+                        container.innerHTML = '';
+                        
+                        if (snapshot.exists()) {
+                            const friends = Object.keys(snapshot.val());
+                            friends.forEach(friendId => {
+                                let div = document.createElement('div');
+                                div.className = "p-2 hover:bg-pink-50 rounded-lg cursor-pointer border border-transparent hover:border-pink-200 transition-all flex justify-between items-center";
+                                div.innerHTML = `<span class="text-xs font-bold text-slate-700"><i class="fa-solid fa-user text-slate-400 mr-2"></i>${friendId}</span>`;
+                                div.onclick = () => window.openFriendChat(friendId);
+                                container.appendChild(div);
+                            });
+                        } else {
+                            container.innerHTML = `<div class="text-center text-xs text-slate-400 py-4">ยังไม่มีรายชื่อเพื่อน<br>หาเพื่อนได้จากปุ่มรายชื่อคนออนไลน์</div>`;
+                        }
+                    });
+                }
+
+                // 5. ระบบห้องแชทส่วนตัว 1-on-1
+                function getChatId(u1, u2) {
+                    return [u1, u2].sort().join('_');
+                }
+
+                window.openFriendChat = function(friendId) {
+                    const myId = localStorage.getItem('IdolManager_LoggedInUser');
+                    currentActiveChatFriend = friendId;
+                    document.getElementById('private-chat-title').innerHTML = `สนทนากับ <span class="text-pink-600">${friendId}</span>`;
+                    
+                    const inputEl = document.getElementById('private-chat-input');
+                    const sendBtn = document.getElementById('send-private-btn');
+                    inputEl.disabled = false; sendBtn.disabled = false;
+                    
+                    const logs = document.getElementById('private-chat-logs');
+                    logs.innerHTML = '<div class="text-center text-xs text-slate-400 py-4">กำลังโหลดข้อความ...</div>';
+
+                    const chatId = getChatId(myId, friendId);
+                    const chatRef = ref(db, `private_chats/${chatId}`);
+                    
+                    // ยกเลิกการฟังห้องเก่าก่อน
+                    if (privateChatListener) privateChatListener();
+                    
+                    const q = query(chatRef, limitToLast(50));
+                    privateChatListener = onValue(q, (snapshot) => {
+                        logs.innerHTML = '';
+                        if (snapshot.exists()) {
+                            snapshot.forEach(child => {
+                                const msg = child.val();
+                                const isMe = msg.sender === myId;
+                                const align = isMe ? "justify-end" : "justify-start";
+                                const bg = isMe ? "bg-pink-500 text-white" : "bg-white border border-slate-200 text-slate-700";
+                                const borderRadius = isMe ? "rounded-t-xl rounded-bl-xl rounded-br-sm" : "rounded-t-xl rounded-br-xl rounded-bl-sm";
+                                
+                                logs.innerHTML += `
+                                    <div class="flex ${align}">
+                                        <div class="max-w-[75%] px-3 py-2 ${bg} ${borderRadius} text-xs shadow-sm">
+                                            <div class="font-bold text-[9px] ${isMe ? 'text-pink-200' : 'text-slate-400'} mb-0.5">${msg.sender}</div>
+                                            <div class="leading-relaxed break-words">${msg.text}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                            logs.scrollTop = logs.scrollHeight;
+                        } else {
+                            logs.innerHTML = '<div class="text-center text-xs text-slate-400 py-10">ทักทายเพื่อนของคุณเลย!</div>';
+                        }
+                    });
+
+                    // ผูกปุ่มส่ง
+                    sendBtn.onclick = () => sendPrivateMessage();
+                    inputEl.onkeyup = (e) => { if(e.key === 'Enter') sendPrivateMessage(); };
+                }
+
+                function sendPrivateMessage() {
+                    const myId = localStorage.getItem('IdolManager_LoggedInUser');
+                    if (!myId || !currentActiveChatFriend) return;
+                    
+                    const inputEl = document.getElementById('private-chat-input');
+                    const text = inputEl.value.trim();
+                    if (!text) return;
+
+                    const chatId = getChatId(myId, currentActiveChatFriend);
+                    push(ref(db, `private_chats/${chatId}`), {
+                        sender: myId, text: text, timestamp: serverTimestamp()
+                    });
+                    inputEl.value = '';
+                }
+
+                // =================================================================
+                // 🏆 ระบบควบคุม Chart โลก / Chart เพื่อน ให้ทำงานแบบ Realtime
+                // =================================================================
+                window.switchChartMode = function(mode) {
+                    window.currentChartMode = mode;
+                    const btnLocal = document.getElementById('btn-chart-local');
+                    const btnFriends = document.getElementById('btn-chart-friends');
+                    const btnGlobal = document.getElementById('btn-chart-global');
+                    const title = document.getElementById('charts-list-title');
+                    const dashboard = document.getElementById('charts-summary-dashboard');
+
+                    // Reset ปุ่ม
+                    [btnLocal, btnFriends, btnGlobal].forEach(b => {
+                        if(b) b.className = "text-xs font-bold px-4 py-1.5 rounded-md text-slate-500 hover:text-slate-700 transition-all border border-transparent";
+                    });
+
+                    if (mode === 'local') {
+                        if(btnLocal) btnLocal.className = "text-xs font-bold px-4 py-1.5 rounded-md bg-white text-pink-600 shadow-sm transition-all border border-slate-200";
+                        if(title) title.innerText = "ประวัติการวางจำหน่ายของค่าย";
+                        if(dashboard) dashboard.classList.remove('hidden');
+                        if(typeof renderChartsTab === 'function') renderChartsTab();
+                    } else if (mode === 'friends') {
+                        if(btnFriends) btnFriends.className = "text-xs font-bold px-4 py-1.5 rounded-md bg-white text-emerald-600 shadow-sm transition-all border border-slate-200";
+                        if(title) title.innerHTML = '<i class="fa-solid fa-users text-emerald-500"></i> ชาร์ตแข่งขันระหว่างเพื่อน';
+                        if(dashboard) dashboard.classList.add('hidden');
+                        renderNetworkCharts('friends');
+                    } else if (mode === 'global') {
+                        if(btnGlobal) btnGlobal.className = "text-xs font-bold px-4 py-1.5 rounded-md bg-white text-blue-600 shadow-sm transition-all border border-slate-200";
+                        if(title) title.innerHTML = '<i class="fa-solid fa-earth-americas text-blue-500"></i> ชาร์ตเพลงระดับโลก (Top 50 Global Sales)';
+                        if(dashboard) dashboard.classList.add('hidden');
+                        renderNetworkCharts('global');
+                    }
+                };
+
+                // ฟังก์ชันดึงชาร์ต (รองรับการกรองดูเฉพาะเพื่อน)
+                function renderNetworkCharts(type) {
+                    const historyList = document.getElementById('charts-history-list');
+                    if (!historyList) return;
+
+                    historyList.innerHTML = `<div class="text-center p-12 bg-slate-50 rounded-xl border border-dashed border-slate-200"><i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-500"></i><p class="text-xs text-slate-500 mt-3 font-bold">กำลังเชื่อมต่อข้อมูลจากเซิร์ฟเวอร์...</p></div>`;
+
+                    const myId = localStorage.getItem('IdolManager_LoggedInUser');
+                    
+                    // ถ้าเป็นการดูแบบเพื่อน ต้องดึงรายชื่อเพื่อนมาก่อน
+                    if (type === 'friends') {
+                        if(!myId) return historyList.innerHTML = `<div class="text-center text-sm text-amber-500 p-12 border border-amber-200 rounded-xl bg-amber-50">กรุณาล็อกอินก่อนใช้งานระบบเพื่อน</div>`;
+                        
+                        get(child(ref(db), `accounts/${myId}/friends`)).then(snap => {
+                            let friendIds = snap.exists() ? Object.keys(snap.val()) : [];
+                            friendIds.push(myId); // เอาตัวเองเข้าไปแข่งด้วย
+                            fetchAndDrawCharts(friendIds);
+                        });
+                    } else {
+                        fetchAndDrawCharts(null); // ดูทั้งหมด
+                    }
+                }
+
+                function fetchAndDrawCharts(allowedIds) {
+                    const historyList = document.getElementById('charts-history-list');
+                    get(child(ref(db), 'global_charts')).then((snapshot) => {
+                        if (snapshot.exists()) {
+                            let allReleases = Object.values(snapshot.val());
+                            
+                            // หากกรองเฉพาะเพื่อน (Filter by ownerId)
+                            if (allowedIds) {
+                                allReleases = allReleases.filter(r => allowedIds.includes(r.ownerId));
+                            }
+                            
+                            allReleases.sort((a, b) => (b.sales || 0) - (a.sales || 0));
+                            allReleases = allReleases.slice(0, 50);
+
+                            // --- ใส่ตรงนี้ครับ ---
+                            window.currentChartData = allReleases;
+
+                            if(allReleases.length === 0) {
+                                historyList.innerHTML = `<div class="text-center text-sm text-slate-400 p-12 border border-dashed rounded-xl bg-slate-50">ยังไม่มีประวัติการแข่งขันชาร์ตในหมวดหมู่นี้</div>`;
+                                return;
+                            }
+
+                            let html = '';
+                            allReleases.forEach((r, index) => {
+                                r.globalRank = index + 1; 
+                                html += generateChartHtml(r, true);
+                            });
+                            historyList.innerHTML = html;
+                        } else {
+                            historyList.innerHTML = `<div class="text-center text-sm text-slate-400 p-12 border border-dashed rounded-xl bg-slate-50">ยังไม่มีประวัติผลงานบนชาร์ต!</div>`;
+                        }
+                    }).catch(e => {
+                        historyList.innerHTML = `<div class="text-center text-sm text-rose-500 p-12 border border-rose-200 rounded-xl bg-rose-50">โหลดชาร์ตล้มเหลว โปรดตรวจสอบอินเทอร์เน็ต</div>`;
+                    });
+                }
+
+                // ==========================================================
+                // 🏆 ระบบควบคุมย่อย หน้าสถิติและชาร์ตเพลงทั้งหมด (ตัวควบคุมแท็บและฟอร์เมชั่น)
+                // ==========================================================
+
+                window.currentChartSubTab = 'works';
+
+                // ฟังก์ชันช่วยเติมคำนำหน้าตัวเลข (1st, 2nd, 3rd, 4th...)
+                function getOrdinalSuffixStudio(i) {
+                    let j = i % 10, k = i % 100;
+                    if (j == 1 && k != 11) return i + "st";
+                    if (j == 2 && k != 12) return i + "nd";
+                    if (j == 3 && k != 13) return i + "rd";
+                    return i + "th";
+                }
+
+                // ฟังก์ชันสลับแท็บย่อยในหน้าชาร์ต
+                function switchChartSubTab(subTabId) {
+                    window.currentChartSubTab = subTabId;
+                    
+                    // 1. รีเซ็ตสไตล์ปุ่มทั้งหมด
+                    ['works', 'local', 'online'].forEach(id => {
+                        const btn = document.getElementById(`sub-chart-btn-${id}`);
+                        if(btn) {
+                            btn.className = "flex-1 sm:flex-none text-xs font-bold px-4 py-2 rounded-lg text-slate-500 hover:text-slate-700 transition-all";
+                        }
+                    });
+
+                    // 2. ไฮไลต์ปุ่มที่เลือก
+                    const activeBtn = document.getElementById(`sub-chart-btn-${subTabId}`);
+                    if(activeBtn) {
+                        activeBtn.className = "flex-1 sm:flex-none text-xs font-bold px-4 py-2 rounded-lg bg-white text-pink-600 shadow-sm transition-all border border-slate-200";
+                    }
+
+                    // 3. จัดการแสดงผลคอนเทนเนอร์ (ต้องระบุให้ครบทั้ง 3 แบบ)
+                    const contentIds = ['works', 'local', 'online'];
+                    contentIds.forEach(id => {
+                        const element = document.getElementById(`chart-sub-content-${id}`);
+                        if(element) {
+                            if(id === subTabId) {
+                                element.classList.remove('hidden'); // แสดงอันที่เลือก
+                            } else {
+                                element.classList.add('hidden');    // ซ่อนอันที่ไม่ใช่
+                            }
+                        }
+                    });
+
+                    // 4. สั่งให้ระบบเรนเดอร์ข้อมูลใหม่ตามแท็บที่กด
+                    renderChartsSubSystem();
+                }
+
+                // 🌸 1. ฟังก์ชันแสดง "ช่องผลงานของคุณ" แยกโฟลเดอร์กลุ่มตามรายวง และโชว์ปกอัลบั้ม
+                function renderLocalRankings() {
+                    const container = document.getElementById('chart-local-ranking-list');
+                    if (!container) return;
+                    // ก๊อปปี้ code ลอจิกการเรียงลำดับเพลงตามยอดขายของคุณมาใส่ตรงนี้
+                    container.innerHTML = `<div class="p-4 text-xs">กำลังแสดงชาร์ตในเครื่อง...</div>`;
+                }
+
+                // ฟังก์ชันสำหรับจัดของเข้าตู้ "ชาร์ตออนไลน์"
+                function renderOnlineRankings() {
+                    const container = document.getElementById('chart-online-ranking-list');
+                    if (!container) return;
+                    // ก๊อปปี้ code การดึงข้อมูลจาก Firebase มาใส่ตรงนี้
+                    container.innerHTML = `<div class="p-4 text-xs">กำลังเชื่อมต่อฐานข้อมูลโลก...</div>`;
+                }
+
+                // 📊 2. เรนเดอร์หน้าชาร์ตเพลงภายในเครื่อง และ ชาร์ตออนไลน์โลก
+                function renderRankingsSubTab(isOnline = false) {
+                    const listContainer = document.getElementById('chart-ranking-list');
+                    if (!listContainer) return;
+
+                    let displayList = isOnline ? (window.currentChartData || []) : (state.releases || []);
+
+                    if (displayList.length === 0) {
+                        listContainer.innerHTML = `<div class="text-center text-xs text-slate-400 py-12">ไม่มีข้อมูลอันดับบนหน้าชาร์ตนี้</div>`;
+                        return;
+                    }
+
+                    let html = '';
+                    displayList.forEach((song, index) => {
+                        let currentRank = isOnline ? (index + 1) : (song.rank || 99);
+                        let lastRank = song.lastRank || currentRank;
+                        
+                        // ประเมินสัญลักษณ์ความเคลื่อนไหว (ขึ้น ▲ / ลง ▼ / คงที่ ▬)
+                        let trendIcon = '<span class="text-slate-400 font-mono">▬</span>';
+                        if (currentRank < lastRank) {
+                            trendIcon = `<span class="text-emerald-500 font-mono text-[10px]">▲ ${lastRank - currentRank}</span>`;
+                        } else if (currentRank > lastRank) {
+                            trendIcon = `<span class="text-rose-500 font-mono text-[10px]">▼ ${currentRank - lastRank}</span>`;
+                        }
+
+                        let rankBadgeClass = "bg-slate-100 text-slate-600 border-slate-200";
+                        let crown = "";
+                        if (currentRank === 1) {
+                            rankBadgeClass = "bg-gradient-to-r from-yellow-300 to-amber-400 text-amber-900 border-yellow-400 shadow-sm font-black";
+                            crown = "👑";
+                        }
+
+                        let groupFlag = song.groupFlagCss || 'background: #64748b; color: #ffffff;';
+                        let groupName = song.groupName || 'เด็กฝึกหัด';
+                        let typeLabel = song.type === 'album' ? 'อัลบั้ม' : 'ซิงเกิล';
+                        let singleNoLabel = song.singleNo ? `${getOrdinalSuffix(song.singleNo)} ${song.type === 'album' ? 'Album' : 'Single'}` : '';
+
+                        html += `
+                        <div onclick="openSongDetailModal('${song.id}', ${isOnline})" class="bg-white border border-slate-200 p-3 rounded-xl flex items-center justify-between gap-3 hover:shadow-md transition cursor-pointer">
+                            <div class="flex items-center gap-3">
+                                <div class="flex flex-col items-center justify-center w-10 text-center flex-shrink-0">
+                                    <div class="${rankBadgeClass} text-sm px-2 py-0.5 rounded-lg border font-bold relative">
+                                        ${currentRank}
+                                        ${crown ? `<span class="absolute -top-2.5 -right-1 text-[10px]">${crown}</span>` : ''}
+                                    </div>
+                                    <div class="mt-0.5 leading-none">${trendIcon}</div>
+                                </div>
+                                
+                                <div>
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="font-bold text-xs text-slate-800 line-clamp-1 max-w-[150px] sm:max-w-xs">${song.title}</span>
+                                        <span class="text-[9px] px-1.5 py-0.2 rounded border border-black/5 font-semibold shadow-sm" style="${groupFlag}">${groupName}</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-400 font-medium mt-0.5">
+                                        ${typeLabel} • <span class="text-slate-500 font-bold">${singleNoLabel}</span> • <span class="text-indigo-500">${song.date || 'ไม่ระบุวัน'}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="font-mono font-bold text-xs text-slate-700 pr-2">
+                                ${(song.sales || 0).toLocaleString()} ก๊อปปี้
+                            </div>
+                        </div>
+                        `;
+                    });
+
+                    listContainer.innerHTML = html;
+                }
+
+                // ฟังก์ชันปิดป๊อปอัปดูรายละเอียดซิงเกิล
+                function closeSongDetailModal() {
+                    const modal = document.getElementById('song-detail-modal');
+                    const content = document.getElementById('song-detail-content');
+                    if (modal && content) {
+                        content.classList.remove('scale-100');
+                        content.classList.add('scale-95');
+                        modal.classList.add('opacity-0');
+                        setTimeout(() => {
+                            modal.classList.add('hidden');
+                        }, 300);
+                    }
+                }
+
+                // =================================================================
+                // 💾 📊 [ระบบเสริมใหม่] กลไกควบคุมและแสดงผลงานชาร์ตแยกสัดส่วน
+                // =================================================================
+                window.currentMusicTab = 'my-releases';
+                window.selectedMusicGroupId = null;
+
+                function calculateReleaseOrdinal(releaseId, groupId, type) {
+                    if (!state.releases) return '';
+                    const filtered = state.releases.filter(r => r.groupId === groupId && r.type === type).reverse();
+                    const index = filtered.findIndex(r => r.id === releaseId);
+                    if (index === -1) return '';
+                    
+                    const count = index + 1;
+                    let suffix = 'th';
+                    if (count % 10 === 1 && count % 100 !== 11) suffix = 'st';
+                    else if (count % 10 === 2 && count % 100 !== 12) suffix = 'nd';
+                    else if (count % 10 === 3 && count % 100 !== 13) suffix = 'rd';
+                    
+                    return `${count}${suffix} ${type === 'album' ? 'Album' : 'Single'}`;
+                }
+
+                function renderMusicReleasesMenu() {
+                    const container = document.getElementById('release-group-selection');
+                    const songsView = document.getElementById('release-songs-view');
+                    if (!container || !songsView) return;
+
+                    if (!window.selectedMusicGroupId) {
+                        container.classList.remove('hidden');
+                        songsView.classList.add('hidden');
+                    } else {
+                        renderGroupSongs(window.selectedMusicGroupId);
+                        return;
+                    }
+
+                    container.innerHTML = '';
+                    
+                    if (!state.groups || state.groups.length === 0) {
+                        container.innerHTML = `<div class="col-span-full text-center py-10 text-xs text-slate-400 font-medium bg-white border border-dashed rounded-xl">❌ ค่ายของคุณยังไม่มีการตั้งวงไอดอลหลักในระบบ</div>`;
+                        return;
+                    }
+
+                    state.groups.forEach(group => {
+                        const badgeColor = group.color || group.flagBg || '#ec4899';
+                        const div = document.createElement('div');
+                        div.className = "bg-white border border-slate-200 hover:border-pink-300 rounded-xl p-4 shadow-sm text-center cursor-pointer transition transform active:scale-95 flex flex-col items-center justify-center gap-2";
+                        div.onclick = () => {
+                            window.selectedMusicGroupId = group.id;
+                            renderGroupSongs(group.id);
+                        };
+                        div.innerHTML = `
+                            <span class="px-3 py-1 rounded-md text-[10px] font-bold text-white shadow-sm" style="background-color: ${badgeColor}">
+                                <i class="fa-solid fa-flag mr-1"></i> ${group.name}
+                            </span>
+                            <span class="text-[11px] font-bold text-slate-500 mt-1">คลิกเปิดดูผลงานเพลง</span>
+                        `;
+                        container.appendChild(div);
+                    });
+                }
+
+                function backToGroupSelection() {
+                    window.selectedMusicGroupId = null;
+                    renderMusicReleasesMenu();
+                }
+
+                // ==============================================================
+                // 1. ฟังก์ชันแสดงรายการเพลง (อัปเกรดเป็นรูปแบบ Grid แสดงปกอัลบั้ม)
+                // ==============================================================
+                function renderGroupSongs(groupId) {
+                    const selectionGrid = document.getElementById('release-group-selection');
+                    const songsView = document.getElementById('release-songs-view');
+                    const titleHeader = document.getElementById('selected-group-title');
+                    const listContainer = document.getElementById('release-songs-list');
+                    
+                    if (!listContainer || !selectionGrid || !songsView) return;
+
+                    selectionGrid.classList.add('hidden');
+                    songsView.classList.remove('hidden');
+
+                    const group = state.groups.find(g => g.id === groupId);
+                    const groupColor = group ? (group.color || '#ec4899') : '#ec4899';
+                    
+                    titleHeader.innerHTML = `
+                        <span class="px-2 py-0.5 rounded text-white text-[10px] font-bold shadow-sm" style="background-color: ${groupColor}">${group ? group.name : 'วง'}</span> 
+                        <span class="font-bold text-sm text-slate-700 ml-1">ผลงานเพลงทั้งหมด</span>
+                    `;
+
+                    listContainer.innerHTML = '';
+                    
+                    // ตั้งค่า Class ของ Container ให้เป็น Grid จัดเรียงหน้าปกแกลเลอรีอย่างสวยงาม
+                    listContainer.className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-2";
+                    
+                    const songs = (state.releases || []).filter(r => r.groupId === groupId);
+                    
+                    if (songs.length === 0) {
+                        listContainer.className = "col-span-full";
+                        listContainer.innerHTML = `<div class="text-slate-400 text-xs text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200 font-medium w-full">📭 วงนี้ยังไม่มีประวัติการวางจำหน่ายเพลงในระบบค่าย</div>`;
+                        return;
+                    }
+
+                    songs.forEach(song => {
+                        // คำนวณลำดับที่ของผลงาน (เช่น 1st Single, 2nd Album) โดยอิงจากระบบ getOrdinal เดิมของเกม
+                        const typeSongs = songs.filter(s => s.type === song.type);
+                        const index = typeSongs.findIndex(s => s.id === song.id) + 1;
+                        const typeLabel = song.type === 'single' ? 'Single' : 'Album';
+                        const ordinalText = typeof getOrdinal === 'function' ? `${getOrdinal(index)} ${typeLabel}` : `${index} ${typeLabel}`;
+                        
+                        const card = document.createElement('div');
+                        card.className = "bg-white rounded-xl border border-slate-200 flex flex-col overflow-hidden hover:shadow-lg hover:border-pink-400 hover:-translate-y-1 transition-all duration-300 cursor-pointer group animate-fade-in";
+                        card.onclick = () => openSongFormationModal(song.id); 
+                        
+                        // ตรวจสอบภาพปก หากผู้เล่นไม่ได้อัพโหลดไว้จะโชว์รูปแผ่น CD ดีไซน์สวยงามแทน
+                        let coverHtml = '';
+                        const imgUrl = song.coverImage || song.cover;
+                        if (imgUrl) {
+                            coverHtml = `<img src="${imgUrl}" class="w-full aspect-square object-cover border-b border-slate-100 group-hover:scale-105 transition-transform duration-500">`;
+                        } else {
+                            coverHtml = `
+                            <div class="w-full aspect-square bg-gradient-to-br from-slate-50 to-slate-200 flex items-center justify-center border-b border-slate-200 overflow-hidden relative">
+                                <i class="fa-solid fa-compact-disc text-slate-300 text-[4rem] group-hover:text-pink-400 group-hover:rotate-180 transition-all duration-700 drop-shadow-md"></i>
+                            </div>`;
+                        }
+                        
+                        card.innerHTML = `
+                            <div class="w-full relative overflow-hidden bg-white">
+                                ${coverHtml}
+                            </div>
+                            <div class="p-3 text-center flex flex-col flex-grow items-center bg-white z-10">
+                                <h5 class="font-bold text-xs text-slate-800 line-clamp-2 leading-tight group-hover:text-pink-600 transition-colors w-full mb-2 h-8 flex items-center justify-center">
+                                    ${song.title}
+                                </h5>
+                                <div class="mt-auto w-full">
+                                    <span class="block bg-pink-50 border border-pink-100 text-pink-600 text-[10px] font-bold px-2 py-0.5 rounded-md w-full shadow-sm tracking-wide">
+                                        ${ordinalText}
+                                    </span>
+                                    <div class="flex justify-between items-center mt-2 px-1 text-[9px] text-slate-400 font-medium">
+                                        <span title="ยอดขาย"><i class="fa-solid fa-cart-shopping mr-0.5"></i>${(song.sales || 0).toLocaleString()}</span>
+                                        <span title="อันดับสูงสุด"><i class="fa-solid fa-trophy text-amber-500 mr-0.5"></i>#${song.rank || '-'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        listContainer.appendChild(card);
+                    });
+                }
+
+                // ==============================================================
+                // 2. ฟังก์ชันแสดงป๊อปอัปฟอร์เมชัน (ดีไซน์ถอดแบบมาจากหน้าคัดเลือกเป๊ะๆ)
+                // ==============================================================
+                function openSongFormationModal(songId) {
+                    // ตรวจสอบและติดตั้งโครงสร้าง HTML ของ Modal อัตโนมัติในเบื้องหลัง ป้องกันหน้าจอเออเร่อ
+                    ensureSongFormationModalExists();
+
+                    const song = (state.releases || []).find(r => r.id === songId);
+                    if (!song) return;
+
+                    // คำนวณลำดับเพื่อแสดงใน Modal ให้สอดคล้องกัน
+                    const songs = (state.releases || []).filter(r => r.groupId === song.groupId);
+                    const typeSongs = songs.filter(s => s.type === song.type);
+                    const songIndex = typeSongs.findIndex(s => s.id === song.id) + 1;
+                    const typeLabel = song.type === 'single' ? 'Single' : 'Album';
+                    const ordinalText = typeof getOrdinal === 'function' ? `${getOrdinal(songIndex)} ${typeLabel}` : `${songIndex} ${typeLabel}`;
+
+                    document.getElementById('modal-custom-song-title').innerText = song.title;
+                    document.getElementById('modal-custom-song-subtitle').innerText = ordinalText;
+
+                    const container = document.getElementById('modal-custom-formation-container');
+                    
+                    // ดึงข้อมูลเซ็มบัตสึและเซ็นเตอร์
+                    let sIds = song.senbatsuIds || song.senbatsu || [];
+                    let cIds = song.centerIds || (song.center ? (Array.isArray(song.center) ? song.center : [song.center]) : []);
+                    
+                    // จัดลำดับ: ให้เซ็นเตอร์ขึ้นโชว์แถวหน้าสุดเสมอ ตามด้วยสมาชิกปกติ
+                    let centersOrdered = cIds.filter(id => sIds.includes(id));
+                    let normalMembers = sIds.filter(id => !cIds.includes(id));
+                    let sortedIds = [...centersOrdered, ...normalMembers];
+                    let totalCenters = centersOrdered.length;
+
+                    let html = `
+                        <div class="text-xs font-bold text-slate-500 mb-3 text-center uppercase tracking-wider border-b border-slate-200 pb-2">
+                            <i class="fa-solid fa-users-viewfinder text-pink-500 mr-1"></i> ผังตำแหน่งฟอร์เมชั่น (Formation)
+                        </div>
+                        <div class="flex flex-wrap justify-center gap-3 bg-white p-4 rounded-xl border border-dashed border-slate-200 shadow-inner max-h-[55vh] overflow-y-auto custom-scrollbar">
+                    `;
+
+                    if (sortedIds.length > 0) {
+                        sortedIds.forEach((memId, index) => {
+                            const member = state.idols.find(i => i.id === memId);
+                            let memberName = member ? member.name : `เมมเบอร์จบการศึกษา`;
+                            let memAvatar = member ? (member.avatar || member.img) : `https://via.placeholder.com/150`;
+                            let isCenter = cIds.includes(memId);
+                            
+                            // ตั้งค่าป้ายรหัสประจำตำแหน่ง
+                            let positionLabel = '';
+                            if (isCenter) {
+                                positionLabel = totalCenters > 1 ? `C${index + 1}` : `Center`;
+                            } else {
+                                positionLabel = `S${index + 1}`;
+                            }
+
+                            // การเลือกธีมสีการ์ด (เซ็นเตอร์จะเป็นกรอบทองหรูหราเหมือนหน้าสตูดิโอ)
+                            let slotStyle = isCenter 
+                                ? 'border-yellow-400 bg-gradient-to-b from-amber-50 to-yellow-50/70 shadow-md ring-2 ring-yellow-400/30' 
+                                : 'border-slate-200 bg-white hover:border-slate-300';
+
+                            html += `
+                            <div class="p-3 border rounded-xl flex flex-col items-center justify-center text-center relative transition-all ${slotStyle} m-1 w-24 shrink-0 shadow-sm">
+                                <div class="absolute top-1 left-1 bg-slate-800 text-white text-[8px] font-mono px-1.5 py-0.5 rounded leading-none font-bold shadow-sm">
+                                    ${positionLabel}
+                                </div>
+                                
+                                ${isCenter ? `<div class="absolute -top-2 text-yellow-500 drop-shadow-sm text-xs z-10"><i class="fa-solid fa-crown animate-bounce"></i></div>` : ''}
+                                
+                                <div class="relative mb-1 mt-1">
+                                    <img src="${memAvatar}" class="w-12 h-12 rounded-full object-cover border-2 ${isCenter ? 'border-yellow-400' : 'border-slate-200'} bg-slate-50 shadow-sm" onerror="this.src='https://via.placeholder.com/150'">
+                                </div>
+                                <span class="font-bold text-[10px] truncate w-full text-slate-800 mb-0.5">${memberName}</span>
+                                <span class="text-[8px] font-bold ${isCenter ? 'text-amber-600' : 'text-slate-400'} uppercase tracking-wider">
+                                    ${isCenter ? 'Center' : 'Senbatsu'}
+                                </span>
+                            </div>`;
+                        });
+                    } else {
+                        html += `<div class="w-full text-center py-8 text-xs text-slate-400">ไม่มีข้อมูลสมาชิกค้างอยู่ในประวัติเซฟนี้</div>`;
+                    }
+                    
+                    html += `</div>`;
+                    container.innerHTML = html;
+
+                    // สั่งเปิดแสดงหน้าต่าง Modal ขึ้นมาบนจอ
+                    document.getElementById('song-formation-modal').classList.remove('hidden');
+                }
+
+                // ==============================================================
+                // 3. ฟังก์ชันพิเศษป้องกันโค้ดพัง (สร้างและฝังโครงสร้าง Modal HTML ลงระบบอัตโนมัติ)
+                // ==============================================================
+                function ensureSongFormationModalExists() {
+                    if (document.getElementById('song-formation-modal')) return;
+                    
+                    const modalHtml = document.createElement('div');
+                    modalHtml.id = 'song-formation-modal';
+                    modalHtml.className = 'fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 hidden';
+                    modalHtml.innerHTML = `
+                        <div class="bg-slate-50 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-100 flex flex-col max-h-[85vh]">
+                            <div class="p-4 bg-white border-b border-slate-200 flex justify-between items-center shrink-0">
+                                <div>
+                                    <h3 id="modal-custom-song-title" class="font-bold text-sm text-slate-800">ชื่อเพลง</h3>
+                                    <p id="modal-custom-song-subtitle" class="text-[10px] text-pink-500 font-bold uppercase tracking-wider mt-0.5">1st Single</p>
+                                </div>
+                                <button onclick="document.getElementById('song-formation-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 w-7 h-7 rounded-full flex items-center justify-center transition-colors">
+                                    <i class="fa-solid fa-xmark text-sm"></i>
+                                </button>
+                            </div>
+                            <div id="modal-custom-formation-container" class="p-4 flex-grow overflow-y-auto">
+                                </div>
+                            <div class="p-3 bg-white border-t border-slate-100 flex justify-end shrink-0">
+                                <button onclick="document.getElementById('song-formation-modal').classList.add('hidden')" class="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold text-xs rounded-xl transition-colors">ปิดหน้าต่าง</button>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modalHtml);
+                }
+
+                function closeSongFormationModal() {
+                    document.getElementById('song-formation-modal').classList.add('hidden');
+                }
+
+                function renderGlobalCharts() {
+                    const listContainer = document.getElementById('global-music-charts-list');
+                    if (!listContainer) return;
+                    listContainer.innerHTML = '<div class="text-center py-10 text-xs text-slate-400"><i class="fa-solid fa-spinner fa-spin text-pink-500 mr-2"></i>กำลังดึงข้อมูลสถิติชาร์ตเพลงล่าสุด...</div>';
+
+                    if (!state.releases || state.releases.length === 0) {
+                        listContainer.innerHTML = `<div class="text-center text-slate-400 text-xs py-10 font-medium bg-slate-50 border border-dashed rounded-xl">📉 ยังไม่มีการบันทึกประวัติชาร์ตเพลงในระบบการเล่นปัจจุบัน</div>`;
+                        return;
+                    }
+
+                    // คัดลอกและนำมาจัดอันดับตามลำดับตัวเลข Rank (จากน้อยไปหามาก เช่น 1-100)
+                    const sortedReleases = [...state.releases].sort((a, b) => (a.rank || 100) - (b.rank || 100));
+                    listContainer.innerHTML = '';
+
+                    sortedReleases.forEach((song, idx) => {
+                        const group = state.groups.find(g => g.id === song.groupId);
+                        const groupBg = group ? (group.color || group.flagBg || '#ec4899') : '#64748b';
+                        
+                        let rankBadgeClass = "bg-slate-100 text-slate-600";
+                        if (song.rank === 1) rankBadgeClass = "bg-amber-500 text-white font-black scale-105 shadow-sm";
+                        else if (song.rank === 2) rankBadgeClass = "bg-slate-300 text-slate-800 font-bold";
+                        else if (song.rank === 3) rankBadgeClass = "bg-amber-600 text-white font-bold";
+
+                        const row = document.createElement('div');
+                        row.className = "flex items-center justify-between gap-3 bg-slate-50/70 p-2.5 rounded-xl border border-slate-100 hover:bg-white transition shadow-2xs";
+                        row.innerHTML = `
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-mono font-bold ${rankBadgeClass} flex-shrink-0">
+                                    ${song.rank || (idx + 1)}
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="text-xs font-bold text-slate-700 truncate">${song.title}</span>
+                                        <span class="px-1.5 py-0.2 rounded text-[8px] font-bold text-white uppercase" style="background-color: ${groupBg}">${group ? group.name : 'เด็กฝึก'}</span>
+                                    </div>
+                                    <div class="text-[9px] text-slate-400 mt-0.5 font-medium">
+                                        <span><i class="fa-solid fa-cart-shopping"></i> สะสม: ${(song.sales || 0).toLocaleString()} แผ่น</span>
+                                        <span class="text-emerald-600 font-bold ml-2"><i class="fa-solid fa-wallet"></i> กำไรรวม: ${(song.profit || 0).toLocaleString()} ฿</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button onclick="openSongFormationModal('${song.id}')" class="text-[10px] bg-white border border-slate-200 px-2 py-1 rounded-lg font-bold text-slate-500 hover:text-pink-600 hover:border-pink-200 transition shrink-0"><i class="fa-solid fa-users-viewfinder"></i> ผัง</button>
+                        `;
+                        listContainer.appendChild(row);
+                    });
+                }
+
+                // ==========================================
+                // 1. ฟังก์ชันดึงข้อมูลเพลง (แก้ไขการนับลำดับซิงเกิลให้ถูกต้อง)
+                // ==========================================
+                function getSongsFromStudio() {
+                    if (typeof state !== 'undefined' && Array.isArray(state.releases)) {
+                        const totalSongs = state.releases.length;
+                        
+                        return state.releases.map((song, index) => {
+                            // เนื่องจากเพลงล่าสุดอยู่ Index 0 ดังนั้น ลำดับซิงเกิล = จำนวนทั้งหมด - index ปัจจุบัน
+                            let singleNo = totalSongs - index;
+                            
+                            let suffix = "th";
+                            if (singleNo % 10 === 1 && singleNo % 100 !== 11) suffix = "st";
+                            else if (singleNo % 10 === 2 && singleNo % 100 !== 12) suffix = "nd";
+                            else if (singleNo % 10 === 3 && singleNo % 100 !== 13) suffix = "rd";
+                            
+                            return {
+                                ...song,
+                                singleLabel: `${singleNo}${suffix} Single`,
+                                cover: song.cover || song.coverImage || ''
+                            };
+                        });
+                    }
+                    return [];
+                }
+
+                // Helper: ฟังก์ชันแปลงข้อมูลเมมเบอร์ให้อ่านได้ ไม่ว่าระบบเดิมจะเก็บเป็น String หรือ Object
+                function parseMemberData(member) {
+                    if (!member) return { name: 'ไม่ระบุชื่อ', image: 'https://via.placeholder.com/150?text=Idol' };
+                    if (typeof member === 'string') {
+                        return { name: member, image: 'https://via.placeholder.com/150?text=Idol' };
+                    }
+                    return {
+                        name: member.name || member.id || 'Member',
+                        image: member.image || member.img || member.avatar || member.profileImg || 'https://via.placeholder.com/150?text=Idol'
+                    };
+                }
+
+                // Helper: ฟังก์ชันจัดการลำดับ 1st, 2nd, 3rd...
+                function getOrdinalSuffix(num) {
+                    const s = ["th", "st", "nd", "rd"], v = num % 100;
+                    return num + (s[(v - 20) % 10] || s[v] || s[0]);
+                }
+
+                // ==========================================
+                // 2. ฟังก์ชันเรนเดอร์แสดงผลงานเพลงบนหน้าจอ (เวอร์ชันเรียง เก่า -> ใหม่)
+                // ==========================================
+                function renderPlayerWorks() {
+                    const gridContainer = document.getElementById('player-works-grid');
+                    if (!gridContainer) return; // เซฟตี้ล็อก ป้องกันกรณีเรียกใช้ฟังก์ชันก่อนหน้าจอโหลดเสร็จ
+                    
+                    gridContainer.innerHTML = ''; 
+                    
+                    // ดึงข้อมูลเพลงจริงจากสตูดิโอ
+                    // 🌟 แก้ไข: ใช้ [...getSongsFromStudio()].reverse() เพื่อให้เพลงเก่าสุดขึ้นก่อน และไล่ไปเพลงล่าสุด
+                    const currentSongs = [...getSongsFromStudio()].reverse();
+                    
+                    let singleCounter = 0;
+                    let albumCounter = 0;
+                    
+                    if (currentSongs.length === 0) {
+                        gridContainer.innerHTML = `
+                            <div class="col-span-full text-center py-12 text-slate-400">
+                                <i class="fa-solid fa-music text-4xl mb-2.5 opacity-60"></i>
+                                <p class="text-xs font-medium">ยังไม่มีผลงานเพลงที่ถูกสร้างขึ้นในสตูดิโอตอนนี้</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    // วนลูปจัดประเภท (เมื่อเรียงจากเก่าไปใหม่ ตัวนับสถิติจะตรงกับประวัติจริงทันที)
+                    currentSongs.forEach((song) => {
+                        let displayType = '';
+                        const songType = (song.type || 'single').toLowerCase();
+                        
+                        if (songType === 'single' || songType === 'ซิงเกิล') {
+                            singleCounter++;
+                            displayType = `${getOrdinalSuffix(singleCounter)} Single`;
+                        } else if (songType === 'album' || songType === 'อัลบั้ม') {
+                            albumCounter++;
+                            displayType = `${getOrdinalSuffix(albumCounter)} Album`;
+                        } else {
+                            displayType = song.type;
+                        }
+                        
+                        const card = document.createElement('div');
+                        card.className = "bg-white p-3 rounded-xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-pink-300 transition-all cursor-pointer flex flex-col items-center text-center group";
+                        card.onclick = () => openWorkDetailModal(song, displayType);
+                        
+                        // การจัดการหน้าปก
+                        let coverHTML = '';
+                        if (song.cover && song.cover.trim() !== '' && !song.cover.includes('placeholder')) {
+                            coverHTML = `<img src="${song.cover}" class="w-full aspect-square object-cover rounded-lg shadow-inner mb-2.5 group-hover:scale-102 transition-transform" alt="${song.title}">`;
+                        } else {
+                            coverHTML = `
+                                <div class="w-full aspect-square bg-slate-100 rounded-lg flex items-center justify-center border border-slate-200/50 mb-2.5 text-slate-400 group-hover:text-pink-500 transition-colors overflow-hidden">
+                                    <i class="fa-solid fa-compact-disc text-5xl" style="animation: spin 8s linear infinite;"></i>
+                                </div>
+                            `;
+                        }
+                        
+                        card.innerHTML = `
+                            ${coverHTML}
+                            <div class="font-bold text-slate-700 text-xs truncate w-full mb-1">${song.title}</div>
+                            <div class="text-[10px] text-pink-500 font-bold bg-pink-50 px-2 py-0.5 rounded-full inline-block">${displayType}</div>
+                        `;
+                        
+                        gridContainer.appendChild(card);
+                    });
+                }
+
+                // ==========================================
+                // 3. ฟังก์ชันเปิด Modal แสดงข้อมูลเซ็มบัตสึ & เซ็นเตอร์ (รองรับระบบอัลบั้ม 100%)
+                // ==========================================
+                function openWorkDetailModal(song, displayType) {
+                    const modal = document.getElementById('work-detail-modal');
+                    if (!modal || !song) return;
+                    
+                    // --- ฟังก์ชันภายในสำหรับดึงข้อมูล เมมเบอร์ตัวเต็ม ผ่าน ID ---
+                    const getMemberFullData = (memberIdentifier) => {
+                        let memberObj = null;
+                        
+                        // ถ้าสิ่งที่ส่งเข้ามาเป็น ID (String) ให้ไปควานหาตัวเต็มในคลังระดับโกลบอล (state)
+                        if (typeof memberIdentifier === 'string' && typeof state !== 'undefined') {
+                            const memberPool = state.members || state.trainees || state.idols || state.allMembers || [];
+                            memberObj = memberPool.find(m => m.id === memberIdentifier || m.name === memberIdentifier);
+                        } else if (typeof memberIdentifier === 'object') {
+                            memberObj = memberIdentifier;
+                        }
+
+                        // นำไปผ่าน parseMemberData เผื่อมีระบบจัดการภาพ/ชื่อเดิมอยู่แล้ว
+                        try {
+                            if (typeof parseMemberData === 'function' && memberObj) {
+                                const parsed = parseMemberData(memberObj);
+                                if (parsed && parsed.name) return parsed;
+                            }
+                        } catch (e) {
+                            console.warn("parseMemberData มีปัญหา แต่ระบบ Safe-Guard จะช่วยจัดการต่อ", e);
+                        }
+
+                        // ตัวสำรองกรณีหาตัวจริงในคลังไม่เจอ (Fallback)
+                        if (!memberObj) {
+                            return { 
+                                name: typeof memberIdentifier === 'string' ? `Member (${memberIdentifier.substring(0,6)})` : "ไม่ทราบชื่อ", 
+                                image: "https://via.placeholder.com/150?text=Idol" 
+                            };
+                        }
+
+                        return {
+                            name: memberObj.name || memberObj.title || "ไม่ทราบชื่อ",
+                            image: memberObj.image || memberObj.img || memberObj.avatar || memberObj.coverImage || "https://via.placeholder.com/150?text=Idol"
+                        };
+                    };
+
+                    // --- 1. คำนวณลำดับ Single / Album ให้ถูกต้องตามป้ายกำกับจริงในวัตถุ ---
+                    let correctDisplayType = song.singleLabel || displayType; 
+                    // ถ้าในวัตถุมีคำว่า singleLabel (เช่น "8th Single") ให้นำมาใช้ตรงๆ ได้เลย
+                    if (!song.singleLabel && typeof state !== 'undefined' && Array.isArray(state.releases)) {
+                        const songIndex = state.releases.findIndex(r => r.id === song.id || r.title === song.title);
+                        if (songIndex !== -1) {
+                            const singleNo = state.releases.length - songIndex;
+                            let suffix = "th";
+                            if (singleNo % 10 === 1 && singleNo % 100 !== 11) suffix = "st";
+                            else if (singleNo % 10 === 2 && singleNo % 100 !== 12) suffix = "nd";
+                            else if (singleNo % 10 === 3 && singleNo % 100 !== 13) suffix = "rd";
+                            
+                            const isAlbum = (song.type || '').toLowerCase().includes('album') || (song.type || '').includes('อัลบั้ม');
+                            correctDisplayType = `${singleNo}${suffix} ${isAlbum ? 'Album' : 'Single'}`;
+                        }
+                    }
+
+                    // ใส่ชื่อเพลงและป้ายประเภท
+                    document.getElementById('modal-work-name').textContent = song.title || "ไม่ระบุชื่อเพลง";
+                    document.getElementById('modal-work-type-badge').textContent = correctDisplayType;
+                    
+                    // --- 2. ดึงรายชื่อเซ็มบัตสึจากคีย์จริง (senbatsuIds) ---
+                    // ดึงคีย์เซฟๆ เผื่อกรณีเป็นเพลงเก่า/เพลงใหม่
+                    let rawSenbatsu = song.senbatsuIds || song.senbatsu || song.members || [];
+                    if (!Array.isArray(rawSenbatsu)) rawSenbatsu = [];
+                    
+                    document.getElementById('modal-work-stats').textContent = `สมาชิกร่วมผลงานนี้: ${rawSenbatsu.length} คน`;
+                    
+                    // --- 3. แสดงรูปภาพปกชิ้นงาน (รองรับ Base64 จากคีย์ cover และ coverImage) ---
+                    const coverZone = document.getElementById('modal-work-cover');
+                    if (coverZone) {
+                        const targetCover = song.cover || song.coverImage;
+                        if (targetCover && targetCover.trim() !== '' && !targetCover.includes('placeholder')) {
+                            coverZone.innerHTML = `<img src="${targetCover}" class="w-full h-full object-cover rounded-xl shadow-md">`;
+                        } else {
+                            coverZone.innerHTML = `
+                                <div class="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200 rounded-xl">
+                                    <i class="fa-solid fa-compact-disc text-4xl" style="animation: spin 8s linear infinite;"></i>
+                                </div>
+                            `;
+                        }
+                    }
+                    
+                    // ล้างกล่องแสดงผลเดิมออกก่อนเขียนใหม่
+                    const centerBox = document.getElementById('modal-work-center-container');
+                    const membersGrid = document.getElementById('modal-work-members-grid');
+                    if (centerBox) centerBox.innerHTML = '';
+                    if (membersGrid) membersGrid.innerHTML = '';
+                    
+                    // --- 4. ดึงข้อมูลและจัดการเซ็นเตอร์จากคีย์จริง (centerIds) ---
+                    let rawCenters = song.centerIds || song.centers || song.center || [];
+                    if (typeof rawCenters === 'string') rawCenters = rawCenters.split(',').map(s => s.trim());
+                    if (!Array.isArray(rawCenters)) rawCenters = [rawCenters];
+                    
+                    // วาดกล่องเซ็นเตอร์หลักด้านบน
+                    if (centerBox) {
+                        if (rawCenters.length > 0 && rawCenters[0] !== undefined) {
+                            rawCenters.forEach((centerIdentifier, cIdx) => {
+                                const centerData = getMemberFullData(centerIdentifier);
+                                
+                                const cDiv = document.createElement('div');
+                                cDiv.className = "flex items-center gap-3 bg-gradient-to-r from-amber-50 to-orange-50 p-2.5 rounded-xl border border-amber-200 shadow-sm min-w-[170px] mr-2 mb-2 inline-flex text-left";
+                                cDiv.innerHTML = `
+                                    <div class="relative w-11 h-11 rounded-full overflow-hidden border-2 border-amber-400 bg-slate-200 flex-shrink-0 shadow-sm">
+                                        <img src="${centerData.image}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/150?text=Idol'">
+                                        <div class="absolute inset-x-0 bottom-0 bg-amber-500 text-[7px] text-white text-center font-bold py-0.5 leading-none">CENTER</div>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-slate-700 text-xs">${centerData.name}</div>
+                                        <div class="text-[9px] text-amber-600 font-medium">${rawCenters.length > 1 ? `เซ็นเตอร์ร่วม (C${cIdx + 1})` : 'เซ็นเตอร์หลัก'}</div>
+                                    </div>
+                                `;
+                                centerBox.appendChild(cDiv);
+                            });
+                        } else {
+                            centerBox.innerHTML = `<p class="text-xs text-slate-400 italic py-1">ไม่มีข้อมูลเซ็นเตอร์ในผลงานนี้</p>`;
+                        }
+                    }
+                    
+                    // --- 5. จัดการแสดงรายชื่อสมาชิกลงในตาราง Grid (เรียงตามลำดับ C1, S2, S3...) ---
+                    if (membersGrid) {
+                        if (rawSenbatsu.length > 0) {
+                            let runningNumber = 1;
+                            
+                            // รอบที่ 1: วาดเฉพาะคนที่เป็น Center ขึ้นก่อนในตาราง
+                            rawSenbatsu.forEach(memberIdentifier => {
+                                // เช็คว่า ID หรือตัวแปรนี้ตรงกับค่าในรายชื่อเซ็นเตอร์ไหม
+                                const isCenter = rawCenters.includes(memberIdentifier) || 
+                                                (typeof memberIdentifier === 'object' && rawCenters.includes(memberIdentifier.id));
+                                
+                                if (isCenter) {
+                                    const mData = getMemberFullData(memberIdentifier);
+                                    const mCard = document.createElement('div');
+                                    mCard.className = 'flex flex-col items-center p-2 rounded-xl border border-amber-400 ring-2 ring-amber-400/20 bg-amber-50/30 shadow-sm text-center relative';
+                                    mCard.innerHTML = `
+                                        <span class="absolute -top-1.5 -left-1 bg-amber-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full scale-90 z-10">C${runningNumber}</span>
+                                        <span class="absolute -top-1.5 -right-1 bg-amber-500 text-white text-[7px] font-bold px-1.5 py-0.5 rounded-full scale-90 z-10">Center</span>
+                                        <div class="w-11 h-11 rounded-full overflow-hidden border border-slate-200 bg-slate-100 mb-1 relative">
+                                            <img src="${mData.image}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/150?text=Idol'">
+                                        </div>
+                                        <div class="font-semibold text-slate-700 text-[10px] truncate w-full px-0.5">${mData.name}</div>
+                                    `;
+                                    membersGrid.appendChild(mCard);
+                                    runningNumber++;
+                                }
+                            });
+                            
+                            // รอบที่ 2: วาดสมาชิกเซ็มบัตสึคนอื่นๆ ที่เหลือต่อท้าย
+                            rawSenbatsu.forEach(memberIdentifier => {
+                                const isCenter = rawCenters.includes(memberIdentifier) || 
+                                                (typeof memberIdentifier === 'object' && rawCenters.includes(memberIdentifier.id));
+                                
+                                if (!isCenter) {
+                                    const mData = getMemberFullData(memberIdentifier);
+                                    const mCard = document.createElement('div');
+                                    mCard.className = 'flex flex-col items-center p-2 rounded-xl border border-slate-200 bg-white shadow-sm text-center relative';
+                                    mCard.innerHTML = `
+                                        <span class="absolute -top-1.5 -left-1 bg-slate-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full scale-90 z-10">S${runningNumber}</span>
+                                        <div class="w-11 h-11 rounded-full overflow-hidden border border-slate-200 bg-slate-100 mb-1 relative">
+                                            <img src="${mData.image}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/150?text=Idol'">
+                                        </div>
+                                        <div class="font-semibold text-slate-700 text-[10px] truncate w-full px-0.5">${mData.name}</div>
+                                    `;
+                                    membersGrid.appendChild(mCard);
+                                    runningNumber++;
+                                }
+                            });
+                            
+                        } else {
+                            membersGrid.innerHTML = `<p class="col-span-full text-center text-xs text-slate-400 py-4">ไม่พบรายชื่อสมาชิกในวัตถุผลงานนี้</p>`;
+                        }
+                    }
+                    
+                    // เปิดการแสดงผลหน้าต่าง Modal
+                    modal.classList.remove('hidden');
+                }
+
+                function closeWorkDetailModal() {
+                    const modal = document.getElementById('work-detail-modal');
+                    if (modal) modal.classList.add('hidden');
+                }
+
+                // เรียกใช้งานระบบออนไลน์ (ถ้ามีในระบบเดิมของคุณ)
+                if (typeof initPresenceSystem === 'function') initPresenceSystem();
+                if (typeof initOnlineList === 'function') initOnlineList();
+
+                // ==========================================
+                // 4. ฟังก์ชันจัดการสลับหน้าชาร์ตเพลงและรีเฟรชข้อมูล
+                // ==========================================
+                window.switchMusicTab = function(param) {
+                    console.log("เรียกใช้งานสลับหน้าชาร์ตด้วยค่า:", param);
+                    
+                    // 1. ตรวจสอบค่าและกำหนดโหมด
+                    let mode = 'local'; // ค่าเริ่มต้น
+                    
+                    // กำหนดเงื่อนไขทั้ง 5 ตามที่คุณใช้งานจริง
+                    if (param === 'global-charts' || param === 'online' || param === true) {
+                        mode = 'global';
+                    } else if (param === 'my-releases' || param === 'local' || param === false) {
+                        mode = 'local';
+                    } else if (param === 'friends') {
+                        mode = 'friends';
+                    } else if (param === 'trending') {
+                        mode = 'trending';
+                    } else if (param === 'new') {
+                        mode = 'new';
+                    }
+
+                    // 2. ส่งต่อไปยังฟังก์ชันจัดการหน้าจอหลัก (ของเดิมที่คุณมี)
+                    if (typeof window.switchChartMode === 'function') {
+                        window.switchChartMode(mode);
+                    }
+
+                    // 3. ส่งต่อไปยังฟังก์ชันจัดการแท็บย่อย (ถ้ามี)
+                    if (typeof window.switchChartSubTab === 'function') {
+                        if (mode === 'local') {
+                            window.switchChartSubTab('works');
+                        } else if (mode === 'global') {
+                            window.switchChartSubTab('online');
+                        } else {
+                            window.switchChartSubTab(mode); // ส่งค่า mode ไปเลยถ้าเป็นฟังก์ชันย่อยอื่นๆ
+                        }
+                    }
+
+                    // เมื่อสลับแท็บมาที่เพลงของตัวเอง (local) ให้ดึงข้อมูลและวาด Grid เพลงใหม่แบบ Real-time ทันที
+                    if (mode === 'local') {
+                        if (typeof renderPlayerWorks === 'function') {
+                            renderPlayerWorks();
+                        }
+                    }
+
+                    // 4. บันทึกสถานะปัจจุบัน
+                    window.currentMusicTab = param;
+
+                    // 5. ไฮไลต์สีปุ่ม (ตามระบบเดิมของคุณ)
+                    const tabs = document.querySelectorAll('[onclick*="switchMusicTab"]');
+                    tabs.forEach(btn => {
+                        const clickAttr = btn.getAttribute('onclick') || '';
+                        // เช็คว่าปุ่มไหนมีค่าตรงกับที่กด
+                        if (clickAttr.includes(param.toString())) {
+                            btn.className = "px-4 py-1.5 text-xs font-bold rounded-xl bg-slate-800 text-white shadow-sm transition-all cursor-pointer";
+                        } else {
+                            btn.className = "px-4 py-1.5 text-xs font-medium rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 transition-all cursor-pointer";
+                        }
+                    });
+                };
+                window.closeWorkDetailModal = function() {
+                    // สั่งปิดช่องแสดงรายละเอียดผลงาน (เช็คเผื่อไว้ให้ทั้ง 2 ชื่อไอดี)
+                    const modal1 = document.getElementById('work-detail-modal');
+                    if (modal1) modal1.classList.add('hidden');
+                    
+                    const modal2 = document.getElementById('song-detail-modal');
+                    if (modal2) modal2.classList.add('hidden');
+                };
+
         </script>
     <div id="online-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-100">
@@ -3453,6 +5168,79 @@
                 <button id="cloud-submit-btn" class="flex-1 text-white text-xs font-bold py-2 rounded-xl shadow-md transition active:scale-95">
                     ยืนยัน
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="friends-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-100 flex flex-col md:flex-row h-[70vh]">
+            
+            <div class="w-full md:w-1/3 bg-slate-50 border-r border-slate-200 flex flex-col h-1/2 md:h-full">
+                <div class="p-3 bg-white border-b border-slate-200 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-user-group text-pink-500 mr-1"></i> รายชื่อเพื่อน</h3>
+                    <button onclick="document.getElementById('friends-modal').classList.add('hidden')" class="md:hidden text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div id="friends-list-container" class="flex-grow overflow-y-auto p-2 space-y-1 custom-scrollbar">
+                    <div class="text-center text-xs text-slate-400 py-4">กำลังโหลด...</div>
+                </div>
+            </div>
+
+            <div class="w-full md:w-2/3 flex flex-col h-1/2 md:h-full bg-white relative">
+                <div class="p-3 border-b border-slate-200 flex justify-between items-center bg-white">
+                    <h3 id="private-chat-title" class="font-bold text-slate-700 text-sm">เลือกเพื่อนเพื่อเริ่มแชท</h3>
+                    <button onclick="document.getElementById('friends-modal').classList.add('hidden')" class="hidden md:block text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+                
+                <div id="private-chat-logs" class="flex-grow overflow-y-auto p-4 space-y-3 bg-slate-50 custom-scrollbar">
+                    <div class="text-center text-xs text-slate-400 py-10 flex flex-col items-center justify-center h-full">
+                        <i class="fa-regular fa-comments text-4xl text-slate-300 mb-2"></i>
+                        <p>เลือกเพื่อนจากเมนูด้านซ้ายเพื่อเริ่มสนทนา<br>และแข่งขันชาร์ตเพลงไปด้วยกัน</p>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-white border-t border-slate-200 flex gap-2">
+                    <input type="text" id="private-chat-input" disabled placeholder="พิมพ์ข้อความ..." class="flex-1 text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-pink-500 transition-colors">
+                    <button id="send-private-btn" disabled class="modern-btn modern-btn-primary text-xs px-4 rounded-xl disabled:opacity-50"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="work-detail-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-100 overflow-hidden transform scale-95 transition-transform duration-200">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <div>
+                    <h3 id="modal-work-title" class="font-bold text-slate-800 text-base">รายละเอียดซิงเกิล</h3>
+                    <p id="modal-work-type-badge" class="text-xs text-pink-500 font-semibold"></p>
+                </div>
+                <button onclick="closeWorkDetailModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <div class="p-5 overflow-y-auto space-y-6 custom-scrollbar flex-grow">
+                <div class="flex flex-col sm:flex-row gap-4 items-center sm:items-start text-center sm:text-left border-b border-slate-100 pb-4">
+                    <div id="modal-work-cover" class="w-24 h-24 flex-shrink-0 shadow-md rounded-xl overflow-hidden"></div>
+                    <div class="flex-grow space-y-1 py-1">
+                        <h4 id="modal-work-name" class="font-bold text-xl text-slate-800"></h4>
+                        <p id="modal-work-stats" class="text-xs text-slate-400 font-medium"></p>
+                    </div>
+                </div>
+                
+                <div>
+                    <h5 class="font-bold text-xs text-slate-400 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                        <i class="fa-solid fa-crown text-amber-500 text-sm"></i> เซ็นเตอร์ (Center)
+                    </h5>
+                    <div id="modal-work-center-container" class="flex justify-center sm:justify-start">
+                        </div>
+                </div>
+
+                <div>
+                    <h5 class="font-bold text-xs text-slate-400 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                        <i class="fa-solid fa-users text-pink-500"></i> สมาชิกเซ็มบัตสึ (Senbatsu)
+                    </h5>
+                    <div id="modal-work-members-grid" class="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                        </div>
+                </div>
             </div>
         </div>
     </div>
